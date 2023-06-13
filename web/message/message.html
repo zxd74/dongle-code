@@ -1,0 +1,59 @@
+<script type="text/javascript">
+    var message;
+    $(function (){
+        if (!!window.EventSource){
+            message = new EventSource('/message/register?userId=dongle')
+            
+            //message.onopen(()=>{})
+            //message.onerror(()=>{})
+            ///message.onmessage(()=>{})
+            
+            message.addEventListener("open",function (){
+                console.log("建立消息监听")
+            },false)
+            message.addEventListener("message",function (e){
+                console.log(e.data)
+            })
+            message.addEventListener("error",function (e){
+                if (e != undefined && e.readystatus == EventSource.CLOSED){
+                    console.log("消息监听已关闭")
+                }else{
+                    console.log("消息监听异常")
+                }
+            },false)
+        }else{
+            console.log("浏览器不支持消息监听！")
+        }
+
+        // 监听窗口关闭事件
+        window.onbeforeunload = function () {
+            console.log("窗口关闭")
+            // closeMessage();
+        };
+
+        // window.setInterval("request()",1000*60)
+    })
+    // ajax + setInterval 定时任务实现消息推送
+    function request(){
+        $.ajax({
+            url:'/message/request-message',
+            success:function (data){
+                console.log(data)
+            }
+        })
+    }
+    function showMessageOnHtml(msg){
+        $('#message').innerHTML = msg
+    }
+    // 关闭消息监听连接
+    function closeMessage() {
+        if (message != null){
+            message.close();
+            const httpRequest = new XMLHttpRequest();
+            httpRequest.open('GET', 'http://localhost:8080/message/close/?userId=dongle', true);
+            httpRequest.send();
+            console.log("close");
+        }
+    }
+</script>
+<div id="message"></div>
