@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <title>Html ProgressBar</title>
+  <style type="text/css">
+    .container {
+        width: 250px;
+        height: 25px;
+        border-radius: 25px;
+        background: white;
+        border:1px solid black;
+        display: inline-block;
+    }
+    .progress {
+        width: 0%;
+        height: inherit;
+        border-radius: 25px;
+        background: green;
+    }
+  </style>
+  <script type="text/javascript">
+      window.onload = function(){
+        setInterval(changeProgress,1000)
+      }
+      var val = 0;
+      function changeProgress(){
+        if (val == 100) {return}
+        val += 10;
+        document.getElementsByClassName("progress")[0].style="width:" + val + "%;"
+        document.getElementById("val").innerText = val
+      }
+  </script>
+ <body>
+    <div class="container">
+        <div class="progress"></div>
+    </div>
+    <label id="val"></label>%
+ </body>
+</html>

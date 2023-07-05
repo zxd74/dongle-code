@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <title>Html ProgressBar</title>
+  <style type="text/css">
+
+  </style>
+  <script type="text/javascript">
+      window.onload = function(){
+        setInterval(changeMeter,1000)
+        setInterval(changeProgress,2000)
+      }
+      function changeMeter(){
+        var val = document.getElementById("meter").value + 10;
+        document.getElementById("meter").value = val;
+        document.getElementById("meter-val").innerText = val;
+      }
+      function changeProgress(){
+        var val = document.getElementById("progress").value + 10;
+        document.getElementById("progress").value = val;
+        document.getElementById("progress-val").innerText = val;
+      }
+  </script>
+ <body>
+ 	<div>
+        Meter进度条:
+        <meter id="meter" min="0" max="100" style="width: 200px;"></meter>
+        <label id="meter-val">0</label>%
+    </div>
+    <div>
+        Progress进度条：
+        <progress id="progress" max="100"></progress>
+        <label id="progress-val">0</label>%
+    </div>
+ </body>
+</html>

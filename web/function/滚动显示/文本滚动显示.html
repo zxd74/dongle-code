@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <title>Html Test</title>
+  <style type="text/css">
+
+  </style>
+  <script type="text/javascript">
+    var tags = [
+            "将两个文件组成文件夹，以文件夹形式上传版本，并部署发布",
+            "用户获取到返回数据后，需拼装一个 HTTP POST 请求，其中 url 为返回包的 url 字段，Body 部分格式为 multipart/form-data",
+            "我们以浏览器为例，假设你已经完成上述案例的服务构建，则html操作代码如下",
+        ]; // 定义文本组
+    var index=0; // 定义当前显示索引
+    onload=function(){
+    setInterval(showTag,5000);
+    }
+    function showTag() {
+        if (index>=tags.length) { index = 0} // 当索引超出时重置为0
+        document.getElementById("tag").innerText=tags[index++];
+    }
+  </script>
+ <body>
+ 	<label id="tag"></label>
+ </body>
+</html>
