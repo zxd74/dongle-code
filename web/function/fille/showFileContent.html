@@ -1,0 +1,34 @@
+<html>
+<head>
+    <style>
+        textarea{
+            width: 100%;
+            height: 100%;
+            font-size: x-large;
+        }
+    </style>
+</head>
+<body>
+    <button id="btn">展示文件内容</button>
+    <label id = "label"></label>
+    <input style="visibility: hidden;" type="file" name="file" id="filePicker"/>
+    <textarea id="content" readonly></textarea>
+</body>
+</html>
+<script script type="text/javascript">
+    var btn = document.getElementById("btn")
+    var ipt = document.getElementById("filePicker")
+    var tta = document.getElementById("content")
+    var ll = document.getElementById("label")
+    btn.addEventListener("click",()=>ipt.click())
+    ipt.onchange =()=>{
+        var file = ipt.files[0]
+        var reader = new FileReader()
+        reader.readAsText(file)
+        reader.onload = ()=>{
+            tta.innerHTML = reader.result
+        }
+        tta.innerText = reader.result
+        ll.innerText = file.name
+    }
+</script>
