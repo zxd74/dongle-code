@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root{
+            --element-width:400px;
+            --element-height:400px;
+        }
+        .main {
+            width: var(--element-width);
+            height: var(--element-height);
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            border: 0;
+            padding: 0;
+        }
+        .slide-data,img {
+            width: var(--element-width);
+            height: var(--element-height);
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .slide-option .slide-options,.slide-border .move{
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            height: calc(var(--element-height) * 0.1);
+            background-color: white;
+            font-size: calc((var(--element-height) * 0.1) - 2px);
+            font-family: 'Microsoft YaHei';
+        }
+        .slide-option .slide-options{
+            margin-top: 0; /*移除font-size影响*/
+            margin-bottom: 0; /*移除font-size影响*/
+            padding-left: 0;
+            margin-left: calc(var(--element-width) * 0.1); /*去除‘一个move移动元素’width尺寸,注意和子元素的尺寸相计算，其和li的间隔相加=width尺寸，若li是右间隔，则其=width*/
+        }
+        .slide-options li{
+            list-style: none;
+            float: left; /*保证序列是行排列，并且从左向右*/
+            margin-left: calc(var(--element-width) * 0.05); /*保证每个序列都有足够间隔*/
+            width: calc((var(--element-width)-5px)/5); /*宽度*/
+        }
+        .slide-border .move{
+            width: calc(var(--element-width) * 0.1);
+        }
+        .slide-border .move.next{
+            right: 0; /*因slide-border的position：absolute，故可以固定右移动为最右*/
+        }
+        .slide-options li:focus{
+            background-color: yellow;
+        }
+        .slide-border .move:hover,.slide-option li:hover{
+            background-color: rgb(0, 0, 0,0.4); /*设置触发移动翻页效果*/
+        }
+    </style>
+    <script>
+        var slideNum = 1
+        const maxNum = 5;
+        const slideHidden = "visibility: hidden;"
+        const slideShow = "visibility: visible;"
+
+        var slideEvent = null;
+        onload = () => setAutoSlide()
+        function setAutoSlide(){
+            slideEvent = slideEvent != null ? slideEvent:setInterval(function(){
+                slide(slideNum+1) /*自动轮播*/
+            },3000)
+        }
+        function clearAutoSlide(){
+            clearInterval(slideEvent)
+            slideEvent = null
+                
+        }
+        function info(num){
+            console.log('',num)
+        }
+        function slide(num){
+            var oldNum = slideNum
+            if(num>maxNum){
+                slideNum = 1
+            }else if(num<1){
+                slideNum = maxNum
+            }else{
+                slideNum = num
+            }
+            console.log(oldNum,slideNum)
+            if(oldNum != slideNum){
+                setSlideStyle('slide'+oldNum,slideHidden) /*隐藏所有序列*/
+                setSlideStyle('slide'+slideNum,slideShow) /*显示序列*/
+            }
+        }
+        function slideMove(num){
+            console.log('slideMove',num)
+            slide(slideNum+num)
+        }
+        function setSlideStyle(cls,style){
+            document.getElementsByClassName(cls)[0].setAttribute('style',style)
+        }
+    </script>
+</head>
+<body>
+    <div class='main'>
+       <div class="slide-data">
+            <img class="slide1" src="D:\vscode-preferences-user-snippets.png" alt="" onclick="info(1)" >
+            <img class="slide2" src="D:\vscode-template-setting.png" alt="" onclick="info(2)" style="visibility: hidden;">
+            <img class="slide3" src="D:\vscode-template-view.png" alt="" onclick="info(3)" style="visibility: hidden;">
+            <img class="slide4" src="D:\vscode-template-vue.png" alt="" onclick="info(4)" style="visibility: hidden;">
+            <img class="slide5" src="D:\vscode-template-vue-click.png" alt="" onclick="info(5)" style="visibility: hidden;">
+       </div>
+       <div class="slide-option" onmouseover="clearAutoSlide()" onmouseout="setAutoSlide()">
+            <ul class="slide-options" >
+                <li onclick="slide(1)">1</li>
+                <li onclick="slide(2)">2</li>
+                <li onclick="slide(3)">3</li>
+                <li onclick="slide(4)">4</li>
+                <li onclick="slide(5)">5</li>
+            </ul>
+            <div class="slide-border">
+                <div class="move prev" onclick="slideMove(-1)">&lsaquo;</div>
+                <div class="move next" onclick="slideMove(1)" >&rsaquo;</div>
+           </div>
+       </div>
+       
+    </div>
+</body>
+</html>
