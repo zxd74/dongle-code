@@ -25,7 +25,8 @@ this.$router.push(url).catch(err => {
 })
 ```
 
-# 路由传参
+# 路由配置
+## 路由传参
 1. 路径path传参方式
 ```js
 {

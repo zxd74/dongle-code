@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root{
+            --slide-width:400px;
+            --slide-height:400px;
+        }
+        .slide-show{
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            border: 0;
+            padding: 0;
+        }
+        .slide-show,.slide-data img{
+            height: var(--slide-height);
+            width: var(--slide-width);
+        }
+        .slide-data img{
+            position:absolute;
+            left: 0;top: 0;
+            display: none;
+            &[actived='actived']{
+                display: block;
+            }
+        }
+
+        .slide-option{
+            bottom: 2px;
+            font-size: calc(var(--slide-height) * 0.1 - 5px);
+            height: calc(var(--slide-width) * 0.1 + 5px);
+            position: absolute;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .slide-options,.slide-border{
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+        .slide-options{
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            & ul{
+                width: auto;
+                margin: 0;
+                padding:0;
+                text-align: center;
+                pointer-events: auto;
+            }
+            & li{
+                list-style: none;
+                margin-left: 2px;
+                margin-right: 2px;
+                float: left;
+                :focus{
+                    background-color: yellow;
+                }
+                &[actived='actived']{
+                    background-color: greenyellow;
+                }
+            }
+        }
+
+        .slide-border{
+            text-align: left;
+            pointer-events: auto;
+            & .move{
+                position:absolute;
+                width: calc(var(--slide-width) * 0.05);
+                text-align: left;
+                :hover{
+                    background-color: rgb(0, 0, 0,0.4);
+                }
+            }
+            & .slide-next{
+                right: 0;
+            }
+        }
+    </style>
+    <script>
+        var slideNum = 1
+        const maxNum = 5;
+        var slideEvent = null;
+        onload = () => {}
+        function setAutoSlide(){
+            slideEvent = slideEvent != null ? slideEvent:setInterval(function(){
+                slide(slideNum+1) /*自动轮播*/
+            },3000)
+        }
+        function clearAutoSlide(){
+            clearInterval(slideEvent)
+            slideEvent = null
+                
+        }
+        function info(num){
+            console.log('',num)
+        }
+        function slide(num){
+            var oldNum = slideNum
+            if(num>maxNum){
+                slideNum = 1
+            }else if(num<1){
+                slideNum = maxNum
+            }else{
+                slideNum = num
+            }
+            if(oldNum != slideNum){
+                setActived('slide-option-'+oldNum,false) /*隐藏所有序列*/
+                setActived('slide-option-'+slideNum,true) 
+                setActived('slide-img-'+oldNum,false)
+                setActived('slide-img-'+slideNum,true)
+            }
+        }
+        function slideMove(num){
+            // 上层元素挡住了下层元素，无法触发点击事件
+            console.log('move',num)
+            slide(slideNum+num)
+        }
+        function setActived(cls,flag){
+            document.getElementsByClassName(cls)[0].setAttribute('actived',flag?'actived':'')
+        }
+    </script>
+</head>
+<body>
+    <div class='slide-show'>
+       <div class="slide-data">
+            <img class="slide-img-1" actived="actived" src="D:\DONGLE.png" alt="" onclick="info(1)" >
+            <img class="slide-img-2" src="D:\QQ图片20220915070431.jpg" alt="" onclick="info(2)">
+            <img class="slide-img-3" src="D:\DONGLE.png" alt="" onclick="info(3)">
+            <img class="slide-img-4" src="D:\QQ图片20220915070431.jpg" alt="" onclick="info(4)" >
+            <img class="slide-img-5" src="D:\QQ图片20220915070431.jpg" alt="" onclick="info(5)">
+            <img class="slide-img-6" src="D:\DONGLE.png" alt="" onclick="info(6)">
+       </div>
+       <div class="slide-option" onmouseover="clearAutoSlide()" onmouseout="clearAutoSlide()">
+            <div class="slide-border">
+                <div class="move slide-prev" onclick="slideMove(-1)">&lsaquo;</div>
+                <div class="move slide-next" onclick="slideMove(1)" >&rsaquo;</div>
+           </div>
+           <div class="slide-options" >
+                <ul>
+                    <li class="slide-option-1" actived="actived" onclick="slide(1)">1</li>
+                    <li class="slide-option-2" onclick="slide(2)">2</li>
+                    <li class="slide-option-3" onclick="slide(3)">3</li>
+                    <li class="slide-option-4" onclick="slide(4)">4</li>
+                    <li class="slide-option-5" onclick="slide(5)">5</li>
+                </ul>
+            </div>
+       </div>
+       
+    </div>
+</body>
+</html>
