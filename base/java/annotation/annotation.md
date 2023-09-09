@@ -95,3 +95,22 @@
     }
 
 ```
+
+# 函数式接口注解
+* **特征**(<font color="red">**必需**</font>)
+  * 定义一个只有一个抽象方法的接口（可以包含其它默认方法，静态方法，重写方法等）
+* 增加@FunctionalInterface注解，表示该接口是函数式接口
+* 主要复合函数式接口的特征都可以使用函数式接口
+* 函数式接口可以作为lambda表达式使用，如`(name)->name.toUpperCase` 可以转换成`(String::toUpperCase)`
+```java
+    @FunctionalInterface
+    public interface Dongle{
+        String value(String val);
+    }
+    public static void out(String value,Dongle dongle){
+        System.out.println(dongle.value(value));
+    }
+    public static void main(String[] args) {
+        out("kevin",String::toUpperCase);
+    }
+```
