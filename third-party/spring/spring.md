@@ -1,33 +1,26 @@
 # 依赖
 
 ## 基本依赖
-
 org.springframework：
-
 1. spring-beans
 2. spring-core
 3. spring-context-support
 4. spring-context
 
 ## web依赖
-
 org.springframework：
-
 1. spring-webmv  MVC接口
 2. spring-web  web服务
 3. spring-aop  AOP拦截
 
 ## 数据依赖
-
 org.springframework：
-
 1. spring-jdbc 数据库访问
 2. spring-tx  事务处理
 
 # 配置
 
 ## 基本配置
-
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -43,11 +36,11 @@ org.springframework：
 ```
 
 ## MVC配置
-
 ```xml
-xmlns:mvc="http://www.springframework.org/schema/mvc"
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc"
 xsi:schemaLocation="http://www.springframework.org/schema/mvc
-    		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd"
+    		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
 
     <!--MVC注解驱动，配置处理器适配器-->
 	<mvc:annotation-driven/>
@@ -60,30 +53,39 @@ xsi:schemaLocation="http://www.springframework.org/schema/mvc
 			<bean class="com.iwanvi.freebook.ad.aop.LoginInterceptor"/>
 		</mvc:interceptor>
 	</mvc:interceptors>
+</beans>
 ```
 
 提示：MVC接口需要使用@Controller或@RestController等注解
 
 ## 任务配置
-
 ```xml
-xmlns:task="http://www.springframework.org/schema/task"
-xsi:schemaLocation="http://www.springframework.org/schema/task
-    		http://www.springframework.org/schema/task/spring-task.xsd"
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+            http://www.springframework.org/schema/task
+            http://www.springframework.org/schema/task/spring-task-3.0.xsd">
 
-	<!--定时任务注解驱动-->
-	<task:annotation-driven />
-	<!-- 指定定时任务 -->
-	<task:annotation-driven scheduler="myScheduler"/>
-	<task:executor id="executor" pool-size="3" />
-	<task:scheduler id="myScheduler" pool-size="5"/>
+            <!--定时任务注解驱动-->
+            <task:annotation-driven />
+
+            <!-- 指定任务器配置 -->
+            <task:annotation-driven scheduler="myScheduler"/>
+            <task:executor id="executor" pool-size="3" />
+            <task:scheduler id="myScheduler" pool-size="5"/>
+
+            <!-- 任务列表 -->
+            <task:scheduled-tasks>
+                <task:scheduled ref="dataTask" method="calc" cron="30 0 * * * ?"/>
+            </task:scheduled-tasks>
+</beans>
 ```
-
 提示：任务类需要配置@Component等注解
 
-
 # 自定义处理
-
 ## 跨域处理
 ```java
 import org.springframework.stereotype.Component;
@@ -110,7 +112,6 @@ public class CORSConfig implements Filter {
 ```
 
 ## 异常统一处理
-
 ```java
 import com.ad.adx.manage.model.AdmResponse;
 import com.ad.adx.manage.utils.AdmException;

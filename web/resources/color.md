@@ -23,6 +23,7 @@
 `#F8F9FA`|<div style="background-color:#F8F9FA">#F8F9FA</div>| 浅灰，边框，背景
 `#F5F7FA`|<div style="background-color:#F5F7FA">#F5F7FA</div>| 浅灰，边框，背景
 `#FDFFFC`|<div style="background-color:#FDFFFC">#FDFFFC</div>| 浅灰，边框，背景
+`#f2f2f2`|<div style="background-color:#f2f2f2">#f2f2f2</div>| 浅灰，边框，背景,代码背景
 `#FFFFFF`|<div style="background-color:#FFFFFF">#FFFFFF</div>| 白色,背景
 `#FFF`|<div style="background-color:#FFF">#FFF</div>| 白色,背景
 `Transparent`|<font color="Transparent">Transparent</font>| 透明
