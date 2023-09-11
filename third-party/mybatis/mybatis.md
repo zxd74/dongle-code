@@ -249,11 +249,9 @@ public class MyCommonGenerator implements CommentGenerator {
                 topLevelClass.addJavaDocLine(" * " + remarkLine);  //$NON-NLS-1$
             }
         }
-        topLevelClass.addJavaDocLine(" *"); //$NON-NLS-1$
-        topLevelClass.addJavaDocLine(" * create by qsm");
+        topLevelClass.addJavaDocLine(" * @author Dongle");
         topLevelClass.addJavaDocLine(" * " + introspectedTable.getFullyQualifiedTable().toString());
         topLevelClass.addJavaDocLine(" */"); //$NON-NLS-1$
-        topLevelClass.addJavaDocLine("@Data"); //$NON-NLS-1$
     }
 
     /**
@@ -270,27 +268,16 @@ public class MyCommonGenerator implements CommentGenerator {
         if (suppressAllComments) {
             return;
         }
-        field.addJavaDocLine("/**"); //$NON-NLS-1$
+        // 有注释才增加注释设置，否则不增加
         String remarks = introspectedColumn.getRemarks();
         if (addRemarkComments && StringUtility.stringHasValue(remarks)) {
+            field.addJavaDocLine("/**"); //$NON-NLS-1$
             String[] remarkLines = remarks.split(System.getProperty("line.separator"));  //$NON-NLS-1$
             for (String remarkLine : remarkLines) {
                 field.addJavaDocLine(" * " + remarkLine);  //$NON-NLS-1$
             }
+            field.addJavaDocLine(" */"); //$NON-NLS-1$
         }
-        field.addJavaDocLine(" */"); //$NON-NLS-1$
-    }
-
-    @Override
-    public void addFieldComment(Field field, IntrospectedTable introspectedTable) {
-
-        if (suppressAllComments) {
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        field.addJavaDocLine("/**"); //$NON-NLS-1$
-        sb.append(introspectedTable.getFullyQualifiedTable());
-        field.addJavaDocLine(" */"); //$NON-NLS-1$
     }
 }
 ```
