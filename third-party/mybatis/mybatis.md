@@ -1,4 +1,14 @@
 # generator
+[官网: http://mybatis.org/generator/index.html]
+
+* `generatorConfiguration`
+  * `context` 数据库配置
+    * `jdbcConnection` 数据库连接
+    * `javaModelGenerator` 实体目录
+    * `sqlMapGenerator` Mapper目录
+    * `javaClientGenerator` Dao接口目录
+    * `table` 表配置
+
 1, mybatis-config.xml
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -31,7 +41,7 @@ iBatis 升级至 MyBatis 时需要注意（两者的映射文件 DTD 约束也�
     </settings>
 </configuration>
 ```
-2. mybatis-generator.xml
+1. mybatis-generator.xml
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE generatorConfiguration
@@ -52,43 +62,235 @@ iBatis 升级至 MyBatis 时需要注意（两者的映射文件 DTD 约束也�
         <property name="beginningDelimiter" value="`"/>
         <property name="endingDelimiter" value="`"/>
 
-        <!-- 代码生成插件 -->
-        <plugin type="com.itfsw.mybatis.generator.plugins.SelectOneByExamplePlugin"/>
+        <!-- 代码生成插件 com.itfsw:mmybatis-generator-plugin-->
+        <!-- <plugin type="com.itfsw.mybatis.generator.plugins.SelectOneByExamplePlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.BatchInsertPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelColumnPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.LimitPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ModelBuilderPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ExampleEnhancedPlugin"/>
         <plugin type="com.itfsw.mybatis.generator.plugins.ExampleTargetPlugin">
-            <!-- 修改Example类生成到目标包下 -->
-            <property name="targetPackage" value="com.iwanvi.nvwa.dao.model"/>
-        </plugin>
+            <property name="targetPackage" value="com.dongle.dao.model"/>
+        </plugin>  -->
 
         <!-- 注释 -->
         <commentGenerator>
             <property name="suppressAllComments" value="true"/><!-- 是否取消注释 -->
             <property name="suppressDate" value="true"/> <!-- 是否生成注释代时间戳-->
+            <property name="addRemarkComments" value="true"/> <!--增加表和列注释-->
         </commentGenerator>
 
         <!--jdbc-->
         <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://db.dongle.com/wv_adx?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false"
+                        connectionURL="jdbc:mysql://db.dongle.com/data?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false"
                         userId="root" password="Dongle@123"/>
         
         <!--实体类model-->
-        <javaModelGenerator targetPackage="com.iwanvi.nvwa.dao.model" targetProject="src/main/java" />
-
+        <javaModelGenerator targetPackage="com.dongle.dao.model" targetProject="src/main/java" />
         <!--生成mapper.xml配置文件-->
         <sqlMapGenerator targetPackage="mapper" targetProject="src/main/resources" />
-
         <!--生成dao接口-->
-        <javaClientGenerator type="XMLMAPPER" targetPackage="com.iwanvi.nvwa.dao" targetProject="src/main/java" />
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.dongle.dao" targetProject="src/main/java" />
         
         <!--对应数据库表-->
-        <table tableName="user" schema="nvwa"></table>
-        <table tableName="flow_consumer" domainObjectName="FlowConsumer">
+        <table tableName="user" schema="dongle" domainObjectName="User"/>
+        <table tableName="data" schema="dongle" domainObjectName="Data">
             <generatedKey column="id" sqlStatement="JDBC"/>
+        </table>
+        <!--为所有表都执行generator-->
+        <table tableName="%"> 
+            <!--生成的model实体的属性，使用实际的表列名作为实体类的属性名，满足驼峰命名法-->
+            <property name="useActualColumnNames" value="true" />
         </table>
     </context>
 </generatorConfiguration>
+```
+2. 执行generator，以maven为例
+```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.mybatis.generator</groupId>
+                <artifactId>mybatis-generator-maven-plugin</artifactId>
+                <version>1.4.2</version>
+                <dependencies>
+                    <dependency>
+                        <!-- 导入对应数据库驱动器 -->
+                        <groupId>com.mysql</groupId>
+                        <artifactId>mysql-connector-j</artifactId>
+                        <version>${mysql.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+# 自定义插件（java+maven）
+* 通过项目本身运行mybatis generator，只能使用java的`public static void main(String[] args)`
+* 通过maven插件方式运行，但需要自定义插件单独作为外院依赖项才能通过命令执行
+
+```xml
+<dependency>
+    <groupId>org.mybatis.generator</groupId>
+    <artifactId>mybatis-generator-core</artifactId>
+    <version>${mybatis.version}</version>
+</dependency>
+```
+
+## CommentGenerator
+```java
+import org.mybatis.generator.api.CommentGenerator;
+import org.mybatis.generator.api.IntrospectedColumn;
+import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.PropertyRegistry;
+import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.internal.DefaultShellCallback;
+import org.mybatis.generator.internal.util.StringUtility;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import static org.mybatis.generator.internal.util.StringUtility.isTrue;
+
+/**
+ * @author Dongle
+ * @desc
+ * @since 2023/9/11 011 15:57
+ */
+public class MyCommonGenerator implements CommentGenerator {
+
+
+    public static void main(String[] args) {
+        List<String> warnings = new ArrayList<>();
+        boolean overwrite = true;
+        File configFile = new File(MyCommonGenerator.class.getClassLoader().getResource("mybatis-generator.xml").getFile());
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        try {
+            Configuration config = cp.parseConfiguration(configFile);
+            DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+            MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
+            myBatisGenerator.generate(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Properties properties;
+
+    private boolean suppressDate;
+
+    private boolean suppressAllComments;
+
+    /**
+     * If suppressAllComments is true, this option is ignored.
+     */
+    private boolean addRemarkComments;
+
+    private SimpleDateFormat dateFormat;
+
+    public MyCommonGenerator() {
+        super();
+        properties = new Properties();
+        suppressDate = false;
+        suppressAllComments = false;
+        addRemarkComments = false;
+    }
+
+    /**
+     * 默认配置
+     *
+     * @param properties
+     */
+    @Override
+    public void addConfigurationProperties(Properties properties) {
+        this.properties.putAll(properties);
+
+        suppressDate = isTrue(properties
+                .getProperty(PropertyRegistry.COMMENT_GENERATOR_SUPPRESS_DATE));
+
+        suppressAllComments = isTrue(properties
+                .getProperty(PropertyRegistry.COMMENT_GENERATOR_SUPPRESS_ALL_COMMENTS));
+
+        addRemarkComments = isTrue(properties
+                .getProperty(PropertyRegistry.COMMENT_GENERATOR_ADD_REMARK_COMMENTS));
+
+        String dateFormatString = properties.getProperty(PropertyRegistry.COMMENT_GENERATOR_DATE_FORMAT);
+        if (StringUtility.stringHasValue(dateFormatString)) {
+            dateFormat = new SimpleDateFormat(dateFormatString);
+        }
+    }
+
+    /**
+     * 实体类添加的注释
+     *
+     * @param topLevelClass
+     * @param introspectedTable
+     */
+    @Override
+    public void addModelClassComment(TopLevelClass topLevelClass,
+                                     IntrospectedTable introspectedTable) {
+        if (suppressAllComments || !addRemarkComments) {
+            return;
+        }
+
+        topLevelClass.addJavaDocLine("/**"); //$NON-NLS-1$
+        String remarks = introspectedTable.getRemarks();
+        if (addRemarkComments && StringUtility.stringHasValue(remarks)) {
+            String[] remarkLines = remarks.split(System.getProperty("line.separator"));  //$NON-NLS-1$
+            for (String remarkLine : remarkLines) {
+                topLevelClass.addJavaDocLine(" * " + remarkLine);  //$NON-NLS-1$
+            }
+        }
+        topLevelClass.addJavaDocLine(" *"); //$NON-NLS-1$
+        topLevelClass.addJavaDocLine(" * create by qsm");
+        topLevelClass.addJavaDocLine(" * " + introspectedTable.getFullyQualifiedTable().toString());
+        topLevelClass.addJavaDocLine(" */"); //$NON-NLS-1$
+        topLevelClass.addJavaDocLine("@Data"); //$NON-NLS-1$
+    }
+
+    /**
+     * 实体类的属性注释，数据库中自定义注释
+     *
+     * @param field
+     * @param introspectedTable
+     * @param introspectedColumn
+     */
+    @Override
+    public void addFieldComment(Field field,
+                                IntrospectedTable introspectedTable,
+                                IntrospectedColumn introspectedColumn) {
+        if (suppressAllComments) {
+            return;
+        }
+        field.addJavaDocLine("/**"); //$NON-NLS-1$
+        String remarks = introspectedColumn.getRemarks();
+        if (addRemarkComments && StringUtility.stringHasValue(remarks)) {
+            String[] remarkLines = remarks.split(System.getProperty("line.separator"));  //$NON-NLS-1$
+            for (String remarkLine : remarkLines) {
+                field.addJavaDocLine(" * " + remarkLine);  //$NON-NLS-1$
+            }
+        }
+        field.addJavaDocLine(" */"); //$NON-NLS-1$
+    }
+
+    @Override
+    public void addFieldComment(Field field, IntrospectedTable introspectedTable) {
+
+        if (suppressAllComments) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        field.addJavaDocLine("/**"); //$NON-NLS-1$
+        sb.append(introspectedTable.getFullyQualifiedTable());
+        field.addJavaDocLine(" */"); //$NON-NLS-1$
+    }
+}
 ```
