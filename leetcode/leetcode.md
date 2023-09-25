@@ -203,3 +203,68 @@ class Solution {
 ```
 
 # 10 正则表达式匹配
+
+# 13 Roman to Integer
+    Roman numerals are usually written largest to smallest from left to right.
+    I can be placed before V (5) and X (10) to make 4 and 9. 
+    X can be placed before L (50) and C (100) to make 40 and 90. 
+    C can be placed before D (500) and M (1000) to make 400 and 900.
+```py
+# 45ms 86.56% 16.4MB 39.26%
+class Solution:
+    def romanToInt(self, s: str) -> int:
+        sm = {"I":1,"V":5,"X":10,"L":50,"C":100,"D":500,"M":1000}
+        sum = 0
+        pre = ""
+        num=0
+        for i in s:
+            if pre == "I" and (i == "V" or i=="X"):
+                sum = sum - num
+                num = sm[i] -1
+            elif pre == "X" and (i == "L" or i=="C"):
+                sum = sum - num
+                num = sm[i] -10
+            elif pre == "C" and (i == "D" or i=="M"):
+                sum = sum - num
+                num = sm[i] -100
+            else:
+                num = sm[i]
+            sum = sum + num
+            pre = i
+        return sum
+```
+```py
+# 52ms 55.28% 16.4MB 39.26%
+class Solution:
+    def romanToInt(self, s: str) -> int:
+        romans = {'I':1,'V':5,'X':10,'L':50,'C':100,'D':500,'M':1000,'CD':400,'CM':900,'XC':90,'XL':40,'IX':9,'IV':4}
+        roman = 0
+        pre = 0
+        for i in s:
+            if pre == 0:
+                pre = romans[i]
+                continue
+            if pre < romans[i]:
+                roman += romans[i] - pre
+                pre = 0
+            else:
+                roman += pre
+                pre = romans[i]
+            print( i,pre,roman)
+        if pre != 0:
+            roman += pre
+        return roman
+```
+```py
+# 58ms 25.26% 16.1MB 93.92%
+class Solution:
+    def romanToInt(self, s: str) -> int:
+        romans = {'I':1,'V':5,'X':10,'L':50,'C':100,'D':500,'M':1000}
+        roman = 0
+        for i in range(len(s)):
+            if i < len(s) -1 and romans[s[i]] < romans[s[i+1]]:
+                roman -= romans[s[i]]
+            else:
+                roman += romans[s[i]]
+        return roman
+```
