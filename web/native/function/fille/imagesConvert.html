@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <script>
+            window.onload = function() {
+                var img_file = document.getElementById("img_file");
+                var img_base = document.getElementById("img_base");
+                var sl_img = document.getElementById("sl_img");
+                var ch_base = document.getElementById("ch_base");
+                var img_view = document.getElementById("img_view");
+                sl_img.onclick = function() {
+                    img_file.click();
+                }
+                img_file.onchange = function() {
+                    var file = img_file.files[0];
+                    console.log(file);
+                    img_view.src = URL.createObjectURL(file);
+                }
+                ch_base.onclick = function() {
+                    var reader = new FileReader();
+                    reader.onloadend = function() {
+                        img_base.value = reader.result;
+                        img_base.hidden = false
+                    }
+                    reader.readAsDataURL(img_file.files[0]);
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <button id="sl_img" >选择图片</button><input type="file" id="img_file" hidden>
+        <button id="ch_base">转base64</button><br/>
+        <img id="img_view" /><br/>
+        <textarea id="img_base" cols="100" rows="20"></textarea>
+    </body>
+</html>
