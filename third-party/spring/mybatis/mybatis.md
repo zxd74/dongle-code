@@ -48,10 +48,11 @@ public interface UserDao{
 
 </mapper>
 ```
-6. 开启Mapper扫描
+6. **开启Mapper扫描**(**必需**)
 ```java
 @SpringBootApplication
-@MapperScans(@MapperScan(basePackages = {"com.dongle.sys.order.dao"}))
+@MapperScan("com.dongle.sys.order.dao") // 单路径
+// @MapperScans(@MapperScan(basePackages = {"com.dongle.sys.order.dao"})) // 多路径
 public class Application {
 
     public static void main(String[] args) {
@@ -60,7 +61,7 @@ public class Application {
 
 }
 ```
-7. 配置mybatis：mybatis-config.xml
+7. 配置mybatis：mybatis-config.xml（**mybatis自用配置**）
     ```xml
     <?xml version="1.0" encoding="UTF-8" ?>
     <!--iBatis 和 MyBatis 的全局配置文件使用不同的 DTD 约束，在将应用由
@@ -101,8 +102,8 @@ public class Application {
             password: Dongle@123
             url: jdbc:mysql://db.dongle.com:3306/dongle-order?useUnicode=true&characterEncodeing=utf8&autoReconnect=true&useSSL=false
     mybatis:
-        type-aliases-package: com.dongle.sys.order.dao.entity
-        mapper-locations: classpath*:mapper/*.xml
+        type-aliases-package: com.dongle.sys.order.dao.entity  # 实体类所在包
+        mapper-locations: classpath*:mapper/*.xml # mapper映射文件地址
     ```
 # 代码生成器
 1. 依赖/插件
