@@ -118,3 +118,69 @@ class MySQLOption:
         self.__cursor.execute(sql)
         return self.__cursor.fetchall()
 ```
+
+# AesUtils
+```python
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+
+import base64
+
+def aes_ecb_encrypt(key, text):
+    """
+    AES-128-ECB AES标准对称加密算法
+    :param key: 加密密钥
+    :param plaintext: 传入的明文，带加密内容
+    :return: 加密结果
+    """
+    # 创建AES并设置加密模式为ECB
+    aes = AES.new(key.encode(), AES.MODE_ECB)
+    # 明文填充,保证数据被填充为16位，AES强制要求
+    padded_text= pad(text.encode(), AES.block_size)
+    # 加密
+    encrypt_aes = aes.encrypt(padded_text)
+    return base64.encodebytes(encrypt_aes).decode()
+
+def aes_cbc_encrypt(key, text, iv):
+    """
+    AES-128-CBC AES标准对称加密算法
+    :param key: 加密密钥
+    :param iv: 初始化向量,CBC模式需要
+    :param plaintext: 传入的明文，带加密内容
+    :return: 加密结果(密文)
+    """
+    # 创建AES并设置加密模式为cbc
+    aes = AES.new(key.encode(), AES.MODE_CBC,iv.encode())
+    # 明文填充,保证数据被填充为16位，AES强制要求
+    padded_text= pad(text.encode(), AES.block_size)
+    # 加密
+    encrypt_aes = aes.encrypt(padded_text)
+    return base64.encodebytes(encrypt_aes).decode()
+
+
+def aes_ecb_decrypt(key, text):
+    """
+    AES-128-ECB AES标准对称解密算法
+    :param key: 加密密钥
+    :param text: 密文
+    :return: 解密结果(明文)
+    """
+    text = base64.b64decode(text)
+    aes = AES.new(key.encode(), AES.MODE_ECB)
+    decrypt_text = aes.decrypt(text).decode()
+    return decrypt_text.strip()
+
+def aes_cbc_decrypt(key, text, iv):
+    """
+    AES-128-CBC AES标准对称解密算法
+    :param key: 加密密钥
+    :param iv: 初始化向量,CBC模式需要
+    :param text: 密文
+    :return: 解密结果(明文)
+    """
+    text = base64.b64decode(text)
+    aes = AES.new(key.encode(), AES.MODE_CBC,iv.encode())
+    decrypt_text = aes.decrypt(text).decode()
+    return decrypt_text.strip()
+
+```
