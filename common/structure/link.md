@@ -1,25 +1,25 @@
+```java
 package language.java.practice.structure;
 
-public class LineMemo {
+public class LinkMemo {
     
-
     /**
      * 单方向链
      */
-    interface Line<T> {
+    interface Link<T> {
         T get();
-        void addNext(Line<T> t);
-        Line<T> next();
+        void addNext(Link<T> t);
+        Link<T> next();
     }
-    public static class SimpleLine<T> implements Line<T>{
+    public static class SimpleLink<T> implements Link<T>{
         T t;
-        Line<T> next;
+        Link<T> next;
 
-        public SimpleLine(T t) {
+        public SimpleLink(T t) {
             this(t,null);
         }
 
-        public SimpleLine(T t, Line<T> next) {
+        public SimpleLink(T t, Link<T> next) {
             this.t = t;
             this.next = next;
         }
@@ -30,13 +30,13 @@ public class LineMemo {
         }
 
         @Override
-        public void addNext(Line<T> next) {
+        public void addNext(Link<T> next) {
             this.next = next;
         }
 
 
         @Override
-        public Line<T> next() {
+        public Link<T> next() {
             return next;
         }
     }
@@ -44,24 +44,24 @@ public class LineMemo {
     /**
      * 双方向链
      */
-    interface DoubleLine<T> extends Line<T>{
+    interface DoubleLink<T> extends Link<T>{
 
-        void setPre(DoubleLine<T> t);
-        DoubleLine<T> pre();
+        void setPre(DoubleLink<T> t);
+        DoubleLink<T> pre();
     }
-    public static class SimpleDoubleLine<T> implements DoubleLine<T>{
+    public static class SimpleDoubleLink<T> implements DoubleLink<T>{
         T t;
-        DoubleLine<T> pre;
-        Line<T> next;
+        DoubleLink<T> pre;
+        Link<T> next;
 
-        public SimpleDoubleLine() {
+        public SimpleDoubleLink() {
         }
 
-        public SimpleDoubleLine(T t) {
+        public SimpleDoubleLink(T t) {
             this(t,null,null);
         }
 
-        public SimpleDoubleLine(T t, DoubleLine<T> pre, Line<T> next) {
+        public SimpleDoubleLink(T t, DoubleLink<T> pre, Link<T> next) {
             this.t = t;
             this.pre = pre;
             this.next = next;
@@ -77,25 +77,27 @@ public class LineMemo {
         }
 
         @Override
-        public void addNext(Line<T> next) {
+        public void addNext(Link<T> next) {
             this.next = next;
         }
 
         @Override
-        public Line<T> next() {
+        public Link<T> next() {
             return next;
         }
 
         @Override
-        public void setPre(DoubleLine<T> pre) {
+        public void setPre(DoubleLink<T> pre) {
             this.pre = pre;
         }
 
         @Override
-        public DoubleLine<T> pre() {
+        public DoubleLink<T> pre() {
             return pre;
         }
     }
 
 
 }
+
+```

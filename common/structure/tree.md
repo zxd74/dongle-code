@@ -1,5 +1,37 @@
-package language.java.practice.structure.tree;
+```java
+public abstract class AbstractNode<T> {
 
+    protected AbstractNode(T t){}
+}
+```
+```java
+public abstract class AbstractNode<T> {
+
+    protected AbstractNode(T t){}
+}
+```
+```java
+import javax.validation.constraints.NotNull;
+
+/**
+ * @author Dongle
+ * @desc
+ * @since 2022/3/23 10:07
+ */
+public class BNode<T> extends AbstractNode<T>{
+
+    T t;
+    protected BNode<T> parent;
+    protected BNode<T> leftNode;
+    protected BNode<T> rightNode;
+
+    public BNode(@NotNull T t) {
+        super(t);
+        this.t = t;
+    }
+}
+```
+```java
 import javax.validation.constraints.NotNull;
 
 /**
@@ -297,3 +329,4 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T>{
                 height(parent.leftNode,node) : height(parent.rightNode,node);
     }
 }
+```

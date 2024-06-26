@@ -1,8 +1,4 @@
-package language.java.practice.structure;
-
-import LineMemo.Line;
-import LineMemo.DoubleLine;
-
+```java
 public class QueueDemo{
     
     /**
@@ -10,23 +6,23 @@ public class QueueDemo{
      */
     interface Queue<T>{
         int size();
-        DoubleLine<T> head();
-        DoubleLine<T> end();
-        void setRight(DoubleLine<T> right);
+        DoubleLink<T> head();
+        DoubleLink<T> end();
+        void setRight(DoubleLink<T> right);
     }
     private static class SimpleQueue<T> implements Queue<T>{
-        DoubleLine<T> head;
-        DoubleLine<T> end;
-        DoubleLine<T> line;
+        DoubleLink<T> head;
+        DoubleLink<T> end;
+        DoubleLink<T> link;
         int size;
 
-        public SimpleQueue(DoubleLine<T> line) {
-            if (line == null){
+        public SimpleQueue(DoubleLink<T> link) {
+            if (link == null){
                 return;
             }
-            this.line = line;
+            this.link = link;
             ++size;
-            handlerLine(line);
+            handlerLink(link);
         }
 
         @Override
@@ -35,41 +31,41 @@ public class QueueDemo{
         }
 
         @Override
-        public DoubleLine<T> head() {
+        public DoubleLink<T> head() {
             return head;
         }
 
         @Override
-        public void setRight(DoubleLine<T> right) {
+        public void setRight(DoubleLink<T> right) {
             if (right == null){
                 return;
             }
-            this.line.addNext(right);
+            this.link.addNext(right);
             ++size;
-            handlerLine(right);
+            handlerLink(right);
         }
 
         @Override
-        public DoubleLine<T> end() {
+        public DoubleLink<T> end() {
             return this.end;
         }
 
-        private void handlerLine(DoubleLine<T> line){
-            if (line == null){
+        private void handlerLink(DoubleLink<T> link){
+            if (link == null){
                 return;
             }
-            DoubleLine<T> pre = line;
+            DoubleLink<T> pre = link;
             while (pre.pre() != null){
                 pre = pre.pre();
                 ++size;
             }
             this.head = pre;
-            Line<T> next = line;
+            Link<T> next = link;
             while (next.next() != null){
                 next = next.next();
                 ++size;
             }
-            this.end = (DoubleLine<T>) next;
+            this.end = (DoubleLink<T>) next;
         }
     }
 
@@ -77,21 +73,21 @@ public class QueueDemo{
      * 依据双方向链，组成双向队列
      */
     interface DoubleQueue<T> extends Queue<T>{
-        void setLeft(DoubleLine<T> left);
+        void setLeft(DoubleLink<T> left);
     }
     private static class SimpleDoubleQueue<T> implements DoubleQueue<T>{
-        DoubleLine<T> head;
-        DoubleLine<T> end;
-        DoubleLine<T> line;
+        DoubleLink<T> head;
+        DoubleLink<T> end;
+        DoubleLink<T> link;
         int size;
 
-        public SimpleDoubleQueue(DoubleLine<T> line) {
-            if (line == null){
+        public SimpleDoubleQueue(DoubleLink<T> link) {
+            if (link == null){
                 return;
             }
-            this.line = line;
+            this.link = link;
             ++size;
-            handlerLine(line);
+            handlerLink(link);
         }
 
         @Override
@@ -100,51 +96,52 @@ public class QueueDemo{
         }
 
         @Override
-        public DoubleLine<T> head() {
+        public DoubleLink<T> head() {
             return head;
         }
 
         @Override
-        public void setRight(DoubleLine<T> right) {
+        public void setRight(DoubleLink<T> right) {
             if (right == null){
                 return;
             }
-            this.line.addNext(right);
+            this.link.addNext(right);
             ++size;
-            handlerLine(right);
+            handlerLink(right);
         }
 
         @Override
-        public DoubleLine<T> end() {
+        public DoubleLink<T> end() {
             return this.end;
         }
 
         @Override
-        public void setLeft(DoubleLine<T> left) {
+        public void setLeft(DoubleLink<T> left) {
             if (left == null){
                 return;
             }
-            this.line.setPre(left);
+            this.link.setPre(left);
             ++size;
-            handlerLine(left);
+            handlerLink(left);
         }
 
-        private void handlerLine(DoubleLine<T> line){
-            if (line == null){
+        private void handlerLink(DoubleLink<T> link){
+            if (link == null){
                 return;
             }
-            DoubleLine<T> pre = line;
+            DoubleLink<T> pre = link;
             while (pre.pre() != null){
                 pre = pre.pre();
                 ++size;
             }
             this.head = pre;
-            Line<T> next = line;
+            Link<T> next = link;
             while (next.next() != null){
                 next = next.next();
                 ++size;
             }
-            this.end = (DoubleLine<T>) next;
+            this.end = (DoubleLink<T>) next;
         }
     }
 }
+```

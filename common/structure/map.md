@@ -1,8 +1,5 @@
-package language.java.practice.structure;
-
+```java
 public class MapDemo {
-    
-    
     /**
      * Map接口
      * @param <K>
@@ -177,3 +174,5 @@ public class MapDemo {
         }
     }
 }
+
+```
