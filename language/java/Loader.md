@@ -7,7 +7,7 @@
    1. sun.misc.Launcher负责加载用户路径ClassPath指定类
 4. 自定义类加载器
 
-### 类加载方式
+## 类加载方式
 1. 命令行启动由JVM初始化加载
 2. 通过Class.forName()动态加载
    1. 分初始化和不初始化(该初始化为变量默认值)
@@ -168,4 +168,101 @@ public class Reflect{
         }
     }
 }
+```
+
+# 代理
+## 静态代理
+1. 定义通用接口
+2. 定义接口实现类
+3. 定义一个实现类的代理类
+4. 使用时，通过代理类调用接口方法
+```java
+public interface Subject {
+    void request();
+}
+public class RealSubject implements Subject {
+    @Override
+    public void request() {
+        System.out.println("RealSubject");
+    }
+}
+public class RealProxy implements Subject {
+    private Subject subject;
+    public RealProxy(Subject subject) {
+        this.subject = subject;
+    }
+}
+    public static void main(String[] args) {
+        RealSubject realSubject = new RealSubject();
+        RealProxy proxy = new RealProxy(realSubject);
+        proxy.request();
+        // 输出：RealSubject
+    }
+```
+## 动态代理
+### JDK动态代理
+1. 定义通用服务接口
+2. 定义接口实现类
+3. 定义服务调用处理器，实现`InvocationHandler`接口
+4. 使用`Proxy.newProxyInstance`方法创建代理对象: 需要用真实对象的类加载器，接口数组，处理器实例
+5. 使用代理对象调用接口方法
+```java
+interface Service {
+    void perform();
+}
+
+class ServiceImpl implements Service {
+    public void perform() {
+        System.out.println("Service performed.");
+    }
+}
+class ServiceInvocationHandler implements InvocationHandler {
+    private Object target;
+
+    public ServiceInvocationHandler(Object target) {
+        this.target = target;
+    }
+
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("Before service");
+        Object result = method.invoke(target, args);
+        System.out.println("After service");
+        return result;
+    }
+}
+
+    public static void main(String[] args) {
+        Service service = new ServiceImpl();
+        Service proxy = (Service) Proxy.newProxyInstance(
+                service.getClass().getClassLoader(),
+                service.getClass().getInterfaces(),
+                new ServiceInvocationHandler(service)
+        );
+        proxy.perform();
+    }
+```
+### CGLIB动态代理
+1. 定义普通类()
+2. 定义方法拦截器，实现`MethodInterceptor`接口（cglib库）
+3. 通过`Enhancer`类创建代理对象
+4. 使用代理对象调用方法
+```java
+class Service {
+    public void perform() {
+        System.out.println("Service performed.");
+    }
+}
+class ServiceInterceptor implements MethodInterceptor {
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        Object result = proxy.invokeSuper(obj, args);
+        return result;
+    }
+}
+    public static void main(String[] args) {
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(Service.class);
+        enhancer.setCallback(new ServiceInterceptor());
+        Service proxy = (Service) enhancer.create();
+        proxy.perform();
+    }
 ```
