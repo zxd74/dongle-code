@@ -1,13 +1,13 @@
 # Slf4j
 
 ## slf4j + log4j支持
-
 ```xml
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.25</version>
         </dependency>
+        <!-- slf4j-log4j12内部会依赖 slf4j-api，所以无需单独再重新依赖，除非不同版本-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
@@ -16,7 +16,6 @@
 ```
 
 ## Slf4j + log4j2支持
-
 ```xml
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -42,7 +41,6 @@
 ```
 
 ## 日志输出配置
-
 ```properties
 #定义主要日志级别，及日志分类
 log4j.rootLogger=DEBUG,console,file
