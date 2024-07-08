@@ -86,8 +86,8 @@ public static void main(String[] args) throws Exception {
     job.setReducerClass(MyReduce.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Long.class);
-    FileInputFormat.addInputPath(job,new Path("ddd"));  // 注意不要和org.apache.hadoop.mapred.FileInputFormat搞混，如果使用，可以通过Job.getConfiguration()作为参数
-    FileOutputFormat.setOutputPath(job,new Path("ddd")); // org.apache.hadoop.mapred.FileInputFormat(job.getConfiguration,new Path("ddd"))，同理
+    FileInputFormat.addInputPath(job,new Path(args[0]));  // 注意不要和org.apache.hadoop.mapred.FileInputFormat搞混，如果使用，可以通过Job.getConfiguration()作为参数
+    FileOutputFormat.setOutputPath(job,new Path(args[1])); // org.apache.hadoop.mapred.FileInputFormat(job.getConfiguration,new Path("ddd"))，同理
     job.waitForCompletion(true);
 }
 ```
