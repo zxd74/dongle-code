@@ -20,7 +20,19 @@ public static void main(String[] args) {
 
     for (int i = 0; i < 10; i++) {
         ProducerRecord<String,String> record = new ProducerRecord<>("","","");
-        producer.send(record);
+        // producer.send(record);
+        producer.send(record, new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata metadata, Exception exception) {
+                if (exception!=null){
+                    // 存在异常
+                    return;
+                }
+                if (metadata!=null){
+                    // 真正发送成功
+                }
+            }
+        });
     }
     producer.flush();
     producer.close();
@@ -36,13 +48,35 @@ public static void main(String[] args) {
     kafkaProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
     KafkaConsumer<String,String> consumer = new KafkaConsumer<>(kafkaProps);
+    consumer.subscribe(Collections.singleton("test")) // 监听topic，如果没有，则poll时异常
+    // consumer.subscribe(Collections.singleton("test"), new ConsumerRebalanceListener() {
+    //     static Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
+    //     @Override
+    //     public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+    //         consumer.commitSync(currentOffsets);
+    //     }
+
+    //     @Override
+    //     public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+    //         long committedOffset = -1;
+    //         for (TopicPartition topicPartition : partitions) {
+    //             // 获取该分区已经提交的偏移量
+    //             committedOffset = consumer.committed(topicPartition).offset();
+    //             System.out.println("重新分配分区，提交的偏移量：" + committedOffset);
+    //             // 重置偏移量到上一次提交的偏移量的下一个位置处开始消费
+    //             consumer.seek(topicPartition, committedOffset + 1);
+    //         }
+    //     }
+    // });
     while (true){
         ConsumerRecords<String,String> records = consumer.poll(100);
         for (ConsumerRecord<String,String> record:records){
             System.out.println("topic = " + record.topic() + " offset = " + record.offset() + " value = " + record.value());
         }
-        consumer.commitAsync();
+        consumer.commitAsync(); // 手动消费确认
     }
+
+
 }
 ```
 
