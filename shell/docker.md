@@ -1,0 +1,47 @@
+# 安装
+```shell
+yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+
+yum install -y yum-utils
+
+# curl http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+systemctl enable docker
+systemctl start docker
+```
+# 私有镜像
+```shell
+# registry server
+docker pull registry
+docker run -d -p <port>:5000 --restart=always --name registry -v /data/docker/registry:/var/lib/registry registry:latest
+```
+```shell
+# docker client
+# 配置
+echo "127.0.0.1 registry.server.host" >> /etc/hosts
+vi /data/docker/daemon.json
+{
+  "insecure-registries":["<registry.server.host>:<port>"]
+}
+
+# 重启
+systemctl daemon-reload
+systemctl restart docker # server docker restart
+
+# 使用
+docker pull/push <registry.server.host>:<port>/reposition_name:tag
+```
+# docker脚本
+```shell
+# python environment
+pip install docker
+```
+## 获取容器列表
+```py
+import docker
+client = docker.from_env()
+containers = client.containers.list()
+```
