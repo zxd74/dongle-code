@@ -268,3 +268,66 @@ class Solution:
                 roman += romans[s[i]]
         return roman
 ```
+
+# 返回最长公共字符串前缀
+    Write a function to find the longest common prefix string amongst an array of strings.
+    If there is no common prefix, return an empty string "".
+* 个人版
+```java
+public String longestCommonPrefix(String[] strs){
+    if (strs == null || strs.length == 0) return "";
+    if (strs.length == 1 && strs[0]!=null) return strs[0];
+    StringBuilder sb = new StringBuilder();
+    int len = 0;boolean cur=true;
+    all: while(true){
+        char c = 0;
+        boolean cur_first=true;
+        for (String str : strs) {
+            if (str == null || len == str.length() || !cur)
+                break all;
+            if (cur_first) {
+                c = str.charAt(len);
+                cur_first = false;
+            }
+            cur = c == str.charAt(len);
+        }
+        if (cur){
+            sb.append(c);
+            len++;
+        }else {
+            break;
+        }
+    }
+    return sb.toString();
+}
+```
+* 官方最优解法
+  * 先选一个前缀，用前缀与其它比较
+  * 使用indexOf方法判断是否存在，不存在减一位继续
+  * 不足：未判空，并且前缀缩减至空时应终止程序
+```java
+public String longestCommonPrefix(String[] strs){
+    String prefix=strs[0];
+    for (int i = 1; i < strs.length; i++) {
+        while (strs[i].indexOf(prefix)!=0)
+            prefix = prefix.substring(0,prefix.length()-1);
+    }
+    return prefix;
+}
+```
+* 修订版
+```java
+public String longestCommonPrefix(String[] strs){
+    // 预处理
+    if (strs == null || strs.length == 0) return "";
+    if (strs.length == 1 && strs[0]!=null) return strs[0];
+    String prefix=strs[0];
+    for (int i = 1; i < strs.length; i++) {
+        if(strs[i]==null || strs[i].equals("")) return ""; // 判空
+        while (strs[i].indexOf(prefix)!=0)
+            prefix = prefix.substring(0,prefix.length()-1);
+            if(prefix.equals("")) return "";//防止缩减至空
+    }
+    return prefix;
+}
+```
