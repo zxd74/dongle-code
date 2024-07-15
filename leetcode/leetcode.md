@@ -269,7 +269,7 @@ class Solution:
         return roman
 ```
 
-# 返回最长公共字符串前缀
+# 14 返回最长公共字符串前缀
     Write a function to find the longest common prefix string amongst an array of strings.
     If there is no common prefix, return an empty string "".
 * 个人版
@@ -329,5 +329,187 @@ public String longestCommonPrefix(String[] strs){
             if(prefix.equals("")) return "";//防止缩减至空
     }
     return prefix;
+}
+```
+
+# 20 括号开闭校验
+    Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
+
+    An input string is valid if:
+     Open brackets must be closed by the same type of brackets.
+     Open brackets must be closed in the correct order.
+     Every close bracket has a corresponding open bracket of the same type.
+
+* 算法逻辑：
+  * 开括号入栈，比括号同类型出栈
+* 初版
+  * 代码较多，但简单易懂
+  * 使用了java源码的Stack类，对象比较大
+```java
+public static boolean isValid(String s){
+    Stack<Integer> stack = new Stack<>();
+    boolean flag = true;
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
+        if (c == '(') {
+            stack.push(1);
+        }
+        if (c == ')') {
+            if (stack.isEmpty() || stack.pop()!=1) {
+                return false;
+            }
+        }
+        if (c == '[') {
+            stack.push(2);
+        }
+        if (c == ']') {
+            if (stack.isEmpty() || stack.pop()!=2) {
+                return false;
+            }
+        }
+        if (c == '{') {
+            stack.push(3);
+        }
+        if (c == '}') {
+            if (stack.isEmpty() || stack.pop()!=3) {
+                return false;
+            }
+        }
+    }
+    return flag && stack.isEmpty();
+}
+```
+* 优解
+  * 代码简洁，但可读性较差
+  * 逻辑：开括号入栈，比括号同类型出栈
+```java
+public boolean isValid(String s) {
+    int i=-1;
+    char[] stack=new char[s.length()];
+
+    for(char ch:s.toCharArray())
+    {
+        if(ch=='[' ||ch=='{' ||ch=='('){
+            stack[++i]=ch;
+        }
+        else{
+            if(i>=0 && ((stack[i]=='{' && ch=='}') ||
+                        (stack[i]=='[' && ch==']') ||
+                        (stack[i]=='(' && ch==')')))
+                --i;
+            else
+                return false;
+        }
+    }
+    return i==-1;
+}
+```
+* 修订出版
+```java
+public boolean isValid(String s) {
+    Stack<Character> stack = new Stack<>();
+    Character pre;
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
+        if (c == '(' || c == '[' || c == '{') {
+            stack.push(c);
+        }
+        else{
+            if (stack.isEmpty()) {
+                return false;
+            }
+            pre = stack.pop();
+            if ((c==')' && pre!='(')||(c==']' && pre!='[')||(c=='}' && pre!='{')) {
+                return false;
+            }
+        }
+    }
+    return stack.isEmpty();
+}
+```
+# 21 合并两个有序列表
+    You are given the heads of two sorted linked lists list1 and list2.
+
+    Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.
+
+    Return the head of the merged linked list.
+```java
+public static class ListNode {
+    int val;
+    ListNode next;
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+```
+* 个人实践
+  * 基础实践
+  * 代码繁琐，局部变量定义较多
+```java
+public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+    ListNode list=null,next = null,node;
+    while(true){
+        if(list1 == null || list2 == null) {
+            if(list == null){
+                list = list1 ==null?list2:list1;
+            }else{
+                next.next = list1 ==null?list2:list1;
+            }
+            break;
+        }
+
+        if(list2.val > list1.val){
+            node = list1;
+            list1 = list1.next;
+        }else{
+            node = list2;
+            list2 = list2.next;
+        }		
+        node.next = null;
+        if(list==null){
+            list =next =  node;
+        }else{
+            next.next = node;
+            next = node;
+        }
+    }
+    return list;
+}
+```
+```java
+// 个人版修订，但不推荐
+public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+    ListNode list=new ListNode(-101),next = list;
+    while(true){
+        if(list1 == null || list2 == null) {
+            next.next = list1 ==null?list2:list1;
+            break;
+        }
+
+        if(list2.val > list1.val){
+            next.next = list1;
+            list1 = list1.next;
+        }else{
+            next.next = list2;
+            list2 = list2.next;
+        }
+        next = next.next;
+    }
+    return list.next;
+}
+```
+* 最优解
+  * 代码少，使用递归逻辑实现，无局部变量
+```java
+public static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+    if (list1 == null) return list2;
+    if (list2 == null) return list1;
+    if (list1.val < list2.val) {
+        list1.next = mergeTwoLists(list1.next, list2);
+        return list1;
+    }else {
+        list2.next = mergeTwoLists(list1, list2.next);
+        return list2;
+    }
 }
 ```
