@@ -204,7 +204,7 @@ class Solution {
 
 # 10 正则表达式匹配
 
-# 13 Roman to Integer
+# 13 Roman to Integer(中)
     Roman numerals are usually written largest to smallest from left to right.
     I can be placed before V (5) and X (10) to make 4 and 9. 
     X can be placed before L (50) and C (100) to make 40 and 90. 
@@ -514,15 +514,15 @@ public static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
 }
 ```
 
-# 最大水量(中)
+# 11 最大水量(中)
     You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
 
     Find two lines that together with the x-axis form a container, such that the container contains the most water.
 
 * 约束：
   * `n == height.length`
-  * `2 <= n <= 105`
-  * `0 <= height[i] <= 104`
+  * `2 <= n <= 10^5`
+  * `0 <= height[i] <= 10^4`
 * 个人解法:逻辑通，但超时
 ```java
 public static int maxArea(int[] height) {
@@ -563,3 +563,106 @@ class Solution {
 ```
 * 疑问：为什么最优解中，left和right的值一定会小于最大值?
   * 答案：因为每次循环，都会将left和right的值向中间移动，所以left和right的值一定会小于最大值
+* 最优解升级版:持续降低循环次数
+```java
+public int maxArea(int[] height) {
+    int max = 0;
+    int s = 0;
+    int e = height.length-1;
+
+    while(s<e){
+        int h = Math.min(height[s],height[e]);
+        int amt = h*(e-s);
+        if(max<amt) max = amt;
+        while(s<e && height[s]<=h){
+            s++;
+        }
+        while(s<e && height[e]<=h){
+            e--;
+        }
+    }
+    return max;
+}
+```
+# 12 Intege to Roman (中)
+    Roman numerals are formed by appending the conversions of decimal place values from highest to lowest. Converting a decimal place value into a Roman numeral has the following rules:
+* 逻辑
+  * If the value does not start with 4 or 9, select the symbol of the maximal value that can be subtracted from the input, append that symbol to the result, subtract its value, and convert the remainder to a Roman numeral.
+  * If the value starts with 4 or 9 use the subtractive form representing one symbol subtracted from the following symbol, for example, 4 is 1 (I) less than 5 (V): IV and 9 is 1 (I) less than 10 (X): IX. Only the following subtractive forms are used: 4 (IV), 9 (IX), 40 (XL), 90 (XC), 400 (CD) and 900 (CM).
+  * Only powers of 10 (I, X, C, M) can be appended consecutively at most 3 times to represent multiples of 10. You cannot append 5 (V), 50 (L), or 500 (D) multiple times. If you need to append a symbol 4 times use the subtractive form.
+* 约束 ：`1 <= num <= 3999`
+* 基本解法：分段处理
+  * 1000+
+  * >=500：900，500<900
+  * >=100: 400,100<400
+  * >=50: 90,50<90
+  * >=10: 40,10<40
+  * >=5: 9,5<9
+  * >0: 4,1<4
+```java
+public static String intToRoman(int num) {
+        StringBuilder sb = new StringBuilder();
+        while (num>=1000) {num -= 1000;sb.append("M");}
+        while (num>=500) {
+            if (num/100 == 9) {num -= 900;sb.append("CM");
+            }else{num -= 500;sb.append("D");}
+        }
+        while (num>=100) {
+            if (num/100 == 4) {num -= 400;sb.append("CD");
+            }else{num -= 100;sb.append("C");}
+        }
+        while (num>50) {
+            if (num/10 == 9) {num -= 90;sb.append("XC");
+            }else{num -= 50;sb.append("L");}
+        }
+        while (num>10) {
+            if (num/10 == 4) {num -= 40;sb.append("XL");
+            }else{num -= 10;sb.append("X");}
+        }
+        while (num>5) {
+            if (num == 9) {num -= 9;sb.append("IX");
+            }else{num -= 5;sb.append("V");}
+        }
+        while (num>0) {
+            if (num == 4) {num -= 4;sb.append("IV");
+            }else{num -= 1;sb.append("I");}
+        }
+        return sb.toString();
+    }
+```
+* 其它解法
+  * 将所有可能一一对应罗列，通过匹配方式输出
+```java
+// O(n)
+public String intToRoman(int num) {
+    int[] values = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
+    String[] romans = new String[]{"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
+    StringBuilder sb=new StringBuilder();
+    for(int i=0;i<values.length;i++){
+        while(num>=values[i]){
+            num-=values[i];
+            sb.append(romans[i]);
+        }
+    }
+    return sb.toString();
+}
+```
+```java
+// O(1)
+public String intToRoman(int num) {
+    string ones[] = new String[]{"","I","II","III","IV","V","VI","VII","VIII","IX"};
+    string tens[] = new String[]{"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
+    string hrns[] = new String[]{"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
+    string ths[]= new String[]{"","M","MM","MMM"};
+        
+    return ths[num/1000] + hrns[(num%1000)/100] + tens[(num%100)/10] + ones[num%10];
+}
+```
+# 15 Three Sum(中)
+    Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.
+
+    Notice that the solution set must not contain duplicate triplets.
+
+* 约束：
+  * `3 <= nums.length <= 3000`
+  * `-10^5 <= nums[i] <= 10^5`
