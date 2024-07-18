@@ -636,7 +636,7 @@ public static String intToRoman(int num) {
 // O(n)
 public String intToRoman(int num) {
     int[] values = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
-    String[] romans = new String[]{"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
+    String[] romans = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
     StringBuilder sb=new StringBuilder();
     for(int i=0;i<values.length;i++){
         while(num>=values[i]){
@@ -650,10 +650,10 @@ public String intToRoman(int num) {
 ```java
 // O(1)
 public String intToRoman(int num) {
-    string ones[] = new String[]{"","I","II","III","IV","V","VI","VII","VIII","IX"};
-    string tens[] = new String[]{"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
-    string hrns[] = new String[]{"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
-    string ths[]= new String[]{"","M","MM","MMM"};
+    string ones[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};
+    string tens[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
+    string hrns[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
+    string ths[]= {"","M","MM","MMM"};
         
     return ths[num/1000] + hrns[(num%1000)/100] + tens[(num%100)/10] + ones[num%10];
 }
@@ -666,3 +666,62 @@ public String intToRoman(int num) {
 * 约束：
   * `3 <= nums.length <= 3000`
   * `-10^5 <= nums[i] <= 10^5`
+
+* 个人版：超时，
+  * 原因：三重循环，并且判重逻辑，补充额外大对象变量
+```java
+public List<List<Integer>> threeSum(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    Map<String, Integer> sets = new HashMap<>();
+    for(int i = 0; i < nums.length - 2; i++){
+        for(int j = i + 1; j < nums.length - 1; j++){
+            for(int k = j + 1; k < nums.length; k++){
+                if(nums[i] + nums[j] + nums[k] == 0){
+                    List<Integer> list = Arrays.asList(nums[i], nums[j], nums[k]);
+                    list.sort((l1,l2)->l1-l2);
+                    String key = list.get(0) + "," + list.get(1) + "," + list.get(2);
+                    if (!sets.containsKey(key)) {
+                        result.add(list);
+                        sets.put(key, null);
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+```
+* 最优解：首先对数组进行排序，根据排序结果再匹配
+  * 为避免相邻元素重复：第一和第二个元素都要对相同值跳过
+  * 第一和第二从左侧开始，第三从右侧开始匹配
+    * 若和大于0，则第三过大，向左移动
+    * 若和小于0，则第二过小，向右移动
+    * 若和等于0，则加入结果集，同时第二向右移动
+  * 两重循环；通过排序解决重复问题
+```java
+public List<List<Integer>> threeSum(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    Arrays.sort(nums); // 重点，先排序
+
+    for(int i = 0; i < nums.length -2; i++){
+        if (i > 0 && nums[i] == nums[i-1]) {continue;} // 避免重复，因已排序，故而相邻相同时，对应的结果相同
+        
+        int j = i + 1, k = nums.length - 1;
+        if (nums[i] + nums[j] + nums[k]>0) {break;} // 修订：当初次匹配的和大于0，则无需继续，因已排序，和只会越来越大
+
+        while (j<k) {
+            int total = nums[i] + nums[j] + nums[k];
+            if (total>0) {k--;}
+            else if (total<0) {j++;}
+            else{
+                result.add(Arrays.asList(nums[i], nums[j], nums[k]));
+                j++;
+                while (j<k && nums[j] == nums[j-1]) { // 避免第二元素重复，同理
+                    j++;
+                }
+            }
+        }
+    }
+    return result;
+}
+```
