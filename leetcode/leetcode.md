@@ -513,3 +513,53 @@ public static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
     }
 }
 ```
+
+# 最大水量(中)
+    You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
+
+    Find two lines that together with the x-axis form a container, such that the container contains the most water.
+
+* 约束：
+  * `n == height.length`
+  * `2 <= n <= 105`
+  * `0 <= height[i] <= 104`
+* 个人解法:逻辑通，但超时
+```java
+public static int maxArea(int[] height) {
+    int min=0,max=Math.min(height[0], height[1]);
+    for(int i=2;i<height.length;i++){
+        for(int j = 0;j<i;j++){
+            min = Math.min(height[j], height[i]) * (i-j);
+            if (min>max) {
+                max = min;
+            }
+        }
+    }
+    return max;
+}
+```
+* 最优解
+```java
+class Solution {
+    public int maxArea(int[] height) {
+        int left = 0;
+        int right = height.length - 1;
+        int maxArea = 0;
+
+        while (left < right) {
+            int currentArea = Math.min(height[left], height[right]) * (right - left);
+            maxArea = Math.max(maxArea, currentArea);
+
+            if (height[left] < height[right]) {
+                left++;
+            } else {
+                right--;
+            }
+        }
+
+        return maxArea;
+    }
+}
+```
+* 疑问：为什么最优解中，left和right的值一定会小于最大值?
+  * 答案：因为每次循环，都会将left和right的值向中间移动，所以left和right的值一定会小于最大值
