@@ -725,3 +725,27 @@ public List<List<Integer>> threeSum(int[] nums) {
     return result;
 }
 ```
+# 16 最接近目标值的三数之和
+    Given an integer array nums of length n and an integer target, find three integers in nums such that the sum is closest to target.
+
+* 思路：和三数之和为0的问题类似，先排序，然后比较
+```java
+public int threeSumClosest(int[] nums, int target) {
+    Arrays.sort(nums);
+    int count = -1001;
+    for (int i = 0; i < nums.length; i++) {
+        int j = i + 1, k = nums.length - 1;
+        while (j < k) {
+            int sum = nums[i] + nums[j] + nums[k];
+            if (sum == target) return target;
+
+            if (count == -1001) count = sum;
+            if(sum < target) j++;
+            else if (sum> target) k--;
+
+            if (Math.abs(sum - target)<Math.abs(count - target)) count = sum;
+        }
+    }
+    return count;
+}
+```
