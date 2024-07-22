@@ -749,3 +749,68 @@ public int threeSumClosest(int[] nums, int target) {
     return count;
 }
 ```
+
+# 17 电话号码的字母组合
+    Given a string containing digits from 2-9 inclusive, return all possible letter combinations that the number could represent. Return the answer in any order.
+
+    A mapping of digits to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.
+
+    { "2":"abc", "3":"def", "4":"ghi", "5":"jkl", "6":"mno", "7":"pqrs", "8":"tuv", "9":"wxyz" }
+
+* 约束
+  * `0 <= digits.length <= 4`
+  * `digits[i] is a digit in the range ['2', '9'].`
+* 个人版：字符串循环拼接
+```java
+public List<String> letterCombinations(String digits) {
+    List<String> result = new ArrayList<>();
+
+    String[] letters = { "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz" };
+
+    for (int i = 0; i < digits.length(); i++) {
+        String[] letter = letters[digits.charAt(i) - 50].split("");
+
+        if (result.size() == 0) {
+            result.addAll(Arrays.asList(letter));
+            continue;
+        }
+
+        List<String> temp = new ArrayList<>();
+        for (String str : letter) {
+            for(String str2:result) temp.add(str2 + str);
+        }
+        result = temp;
+    }
+
+    return result;
+}
+```
+* 升级版：
+  * 使用StringBuilder加速字符串拼接
+  * 使用回溯法取代循环，缩减代码
+```java
+public List<String> letterCombinations(String digits) {
+    List<String> result = new ArrayList<>();
+
+    String[] letters = { "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz" };
+
+    combina(digits, letters, new StringBuilder(), 0, result);
+
+    return result;
+}
+
+private void combina(String digits,String[] letters, StringBuilder sb,int start, List<String> result){
+    if (start == digits.length()) {
+        result.add(sb.toString());
+        return;
+    }
+
+    String[] strs = letters[digits.charAt(start) - 50].split("");
+    for (int i = 0; i < strs.length; i++) {
+        sb.append(strs[i]);
+        combina(digits, letters, sb, start + 1, result);
+        sb.deleteCharAt(sb.length() - 1);
+    }
+
+}
+```
