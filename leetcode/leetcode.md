@@ -814,3 +814,81 @@ private void combina(String digits,String[] letters, StringBuilder sb,int start,
 
 }
 ```
+# 18 四数之和
+    Given an array nums of n integers, return an array of all the unique quadruplets [nums[a], nums[b], nums[c], nums[d]] such that:
+    * 0 <= a, b, c, d < n
+    * a, b, c, and d are distinct.
+    * nums[a] + nums[b] + nums[c] + nums[d] == target
+
+* 约束
+  * `1 <= nums.length <= 200`
+  * `-10^9 <= nums[i] <= 10^9`
+  * `-10^9 <= target <= 10^9`
+* 思考
+  * 仿照三数之和，先排序，再对比
+  * 由于数值元素限制，四数之和可能大于Integer，使用long类型转换，避免溢出
+  * 固定前两个和，由后两个和与差值做对比，避免重复计算前两个和
+  * 若循环者下一个值与前一个值相同，则跳过，进入下一次循环
+* 个人版
+```java
+public List<List<Integer>> fourSum(int[] nums, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    Arrays.sort(nums);
+    for (int i = 0; i < nums.length - 3; i++) {
+        if(i>0 && nums[i]==nums[i-1]) continue; 
+        for (int j = i+1; j < nums.length - 2 ; j++) {
+            if (j>i+1 && nums[j] == nums[j-1]) continue;
+
+            int k = j+1, l = nums.length - 1;
+            while (k < l) {
+                long sum = (long)nums[i] + nums[j] + nums[k] + nums[l];
+                if (sum > Integer.MAX_VALUE) {
+                    l--;
+                    continue;
+                }
+                
+                if (sum < target) k++;
+                else if (sum>target) l--;
+                else{
+                    res.add(Arrays.asList(nums[i], nums[j], nums[k], nums[l]));
+                    while (k<l && nums[k] == nums[k+1]) k++;
+                    while (k<l && nums[l] == nums[l-1]) l--;
+                    k++;
+                }
+            }
+        }
+    }
+
+    return res;
+}
+```
+* 优化版
+  * 固定前两个和，避免重复计算
+```java
+public List<List<Integer>> fourSum(int[] nums, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    Arrays.sort(nums);
+    for (int i = 0; i < nums.length - 3; i++) {
+        if(i>0 && nums[i]==nums[i-1]) continue; 
+        for (int j = i+1; j < nums.length - 2 ; j++) {
+            if (j>i+1 && nums[j] == nums[j-1]) continue;
+            long sum = (long)target - nums[i] - nums[j];
+            int k = j+1, l = nums.length - 1;
+            while (k < l) {
+                long twosum = nums[k] + nums[l];
+                if (sum < twosum)  l--;
+                else if (sum > twosum) k++;
+                else{
+                    res.add(Arrays.asList(nums[i], nums[j], nums[k], nums[l]));
+                    while (k<l && nums[k] == nums[k+1]) k++;
+                    while (k<l && nums[l] == nums[l-1]) l--;
+                    k++;
+                    l--;
+                }
+            }
+        }
+    }
+
+    return res;
+}
+```
