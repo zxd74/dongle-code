@@ -892,3 +892,61 @@ public List<List<Integer>> fourSum(int[] nums, int target) {
     return res;
 }
 ```
+
+# 19 从List结尾移除第N项节点
+    Given the head of a linked list, remove the nth node from the end of the list and return its head.
+* **约束**
+  * 1 <= sz <= 30
+  * 0 <= Node.val <= 100
+  * 1 <= n <= sz
+```java
+public class ListNode {
+    int val;
+    ListNode next;
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+```
+* 普通版：
+  * 时间复杂度为O(n)
+  * 易理解
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode next = head;int total = 0;
+    while (next != null) {
+        total++;
+        next = next.next;
+    }
+    if (total == n) {
+        return head.next;
+    }
+    total = total - n;
+    next = head;
+    while (total>1) {
+        total--;
+        next = next.next;
+    }
+    next.next = next.next.next;
+    return head;
+}
+``
+* 递归版
+    * 时间复杂度高于O(n),低于O(n^2)
+    * 使用了递归思想，简化了代码
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    return removeNthFromEnd(head,head,n);
+}
+private ListNode removeNthFromEnd(ListNode head,ListNode node,int n){
+    int size = ListNodeSize(node);
+    if (size-1 > n ) return removeNthFromEnd(head,node.next,n);
+    if (size  == n) return head.next;
+    node.next = node.next.next;
+    return head;
+}
+private int ListNodeSize(ListNode node){
+    if (node == null) return 0;
+    return ListNodeSize(node.next)+1;
+}
+```
