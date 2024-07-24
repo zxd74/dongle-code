@@ -1001,3 +1001,98 @@ public void generateParenthesis(List<String> result, StringBuilder sb, int leftC
     }
 }
 ```
+# 23 合并多个有序链表
+    You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.
+* 约束：
+  * `k == lists.length`
+  * `0 <= k <= 10^4`
+  * `0 <= lists[i].length <= 500`
+  * `-10^4 <= lists[i][j] <= 10^4`
+  * `lists[i] is sorted in ascending order.`
+  * `The sum of lists[i].length will not exceed 10^4.`
+```java
+public static class ListNode {
+    int val;
+    ListNode next;
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+```
+* 个人版：
+  * 针对链表操作，头部初始化自定义，后续节点在next处绑定，避免判断头部是否为空
+  * 遍历链表，按顺序插入到新链表中
+  * 时间复杂度O(n^2)
+```java
+public static ListNode mergeKLists(ListNode[] lists) {
+    if (lists.length == 0) return null;
+    if(lists.length == 1) return lists[0];
+    ListNode head = new ListNode(),list,pre,node ;
+    for(int i = 0;i<lists.length;i++){
+        if((node = lists[i]) == null) continue;
+        if (head.next == null) {
+            head.next = node;
+            continue;
+        }
+        pre = head;
+        list = head.next;
+        while(list!=null && node != null){
+            if(list.val<=node.val){
+                pre = pre.next = list;
+                list = list.next;
+                continue;
+            }
+            
+            pre = pre.next = node;
+            node = node.next;
+            
+        }
+        ListNode tmp = list == null ? node : list;
+        while (tmp!=null) {
+            pre = pre.next = tmp;
+            tmp = tmp.next;
+        }
+    }
+    return head.next;
+}	
+```
+* 官方优解
+  * 采用递归算法，最优解为单独一个ListNode
+  * 采用二分法排序，直至最终只有一个元素结果
+  * 时间复杂度O(n)
+```java
+public ListNode mergeKLists(ListNode[] lists) {
+    if (lists.length == 0)  return null;
+    if (lists.length == 1) return lists[0];
+    return mergeSorted(0,lists.length-1,lists);
+}
+
+public ListNode mergeSorted(int start,int end,ListNode[] lists){
+    if (start == end) {
+        return lists[start];
+    }
+    int mid = (start + end) >>> 1;
+    ListNode left = mergeSorted(start,mid,lists),right = mergeSorted(mid+1,end,lists);
+    return mergeTwoLists(left, right);
+}
+public ListNode mergeTwoLists(ListNode list1,ListNode list2){
+    ListNode head = new ListNode();
+    ListNode next = head;
+    while(list1!=null && list2!=null){
+        if(list1.val<=list2.val){
+            next = next.next = list1;
+            list1 = list1.next;
+            continue;
+        }
+        
+        next = next.next = list2;
+        list2 = list2.next;
+    }
+    ListNode tmp = list1!=null ? list1 : list2;
+    while (tmp !=null) {
+        next = next.next = tmp;
+        tmp = tmp.next;
+    }
+    return head.next;
+}
+```
