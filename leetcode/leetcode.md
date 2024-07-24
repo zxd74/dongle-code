@@ -950,3 +950,54 @@ private int ListNodeSize(ListNode node){
     return ListNodeSize(node.next)+1;
 }
 ```
+# 20 括号的可能组合
+    Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+* 约束
+  * `1 <= n <= 8`
+  * 结果需要**排序**，否则和LeetCode结果顺序不一致就会错误
+* 个人版
+  * 初次想法：比前一个，将括号添加到每个元素头部，尾部，外部，有缺漏(无法在中间插入，导致缺失部分可能性)
+  * 最终想法：对一个单独括号匹配，给这个单括号在外部和相邻位置分别再加一个单括号，然后越过该单括号位置后，再继续下一次循环，直至找不到为止
+    * 由于其它情形存在，最终合并后就包含所有
+    * **时间复杂度O(n^2)**
+```java
+public List<String> generateParenthesis(int n){
+    if(n == 1) return Collections.singletonList("()");
+    Set<String> set = new HashSet<String>();
+    generateParenthesis(n-1).forEach(sub->{
+        int start = 0;
+        while ((start = sub.indexOf("()", start)) != -1) {
+            set.add(sub.substring(0, start) + "()()" + sub.substring(start + 2));
+            set.add(sub.substring(0, start) + "(())" + sub.substring(start + 2));
+            start += 2;
+        }
+    });
+    return set.stream().sorted().collect(Collectors.toList());
+}
+```
+* 官方较优解：分别从左右匹配,左侧每个位置加`(`,右侧每个位置加`)`，直至左右对等
+  * **时间复杂度 O(n)**
+```java
+public List<String> generateParenthesis(int n){
+    List<String> result = new ArrayList<String>();
+    StringBuilder sb = new StringBuilder();
+    generateParenthesis(result, sb, 0, 0, n);
+    return result;
+}
+public void generateParenthesis(List<String> result, StringBuilder sb, int leftCount,int rifghtCount,int n) {
+    if (leftCount == n && rifghtCount == n) {
+        result.add(sb.toString());
+        return;
+    }
+    if (leftCount<n) {
+        sb.append("(");
+        generateParenthesis(result, sb, leftCount + 1, rifghtCount, n);
+        sb.deleteCharAt(sb.length()-1); // 减去多增加的 ( 字符
+    }
+    if (rifghtCount<n && rightCount<leftCount) {
+        sb.append(")");
+        generateParenthesis(result, sb, leftCount, rifghtCount + 1, n);
+        sb.deleteCharAt(sb.length()-1); // 减去多增加的 ) 字符
+    }
+}
+```
