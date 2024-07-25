@@ -1159,3 +1159,33 @@ public static ListNode reverseKGroup1(ListNode head, int k) {
     return prev;
 }
 ```
+# 26 删除有序数组中的重复项
+    Given an integer array nums sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same. Then return the number of unique elements in nums.
+
+    Consider the number of unique elements of nums to be k, to get accepted, you need to do the following things:
+
+    Change the array nums such that the first k elements of nums contain the unique elements in the order they were present in nums initially. The remaining elements of nums are not important as well as the size of nums.
+    
+    Return k.
+
+* 约束
+  * `1 <= nums.length <= 3 * 10^4`
+  * `-100 <= nums[i] <= 100`
+  * `nums is sorted in non-decreasing order.`
+* 思路：
+  * 无需考虑第一个元素，遍历直接从第二个开始
+  * 记录结果有效元素索引
+  * 以遍历值和有效索引对应值比较
+    * 相等过滤
+    * 不等，在有效索引下一位填充该值
+  * 结果返回有效索引值+1
+```java
+public int removeDuplicates(int[] nums) {
+    int idx = 0;
+    for(int i = 1;i<nums.length;i++){
+        if(nums[idx] == nums[i]) continue;
+        nums[++idx] = nums[i];
+    }
+    return idx+1;
+}
+```
