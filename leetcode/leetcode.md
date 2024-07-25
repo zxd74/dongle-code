@@ -1213,3 +1213,50 @@ public int removeElement(int[] nums, int val) {
     return idx;
 }
 ```
+
+# 28 Find the Index of the First Occurrence in a String
+    Given two strings needle and haystack, return the index of the first occurrence of needle in haystack, or -1 if needle is not part of haystack.
+
+* 约束；
+  * `1 <= haystack.length, needle.length <= 10^4`
+  * `haystack and needle consist of only lowercase English characters.`
+* 思路：
+  * 可以使用各语言字符串原生操作`indexOf`
+* 思路：
+  * 比较长度，若匹配内容长，直接返回-1
+  * 遍历被匹配内容，判断第一个字符是否相等，不等下次循环
+  * 相等继续匹配下一个字符是否相等
+  * 若结束都未匹配完或者其它字符不等则返回-1，
+  * 否则返回当前被匹配索引值
+```java
+public int strStr(String haystack, String needle) {
+    if(haystack.length()<needle.length()) return -1;
+    A:for(int i=0;i<haystack.length();i++){
+        if(haystack.charAt(i) != needle.charAt(0)) continue A;
+        if(needle.length() ==1 ) return i;
+        boolean flag = false;
+        for(int j=1;j<needle.length() && i+j<haystack.length();j++){
+            if(i+j==haystack.length()-1 && j!=needle.length()-1) return -1;
+            if(!(flag = haystack.charAt(i+j) == needle.charAt(j))) continue A;
+        }
+        if (flag) return i;
+    }
+    return -1;
+}
+```
+* **优化版**
+  * 被匹配内容索引**截止**(总长-匹配内容长度)
+  * 若匹配结果索引值+1等于匹配内容长度，则返回当前被匹配索引值
+  * 否则返回-1
+```java
+public int strStr(String haystack, String needle) {
+    int hl = haystack.length(),nl = needle.length();
+    if(hl<nl) return -1;
+    for(int i=0; i<=hl-nl; i++){
+        int j=0;
+        while(j<nl && haystack.charAt(i+j) == needle.charAt(j)) j++;
+        if(j==nl) return i;
+    }
+    return -1;
+}
+```
