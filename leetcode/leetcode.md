@@ -1229,6 +1229,7 @@ public int removeElement(int[] nums, int val) {
   * 若结束都未匹配完或者其它字符不等则返回-1，
   * 否则返回当前被匹配索引值
 ```java
+// haystack.indexOf(needle);
 public int strStr(String haystack, String needle) {
     if(haystack.length()<needle.length()) return -1;
     A:for(int i=0;i<haystack.length();i++){
@@ -1258,5 +1259,67 @@ public int strStr(String haystack, String needle) {
         if(j==nl) return i;
     }
     return -1;
+}
+```
+
+# 29 Divide Two Integers
+    Given two integers dividend and divisor, divide two integers without using multiplication, division, and mod operator.
+
+    The integer division should truncate toward zero, which means losing its fractional part. For example, 8.345 would be truncated to 8, and -2.7335 would be truncated to -2.
+
+    Return the quotient after dividing dividend by divisor.
+
+* 约束：
+  * `-2^31 <= dividend, divisor <= 2^31 - 1`
+  * `divisor != 0`
+* 个人版
+  * 将所有值转为long类型正数
+  * 判断最终结果正负
+  * 处理除数为1的特殊情况，根据结果正负和被除数的限制，返回结果
+```java
+// 如果允许使用乘除，模式运算，可以考虑 
+/**
+ * if(dividend == Integer.MIN_VALUE && divisor == -1) return Integer.MAX_VALUE;
+ * return dividend/divisor
+ */
+public int divide(int dividend, int divisor) {
+    if(dividend == 0) return 0;
+    int count = 0;
+    boolean df,rf,rsf;
+    long dl = (df=dividend>0)?dividend:-((long)dividend);
+    long d2 = (rf = divisor>0)?divisor:-((long)divisor);
+    rsf = df == rf;
+    if(d2 == 1) return rsf ? dividend==Integer.MIN_VALUE?Integer.MAX_VALUE:df?dividend:-dividend:df?-dividend:dividend;
+    if(dl<d2) return 0;
+    if(dl == d2) return rsf?1:-1;
+    while(dl>=d2){
+        dl -= d2;
+        count++;
+    }
+    return rsf?count:-count;
+}
+```
+* 优化版
+  * 将dividend为最小Integer和divisor为-1的情况单独处理
+  * 将Integer类型转Long类型，避免溢出
+  * 加快逻辑：将被除数与除数的倍数比较(使用**位运算**)，结果直接加倍数，并将被除数减去除数倍数倍，然后继续重复，直至被除数小于除数
+```java
+public int divide(int dividend, int divisor) {
+    if(dividend == 0) return 0;
+    if(dividend == Integer.MIN_VALUE && divisor == -1) return Integer.MAX_VALUE;
+    int result = 0;
+    boolean df,rf,rsf;
+    long d1 = (df=dividend>0)?dividend:-((long)dividend);
+    long d2 = (rf = divisor>0)?divisor:-((long)divisor);
+    rsf = df == rf;
+    if(d2 == 1) return rsf ? df?dividend:-dividend:df?-dividend:dividend;
+    if(d1<d2) return 0;
+    while(d1>=d2){
+        int count = 0;
+        while(d1>=(d2<<(count+1))) count++;
+        result += 1<<count;
+        d1-= d2 << count;
+    }
+    return rsf?result:-result;
 }
 ```
