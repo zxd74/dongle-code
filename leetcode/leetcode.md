@@ -1323,3 +1323,131 @@ public int divide(int dividend, int divisor) {
     return rsf?result:-result;
 }
 ```
+# 30 Substring with Concatenation of All Words
+    You are given a string s and an array of strings words. All the strings of words are of the same length.
+
+    A concatenated string is a string that exactly contains all the strings of any permutation of words concatenated.
+
+    For example, if words = ["ab","cd","ef"], then "abcdef", "abefcd", "cdabef", "cdefab", "efabcd", and "efcdab" are all concatenated strings. "acdbef" is not a concatenated string because it is not the concatenation of any permutation of words.
+    Return an array of the starting indices of all the concatenated substrings in s. You can return the answer in any order.
+
+约束：
+* `1 <= s.length <= 10^4`
+* `1 <= words.length <= 5000`
+* `1 <= words[i].length <= 30`
+* `s and words[i] consist of lowercase English letters.`
+* 个人版
+  * 自定义一个节点，存储字符串和索引值
+    * 对于重复值，先排序，再获取索引值
+  * 检查索引有效值
+    * 按索引值排序
+    * 判断两两索引值之间差是否为单个字符串长度(数组中的字符串)
+    * 直至循环完都相等，则记录第一个索引值(之前已排序)
+    * 不相等，则对第一个字符串重新获取索引值
+      * 需要排除重复值的索引值，即以重复值的最大索引+单个字符串长度为起始开始检索索引
+    * 重新检查索引有效值
+  * **问题**：部分用例和leetcode执行结果不一致
+    * `s = "barfoofoobarthefoobarman", words = ["bar","foo","the"],result = [13]`,本地结果为`[13]`,leetcode输出`[]`导致错误无法提交
+    * 不确定问题在哪里，代码感觉没有问题, 在其它平台执行结果都是正确的(只能说可能和leetcode执行逻辑不匹配)
+    * 代码确实繁重了，可以优化
+    * 借助了自定义类
+```java
+public List<Integer> findSubstring(String s, String[] words) {
+    List<Integer> list = new ArrayList<>();
+    int subLength = words[0].length(),subAllLength = words.length * subLength;
+    // 1. 验证长度是否够总长限制
+    if(s.length()<subAllLength ) return list; // 长度限制
+    
+    Node[] nodes = new Node[words.length];
+    Arrays.sort(words);
+    int preIndex = -1;
+    // 2. 获取每个word对应索引值
+    for(int i=0;i<words.length;i++){
+        int subIndex = i != 0 && words[i] == words[i-1]?subIndex = s.indexOf(words[i],preIndex + subLength):s.indexOf(words[i]);
+        if(subIndex == -1) return list; // 2.1 存在一个字符串未匹配的，则代表全部无效
+        nodes[i] = new Node(words[i],subIndex);
+        preIndex = subIndex;
+    }
+    // 3. 其它情况的索引校验
+    checkIndex(s, nodes, list, subLength,subAllLength);
+    return list;
+}
+public void checkIndex(String s,Node[] nodes,List<Integer> list,int subLength,int subAllLength){
+    Arrays.sort(nodes,(l1,l2)-> l1.idx-l2.idx); // 先按索引值排序
+    Node preNode = nodes[0];
+    int idx = -1 ;	// 标记无效的索引，!= -1 代表无效
+    // 4. 验证索引值是否连续
+    for(int i = 1;i<nodes.length;i++){
+        Node node = nodes[i];
+        if(node.idx-preNode.idx != subLength){
+            idx = i;
+            break; // 中断循环
+        }
+        preNode = node;
+    }
+    if(idx == -1) list.add(nodes[0].idx); // 有效索引值记录
+    if (s.length() - (nodes[0].idx+subLength) <subAllLength) return; //当剩余长度不够时，直接退出
+    int start = nodes[0].idx;
+    for(int i = 1;i<nodes.length;i++){
+        if (nodes[i].sub.equals(nodes[0].sub)) {
+            start = nodes[i].idx;
+        }
+    }
+    // 重新匹配第一个节点索引值，重新校验：实际结果排序后可能以下一个节点为开头
+    int subIndex = s.indexOf(nodes[0].sub,start + subLength); //  将从无效位置的前一个+字符串长度为索引开始重新匹配前面所有无效的下一个索引值
+    if(subIndex == -1) return; // 无法获取下一个索引值时，程序中断
+    nodes[0].idx = subIndex; // 更新第一个索引值
+    // 继续校验
+    checkIndex(s,nodes,list,subLength,subAllLength);
+}
+
+public class Node{
+    private String sub;
+    private int idx;
+    public Node(String sub,int idx){
+        this.sub = sub;
+        this.idx = idx;
+    }
+}
+```
+* **优解版**
+  * **以Map存储word出现次数**
+  * 遍历单词数组
+    * 遍历不超过字符串长度，每次**步长为一个单词长**
+      * 将截取的字符串放入临时Map中，并将统计次数(默认0)+1
+      * 如果截取的字段数和单词组数相当时，判断两个Map是否相等，
+        * 相等则记录索引值
+      * 临时Map将开头单词的次数-1，
+      * 截取的单词数同理-1；
+      * 将判断符合条件的索引值 k 同理加一个单词长度
+```java
+public List<Integer> findSubstring(String s, String[] words) {
+    List<Integer> list = new ArrayList<>();
+    int n = s.length(), m = words.length, w = words[0].length(),t = m * w;
+    if (n < t) return list;
+
+    Map<String,Integer> map = Arrays.stream(words).collect(Collectors.toMap(i->i, i->1, Integer::sum));
+    for (int i = 0; i < m; i++) {
+        Map<String,Integer> temp = new HashMap<>();
+        int count = 0;
+        for (int j = i,k=i; j + w< n + 1; j += w) {
+            String word = s.substring(j, j + w);
+            temp.put(word,temp.getOrDefault(word,0)+1);
+            count++;
+
+            if (count == m) { // 每次循环都判断是否满足条件
+                if (map.equals(temp)) list.add(k); // 满足条件，添加索引值
+                String remove = s.substring(k,k+w);
+                temp.computeIfPresent(remove, (a,b) -> b > 1 ? b - 1 : null);
+                count--; // 移除第一个索引值，count减1
+                k =k+w;
+            }
+        }
+    }
+    return list;
+}
+```
+* 总结：
+  * 以Map存储字符串及出现的次数
+  * 每次单词组内字符串验证一批次之后，移除第一个字符串次数，重新遍历
+  * 每次单词遍历以一个单词长为步长匹配单词
