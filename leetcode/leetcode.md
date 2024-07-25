@@ -1096,3 +1096,66 @@ public ListNode mergeTwoLists(ListNode list1,ListNode list2){
     return head.next;
 }
 ```
+# 24 两两交换链表中的节点
+    Given a linked list, swap every two adjacent nodes and return its head. You must solve the problem without modifying the values in the list's nodes (i.e., only nodes themselves may be changed.)
+
+* 约束：
+  * `The number of nodes in the list is in the range [0, 100].`
+  * `0 <= Node.val <= 100`
+* 个人版
+  * 采用递归算法，最优解为节点为空或下一个节点为空
+  * 每个次递归时，校验两个节点(当前节点和下一个节点)
+    * 子递归，已当前节点的下下各节点为开头
+    * 当前递归交换两个节点，然后下下各节点为下次递归结果
+```java
+public ListNode swapPairs(ListNode head) {
+    if(head == null) return null;
+    if(head.next == null) return head;
+    
+    ListNode next = head.next;
+    ListNode nh = swapPairs(next.next);
+    next.next = head;
+    head.next = nh;
+    head = next;
+    return head;
+}
+```
+
+# 25 K 个一组翻转链表
+    Given the head of a linked list, reverse the nodes of the list k at a time, and return the modified list.
+
+    k is a positive integer and is less than or equal to the length of the linked list. If the number of nodes is not a multiple of k then left-out nodes, in the end, should remain as it is.
+
+    You may not alter the values in the list's nodes, only nodes themselves may be changed.
+
+* 约束：
+  * `The number of nodes in the list is n.`
+  * `1 <= k <= n <= 5000`
+  * `0 <= Node.val <= 1000`
+* 思路
+  * 先统计k长度的不为空的节点ListNode
+    * 长度不够时直接保持原样返回
+  * 将k个节点做**反转**(注意是反转，不是兑换第k个节点)
+  * 若后续还有节点，则采用递归形式继续，直至结束
+```java
+public static ListNode reverseKGroup1(ListNode head, int k) {
+    if(head == null) return head;
+    ListNode curr = head,dummy = null,prev = null;
+    int count = 0;
+    while(curr != null && count < k){
+        curr = curr.next;
+        count++;
+    }
+    if (count<k) return head;
+    count = 0;curr = head;
+    while(curr != null && count < k){
+        dummy = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = dummy;
+        count++;
+    }
+    if(dummy != null) head.next = reverseKGroup(dummy, k);
+    return prev;
+}
+```
