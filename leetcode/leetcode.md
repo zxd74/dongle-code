@@ -1427,18 +1427,17 @@ public List<Integer> findSubstring(String s, String[] words) {
     if (n < t) return list;
 
     Map<String,Integer> map = Arrays.stream(words).collect(Collectors.toMap(i->i, i->1, Integer::sum));
-    for (int i = 0; i < m; i++) {
+    for (int i = 0; i < w; i++) {
         Map<String,Integer> temp = new HashMap<>();
         int count = 0;
-        for (int j = i,k=i; j + w< n + 1; j += w) {
+        for (int j = i,k=i; j + w<= n; j += w) {
             String word = s.substring(j, j + w);
             temp.put(word,temp.getOrDefault(word,0)+1);
             count++;
 
             if (count == m) { // 每次循环都判断是否满足条件
                 if (map.equals(temp)) list.add(k); // 满足条件，添加索引值
-                String remove = s.substring(k,k+w);
-                temp.computeIfPresent(remove, (a,b) -> b > 1 ? b - 1 : null);
+                temp.computeIfPresent(s.substring(k,k+w), (a,b) -> b > 1 ? b - 1 : null);
                 count--; // 移除第一个索引值，count减1
                 k =k+w;
             }
@@ -1451,3 +1450,93 @@ public List<Integer> findSubstring(String s, String[] words) {
   * 以Map存储字符串及出现的次数
   * 每次单词组内字符串验证一批次之后，移除第一个字符串次数，重新遍历
   * 每次单词遍历以一个单词长为步长匹配单词
+
+# 31. 下一个排列
+    A permutation of an array of integers is an arrangement of its members into a sequence or linear order.
+
+    Given an array of integers nums, find the next permutation of nums.
+
+    The next permutation of an array of integers is the next lexicographically greater permutation of its integer. More formally, if all the permutations of the array are sorted in one container according to their lexicographical order, then the next permutation of that array is the permutation that follows it in the sorted container. If such arrangement is not possible, the array must be rearranged as the lowest possible order (i.e., sorted in ascending order).
+
+* For example, for arr = [1,2,3], the following are all the permutations of arr: [1,2,3], [1,3,2], [2, 1, 3], [2, 3, 1], [3,1,2], [3,2,1].
+* For example, the next permutation of arr = [1,2,3] is [1,3,2].
+* Similarly, the next permutation of arr = [2,3,1] is [3,1,2].
+* While the next permutation of arr = [3,2,1] is [1,2,3] because [3,2,1] does not have a lexicographical larger rearrangement.
+
+约束：
+* `1 <= nums.length <= 100`
+* `0 <= nums[i] <= 100`
+
+思路：
+* 从后向前遍历，找到前者比后者大的索引
+* 不存在时，证明为最大值，进行反转(即最小排序)，结束
+* 存在时，重新从后向向前到刚才的索引处遍历，找到比索引对应大的值，进行交换
+* 对索引+1到结尾进行排序(反转，因必定是最大排序，故转最小值排序)
+* 因使用了第三方Arrays对数据进行反转排序操作，导致速度相对较慢
+```java
+public void nextPermutation(int[] nums) {
+    if(nums.length <2) return;
+    int i = nums.length-2 ;
+    while(i>=0 && nums[i]>=nums[i+1]){ // 过滤前者比后者大的位置
+        i--;
+    }
+    if(i<0){ // 即最大值排序。相对应最小排序
+        Arrays.sort(nums);
+        return; // 结束
+    }
+    // 存在前一个比后一个小的现象，nums[i] < nums[i+1]
+    int j = nums.length-1;
+    while(i<j){
+        if (nums[j] > nums[i]) {
+            int tmp = nums[i];
+            nums[i] = nums[j];
+            nums[j] = tmp;
+            break;
+        }
+        j--;
+    }
+    // 再对 i+1 到结尾进行排序
+    int[] tmps = Arrays.copyOfRange(nums,i+1,nums.length);
+    Arrays.sort(tmps);
+    i++;
+    for (int k = 0; k < tmps.length; k++) {
+        nums[i+k] = tmps[k];
+    }
+}
+```
+优化版：
+* 提供自定义交换和反转操作，比Arrays操作快
+```java
+public void nextPermutation(int[] nums){
+    if(nums.length <2) return;
+    int i = nums.length-2 ;
+    while(i>=0 && nums[i]>=nums[i+1]) i--; // 过滤前者比后者大的位置
+    if(i<0){ // 即最大值排序。相对应最小排序
+        reverse(nums, 0);
+        return; // 结束
+    }
+    // 存在前一个比后一个小的现象，nums[i] < nums[i+1]
+    for(int j = nums.length - 1;j>i;j--){
+        if (nums[j] > nums[i]) {
+            swap(nums,i,j);
+            break;
+        }
+    }
+    // 再对 i+1 到结尾进行排序
+    reverse(nums, i+1);
+}
+
+public void swap(int [] nums ,int i,int j){
+    int temp = nums[i];
+    nums[i] = nums[j];
+    nums[j] = temp;
+}
+public void reverse(int [] nums ,int start){
+    int i=start,j=nums.length-1;
+    while(i<j){
+        swap(nums,i,j);
+        i++;
+        j--;
+    }
+}
+```
