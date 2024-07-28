@@ -1,3 +1,32 @@
+- [对一个整数m删除n位数后，顺序不变，输出最大值](#对一个整数m删除n位数后顺序不变输出最大值)
+- [8 字符串转整数](#8-字符串转整数)
+- [9 数字是回环数字](#9-数字是回环数字)
+- [10 正则表达式匹配](#10-正则表达式匹配)
+- [13 Roman to Integer(中)](#13-roman-to-integer中)
+- [14 返回最长公共字符串前缀](#14-返回最长公共字符串前缀)
+- [20 括号开闭校验](#20-括号开闭校验)
+- [21 合并两个有序列表](#21-合并两个有序列表)
+- [11 最大水量(中)](#11-最大水量中)
+- [12 Intege to Roman (中)](#12-intege-to-roman-中)
+- [15 Three Sum(中)](#15-three-sum中)
+- [16 最接近目标值的三数之和](#16-最接近目标值的三数之和)
+- [17 电话号码的字母组合](#17-电话号码的字母组合)
+- [18 四数之和](#18-四数之和)
+- [19 从List结尾移除第N项节点](#19-从list结尾移除第n项节点)
+- [20 括号的可能组合](#20-括号的可能组合)
+- [23 合并多个有序链表](#23-合并多个有序链表)
+- [24 两两交换链表中的节点](#24-两两交换链表中的节点)
+- [25 K 个一组翻转链表](#25-k-个一组翻转链表)
+- [26 删除有序数组中的重复项](#26-删除有序数组中的重复项)
+- [27 移除指定值元素](#27-移除指定值元素)
+- [28 Find the Index of the First Occurrence in a String](#28-find-the-index-of-the-first-occurrence-in-a-string)
+- [29 Divide Two Integers](#29-divide-two-integers)
+- [30 Substring with Concatenation of All Words](#30-substring-with-concatenation-of-all-words)
+- [31. 下一个排列](#31-下一个排列)
+- [32 最长有效圆括号](#32-最长有效圆括号)
+
+
+
 # 对一个整数m删除n位数后，顺序不变，输出最大值
 * 题目说明：给定任意一个数字 m，然后给出数字 n，则需在 m 中去掉 n 位数，保持各位顺序不变的情况下，得到最大数。
 * 输入描述：输入整数m,n.(1<=m<=1e100,1<=n<=100)
@@ -1472,7 +1501,7 @@ public List<Integer> findSubstring(String s, String[] words) {
 * 不存在时，证明为最大值，进行反转(即最小排序)，结束
 * 存在时，重新从后向向前到刚才的索引处遍历，找到比索引对应大的值，进行交换
 * 对索引+1到结尾进行排序(反转，因必定是最大排序，故转最小值排序)
-* 因使用了第三方Arrays对数据进行反转排序操作，导致速度相对较慢
+* 因使用了第三方Arrays对数据进行反转排序，存在额外操作，导致速度相对较慢
 ```java
 public void nextPermutation(int[] nums) {
     if(nums.length <2) return;
@@ -1538,5 +1567,36 @@ public void reverse(int [] nums ,int start){
         i++;
         j--;
     }
+}
+```
+
+# 32 最长有效圆括号
+    Given a string containing just the characters '(' and ')', return the length of the longest valid (well-formed) parentheses substring.
+
+* 约束：
+  * `0 <= s.length <= 3 * 10^4`
+  * `s[i] is '(', or ')'.`
+* 思路：
+  * 使用栈，遇到左括号，入栈，遇到右括号，出栈，当栈为空时，记录当前长度，当栈不为空时，清空栈，重新开始
+  * 遍历完成后，再次记录当前长度，返回最大值
+```java
+public int longestValidParentheses(String s) {
+    Stack<Integer> stack = new Stack<>();
+    stack.push(-1);
+    int max_len = 0,n=s.length();
+    for (int i = 0; i < n; i++) {
+        if (s.charAt(i) == '(') {
+            stack.push(i);
+        } else {
+            stack.pop();
+            if (stack.isEmpty()) {
+                stack.push(i);
+            } else {
+                max_len = Math.max(max_len, i - stack.peek());
+            }
+        }
+    }
+
+    return max_len;        
 }
 ```
