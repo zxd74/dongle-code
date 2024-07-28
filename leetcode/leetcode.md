@@ -24,6 +24,7 @@
 - [30 Substring with Concatenation of All Words](#30-substring-with-concatenation-of-all-words)
 - [31. 下一个排列](#31-下一个排列)
 - [32 最长有效圆括号](#32-最长有效圆括号)
+- [33 搜索旋转排序数组](#33-搜索旋转排序数组)
 
 
 
@@ -1598,5 +1599,87 @@ public int longestValidParentheses(String s) {
     }
 
     return max_len;        
+}
+```
+
+# 33 搜索旋转排序数组
+    There is an integer array nums sorted in ascending order (with distinct values).
+
+    Prior to being passed to your function, nums is possibly rotated at an unknown pivot index k (1 <= k < nums.length) such that the resulting array is [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]] (0-indexed). For example, [0,1,2,4,5,6,7] might be rotated at pivot index 3 and become [4,5,6,7,0,1,2].
+
+    Given the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums.
+
+    You must write an algorithm with O(log n) runtime complexity.
+
+* 约束：
+  * `1 <= nums.length <= 5000`
+  * `-10^4 <= nums[i] <= 10^4`
+  * All values of nums are unique.
+  * `nums` is an ascending array that is possibly rotated.
+  * `-10^4 <= target <= 10^4`
+* 思路：
+  * 使用二分查找，找到中间值，判断中间值是否为目标值，若不是，则判断中间值与目标值的大小，从而确定目标值在左半部分还是右半部分，然后递归查找
+* 个人版：
+  * 先定位 旋转位点k，找到最大值索引，在根据target范围查找
+  * 优化：可边定位边匹配
+```java
+public int search(int[] nums, int target) {
+    if(nums.length ==1){
+        if(nums[0] == target) return 0;
+        else return -1;
+    }
+    int maxIndex = nums.length-1;
+    if (nums[maxIndex]<nums[0]) { // 被旋转了
+        maxIndex--;
+        while (maxIndex>0) {
+            if (nums[maxIndex]>nums[maxIndex+1]) {
+                break;
+            }
+            maxIndex--;
+        }
+    } // else 未被旋转 maxIndex = nums.length-1;
+    System.out.println(maxIndex);
+    if (nums[0]<=target) {
+        while (maxIndex>-1) {
+            if (nums[maxIndex] == target) {
+                return maxIndex;
+            }
+            maxIndex--;
+        }
+    }else{
+        maxIndex++;
+        while (maxIndex<nums.length) {
+            if (nums[maxIndex] == target) {
+                return maxIndex;
+            }
+            maxIndex++;
+        }
+    }
+    return -1;
+}
+```
+* 优化版：
+  * 采用二分法，每一边存在某一方必需两个条件都满足时才能处理，否则就是另一边进行处理
+```java
+public int search(int[] nums,int target){
+    int low = 0,high = nums.length-1;
+    while(low<=high){
+        int mid = (high-low)/2;
+        if(nums[mid]==target) return mid;
+        if (nums[low]<=nums[mid]) {
+            if (nums[low]<=target && nums[mid]>target) {
+                high= mid-1;
+            }else{
+                low = mid +1;
+            }
+        }else{
+            if (nums[mid]<target && target<=nums[high]) {
+                low = mid+1;
+            }else{
+                high = mid-1;
+            }
+        }
+    }
+    return -1;
 }
 ```
