@@ -26,6 +26,7 @@
 - [32 最长有效圆括号](#32-最长有效圆括号)
 - [33 搜索旋转排序数组](#33-搜索旋转排序数组)
 - [34 在排序数组中查找元素的第一个和最后一个位置](#34-在排序数组中查找元素的第一个和最后一个位置)
+- [35 在排序数组中查找插入位置(Easy)](#35-在排序数组中查找插入位置easy)
 
 
 
@@ -1717,5 +1718,29 @@ public int[] searchRange(int[] nums, int target) {
         }
     }
     return result;
+}
+```
+# 35 在排序数组中查找插入位置(Easy)
+    Given a sorted array of distinct integers and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.
+
+    You must write an algorithm with O(log n) runtime complexity.
+
+* 约束：
+  * `1 <= nums.length <= 10^4`
+  * `-10^4 <= nums[i] <= 10^4`
+  * `nums` is sorted in non-decreasing order.
+  * `-10^4 <= target <= 10^4`
+* 思路：
+  * 匹配大于等于项，对应索引即位置
+  * 若未匹配，则结尾插入，索引对应数组长度
+* 代码
+```java
+public int searchInsert(int[] nums, int target) {
+    for(int i =0;i<nums.length;i++){
+        if(nums[i]>=target){
+            return i;
+        }
+    }
+    return nums.length;
 }
 ```
