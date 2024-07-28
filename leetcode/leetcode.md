@@ -25,6 +25,7 @@
 - [31. 下一个排列](#31-下一个排列)
 - [32 最长有效圆括号](#32-最长有效圆括号)
 - [33 搜索旋转排序数组](#33-搜索旋转排序数组)
+- [34 在排序数组中查找元素的第一个和最后一个位置](#34-在排序数组中查找元素的第一个和最后一个位置)
 
 
 
@@ -1681,5 +1682,40 @@ public int search(int[] nums,int target){
         }
     }
     return -1;
+}
+```
+
+
+# 34 在排序数组中查找元素的第一个和最后一个位置
+    Given an array of integers nums sorted in non-decreasing order, find the starting and ending position of a given target value.
+
+    If target is not found in the array, return [-1, -1].
+
+    You must write an algorithm with O(log n) runtime complexity.
+
+* 约束：
+  * `0 <= nums.length <= 10^5`
+  * `-10^9 <= nums[i] <= 10^9`
+  * nums is a non-decreasing array.
+  * `-10^9 <= target <= 10^9`
+* 思路
+* 初版
+```java
+public int[] searchRange(int[] nums, int target) {
+    int[] result = {-1,-1};
+    int low=0,high = nums.length-1;
+    while(low<=high && (result[0]==-1 || result[1]==-1)){
+        if(nums[low] == target ){
+            result[0] = low;
+        }else{
+            low++;
+        }
+        if(nums[high] == target){
+            result[1] = high;
+        }else{
+            high--;
+        }
+    }
+    return result;
 }
 ```
