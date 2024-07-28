@@ -27,6 +27,7 @@
 - [33 搜索旋转排序数组](#33-搜索旋转排序数组)
 - [34 在排序数组中查找元素的第一个和最后一个位置](#34-在排序数组中查找元素的第一个和最后一个位置)
 - [35 在排序数组中查找插入位置(Easy)](#35-在排序数组中查找插入位置easy)
+- [36 有效的数独(中)](#36-有效的数独中)
 
 
 
@@ -1742,5 +1743,48 @@ public int searchInsert(int[] nums, int target) {
         }
     }
     return nums.length;
+}
+```
+# 36 有效的数独(中)
+    Determine if a 9 x 9 Sudoku board is valid. Only the filled cells need to be validated according to the following rules:
+    Each row must contain the digits 1-9 without repetition.
+    Each column must contain the digits 1-9 without repetition.
+    Each of the nine 3 x 3 sub-boxes of the grid must contain the digits 1-9 without repetition.
+    Note:
+    A Sudoku board (partially filled) could be valid but is not necessarily solvable.
+    Only the filled cells need to be validated according to the mentioned rules.
+* 约束：
+  * `board.length == 9`
+  * `board[i].length == 9`
+  * `board[i][j] is a digit 1-9 or '.'.`
+* 思路：重点关注**九宫格**规则
+  * 遍历，判断行、列、九宫格是否满足条件
+  * 九宫格规则：
+    * 行：`board[i][j]`
+    * 列：`board[j][i]`
+    * **九宫格**：`board[3*(i/3)+j/3][3*(i%3)+j%3]`
+* 代码
+```java
+public boolean isValidSudoku(char[][] board) {
+    int[] rows,cols,squares;
+    for(int i = 0;i<9;i++){
+        rows = new int[9];cols=new int[9];squares = new int[9];
+        for(int j=0;j<9; j++){
+            // 同行校验 [i][j]
+            if(!isValidArrays(board[i][j], rows)) return false;
+            // 同列校验 [j][i]
+            if(!isValidArrays(board[j][i], cols)) return false;
+            // 3x3格校验 [3*(i/3)+j/3][3*(i%3)+j%3]
+            if(!isValidArrays(board[3*(i/3)+j/3][3*(i%3)+j%3], squares)) return false;
+        }
+    }
+    return true;
+}
+
+public boolean isValidArrays(char ch,int[] nums){
+    if (ch == '.')  return true;
+    if (nums[ch-49] == ch)  return false;
+    nums[ch-49] = ch;
+    return true;
 }
 ```
