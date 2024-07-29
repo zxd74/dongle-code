@@ -268,3 +268,55 @@ if __name__ == "__main__":
             print("数独解析出现异常", ex)
         content = input("按Q结束，否则继续")
 ```
+# Java
+* 基础版
+```java
+public void solveSudoku(char[][] board) {
+    solve(board);
+}
+public boolean solve(char[][] board) {
+    char[] nums = {'1','2','3','4','5','6','7','8','9'};
+    for(int i = 0;i<9;i++){
+        for(int j = 0;j<9;j++){
+            if(board[i][j] != '.') continue;
+            for(int k = 0;k<9;k++){
+                board[i][j] = nums[k];
+                if(isValidSudoku(board) && // 本次填充是否有效
+                solve(board)) { // 下次填充是否有效，无效，则同步本次也无效，需要继续更换本次填充
+                    return true;
+                }else{
+                    board[i][j] = '.' ;
+                }
+                
+            }
+            if (board[i][j]  == '.') {
+                // 代表没有可选值了
+                return false;
+            }
+        }
+    }
+    return true;
+}
+public boolean isValidSudoku(char[][] board) {
+    int[] rows,cols,squares;
+    for(int i = 0;i<9;i++){
+        rows = new int[9];cols=new int[9];squares = new int[9];
+        for(int j=0;j<9; j++){
+            // 同行校验 [i][j]
+            if(!isValidArrays(board[i][j], rows)) return false;
+            // 同列校验 [j][i]
+            if(!isValidArrays(board[j][i], cols)) return false;
+            // 3x3格校验 [3*(i/3)+j/3][3*(i%3)+j%3]
+            if(!isValidArrays(board[3*(i/3)+j/3][3*(i%3)+j%3], squares)) return false;
+        }
+    }
+    return true;
+}
+
+public boolean isValidArrays(char ch,int[] nums){
+    if (ch == '.')  return true;
+    if (nums[ch-49] == ch)  return false;
+    nums[ch-49] = ch;
+    return true;
+}
+```

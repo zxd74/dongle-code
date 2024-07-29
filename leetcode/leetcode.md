@@ -28,6 +28,7 @@
 - [34 在排序数组中查找元素的第一个和最后一个位置](#34-在排序数组中查找元素的第一个和最后一个位置)
 - [35 在排序数组中查找插入位置(Easy)](#35-在排序数组中查找插入位置easy)
 - [36 有效的数独(中)](#36-有效的数独中)
+- [37 解数独(难)](#37-解数独难)
 
 
 
@@ -1787,4 +1788,79 @@ public boolean isValidArrays(char ch,int[] nums){
     nums[ch-49] = ch;
     return true;
 }
+```
+
+# 37 解数独(难)
+    Write a program to solve a Sudoku puzzle by filling the empty cells.
+    A sudoku solution must satisfy all of the following rules:
+    Each of the digits 1-9 must occur exactly once in each row.
+    Each of the digits 1-9 must occur exactly once in each column.
+    Each of the digits 1-9 must occur exactly once in each of the 9 3x3 sub-boxes of the grid.
+    The '.' character indicates empty cells.
+
+* 约束：
+  * `board.length == 9`
+  * `board[i].length == 9`
+  * `board[i][j] is a digit or '.'.`
+  * `It is guaranteed that the input board has only one solution.`
+* 代码（初版）
+  * 思路：当某个位置不存在时，从1-9一次填充，
+    * 填充一次检查是否有效
+    * 有效，继续下一个位置
+    * 无效，则换下一个填充
+```java
+public void solveSudoku(char[][] board) {
+    solve(board);
+}
+public boolean solve(char[][] board) {
+    char[] nums = {'1','2','3','4','5','6','7','8','9'};
+    for(int i = 0;i<9;i++){
+        for(int j = 0;j<9;j++){
+            if(board[i][j] != '.') continue;
+            for(int k = 0;k<9;k++){
+                board[i][j] = nums[k];
+                if(isValidSudoku(board) && // 本次填充是否有效
+                solve(board)) { // 下次填充是否有效，无效，则同步本次也无效，需要继续更换本次填充
+                    return true;
+                }else{
+                    board[i][j] = '.' ;
+                }
+                
+            }
+            if (board[i][j]  == '.') {
+                // 代表没有可选值了
+                return false;
+            }
+        }
+    }
+    return true;
+}
+public boolean isValidSudoku(char[][] board) {
+    int[] rows,cols,squares;
+    for(int i = 0;i<9;i++){
+        rows = new int[9];cols=new int[9];squares = new int[9];
+        for(int j=0;j<9; j++){
+            // 同行校验 [i][j]
+            if(!isValidArrays(board[i][j], rows)) return false;
+            // 同列校验 [j][i]
+            if(!isValidArrays(board[j][i], cols)) return false;
+            // 3x3格校验 [3*(i/3)+j/3][3*(i%3)+j%3]
+            if(!isValidArrays(board[3*(i/3)+j/3][3*(i%3)+j%3], squares)) return false;
+        }
+    }
+    return true;
+}
+
+public boolean isValidArrays(char ch,int[] nums){
+    if (ch == '.')  return true;
+    if (nums[ch-49] == ch)  return false;
+    nums[ch-49] = ch;
+    return true;
+}
+```
+
+* 改进版：
+  * 每次填充过滤行、列、格已存在的，避免重复填充无效值
+```java
+
 ```
