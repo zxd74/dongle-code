@@ -1808,6 +1808,7 @@ public boolean isValidArrays(char ch,int[] nums){
     * 填充一次检查是否有效
     * 有效，继续下一个位置
     * 无效，则换下一个填充
+  * 问题：重复无效填充，导致时间耗时较高
 ```java
 public void solveSudoku(char[][] board) {
     solve(board);
@@ -1862,5 +1863,37 @@ public boolean isValidArrays(char ch,int[] nums){
 * 改进版：
   * 每次填充过滤行、列、格已存在的，避免重复填充无效值
 ```java
-
+public void solveSudoku(char[][] board) {
+    char[] nums = {'1','2','3','4','5','6','7','8','9'};
+    solveSudoku(board,nums,0,0);
+}
+public boolean solveSudoku(char[][] board,char[] nums,int i,int j){
+    if (j == 9) { // 当列索引j等于9时，代表列溢出，换到下一行开头
+        i++;j = 0;
+    }
+    if (i == 9) return true; // 填充完毕
+    if (board[i][j]!='.') return solveSudoku(board, nums, i, j+1);
+    Set<String> exist = new HashSet<>();  // 统计其它位置已经存在的值
+    for (int k = 0; k < 9; k++) {
+        if (board[i][k] != '.') exist.add(String.valueOf(board[i][k])); // 同行
+        if (board[k][j]!='.') exist.add(String.valueOf(board[k][j])); // 同列
+        
+        int tmpi = 3*(i/3)+(k)/3,tmpj = (k%3) + 3*(j/3); // 同格范围计算
+        if (board[tmpi][tmpj] != '.') exist.add(String.valueOf(board[tmpi][tmpj])); // 因按行顺序填充，故九宫格的范围应以列为主
+    }
+    for(int k = 0;k<9;k++){
+        if (exist.contains(String.valueOf(nums[k]))){
+            continue;
+        }
+        board[i][j] = nums[k];
+        if(solveSudoku(board,nums,i,j + 1)) {
+            return true; // 只要没有false返回即代表一致填充到最后，直至成功
+        }else{
+            board[i][j] = '.' ;
+        }
+    }
+    return false; // 默认返回false，避免未考虑的异常情况
+}
 ```
+* 官方(升级版)：
+  * 按位判断是否互斥

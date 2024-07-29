@@ -269,7 +269,8 @@ if __name__ == "__main__":
         content = input("按Q结束，否则继续")
 ```
 # Java
-* 基础版
+* 基础版：
+  * 问题：重复无效填充，导致时间耗时较高
 ```java
 public void solveSudoku(char[][] board) {
     solve(board);
@@ -284,15 +285,9 @@ public boolean solve(char[][] board) {
                 if(isValidSudoku(board) && // 本次填充是否有效
                 solve(board)) { // 下次填充是否有效，无效，则同步本次也无效，需要继续更换本次填充
                     return true;
-                }else{
-                    board[i][j] = '.' ;
-                }
-                
+                }else board[i][j] = '.' ;
             }
-            if (board[i][j]  == '.') {
-                // 代表没有可选值了
-                return false;
-            }
+            if (board[i][j]  == '.') return false; // 代表没有可选值了
         }
     }
     return true;
@@ -317,6 +312,81 @@ public boolean isValidArrays(char ch,int[] nums){
     if (ch == '.')  return true;
     if (nums[ch-49] == ch)  return false;
     nums[ch-49] = ch;
+    return true;
+}
+```
+* 改进版
+  * 在每个空位置上，查询所有互斥位置的值
+  * 填入内容时，**过滤**互斥位置的值
+```java
+public void solveSudoku(char[][] board) {
+    char[] nums = {'1','2','3','4','5','6','7','8','9'};
+    solveSudoku(board,nums,0,0);
+}
+public boolean solveSudoku(char[][] board,char[] nums,int i,int j){
+    if (j == 9) { // 当列索引j等于9时，代表列溢出，换到下一行开头
+        i++;j = 0;
+    }
+    if (i == 9) return true; // 填充完毕
+    if (board[i][j]!='.') return solveSudoku(board, nums, i, j+1);
+    Set<String> exist = new HashSet<>();  // 统计其它位置已经存在的值
+    for (int k = 0; k < 9; k++) {
+        if (board[i][k] != '.') exist.add(String.valueOf(board[i][k])); // 同行
+        if (board[k][j]!='.') exist.add(String.valueOf(board[k][j])); // 同列
+        
+        int tmpi = 3*(i/3)+(k)/3,tmpj = (k%3) + 3*(j/3); // 同格范围计算
+        if (board[tmpi][tmpj] != '.') exist.add(String.valueOf(board[tmpi][tmpj])); // 因按行顺序填充，故九宫格的范围应以列为主
+    }
+    for(int k = 0;k<9;k++){
+        if (exist.contains(String.valueOf(nums[k]))){
+            continue;
+        }
+        board[i][j] = nums[k];
+        if(solveSudoku(board,nums,i,j + 1)) {
+            return true; // 只要没有false返回即代表一致填充到最后，直至成功
+        }else{
+            board[i][j] = '.' ;
+        }
+    }
+    return false; // 默认返回false，避免未考虑的异常情况
+}
+```
+* 官方进阶版
+  * 相对用时较快，内存占用少
+```java
+
+```
+* 相关验证方法
+```java
+public boolean isValidSudoku(char[][] board) { // 是否时有效数独
+    int[] rows,cols,squares;
+    for(int i = 0;i<9;i++){
+        rows = new int[9];cols=new int[9];squares = new int[9];
+        for(int j=0;j<9; j++){
+            // 同行校验 [i][j]
+            if(!isValidArrays(board[i][j], rows)) return false;
+            // 同列校验 [j][i]
+            if(!isValidArrays(board[j][i], cols)) return false;
+            // 3x3格校验 [3*(i/3)+j/3][3*(i%3)+j%3]
+            if(!isValidArrays(board[3*(i/3)+j/3][3*(i%3)+j%3], squares)) return false;
+        }
+    }
+    return true;
+}
+
+public boolean isValidArrays(char ch,int[] nums){ // 校验是否是有效数独集合，存在不合格，用于解析前的验证
+    if (ch == '.')  return true;
+    if (nums[ch-49] == ch)  return false;
+    nums[ch-49] = ch;
+    return true;
+}
+
+public boolean isSolved(char[][] board){ // 数独是否已被解析
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if(board[i][j] == '.') return false;
+        }
+    }
     return true;
 }
 ```
