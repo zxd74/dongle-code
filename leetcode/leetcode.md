@@ -29,6 +29,7 @@
 - [35 在排序数组中查找插入位置(Easy)](#35-在排序数组中查找插入位置easy)
 - [36 有效的数独(中)](#36-有效的数独中)
 - [37 解数独(难)](#37-解数独难)
+- [38 报数序列(中)](#38-报数序列中)
 
 
 
@@ -1897,3 +1898,39 @@ public boolean solveSudoku(char[][] board,char[] nums,int i,int j){
 ```
 * 官方(升级版)：
   * 按位判断是否互斥
+```java
+// TODO 待理解后补充
+```
+
+# 38 报数序列(中)
+    The count-and-say sequence is a sequence of digit strings defined by the recursive formula:
+    
+    Run-length encoding (RLE) is a string compression method that works by replacing consecutive identical characters (repeated 2 or more times) with the concatenation of the character and the number marking the count of the characters (length of the run). For example, to compress the string "3322251" we replace "33" with "23", replace "222" with "32", replace "5" with "15" and replace "1" with "11". Thus the compressed string becomes "23321511".
+    
+    Given a positive integer n, return the nth element of the count-and-say sequence.
+
+* 约束
+  * `1 <= n <= 30`
+* 思路
+  * 使用递归先获取前一个的结果，再通过结果进行压缩
+```java
+public String countAndSay(int n) {
+    if(n == 1) return "1";
+    if(n == 2) return "11";
+    String content = countAndSay(n-1);
+    char pre = '0';int count = 0;
+    StringBuilder sb = new StringBuilder();
+    for(int i = 0;i<content.length();i++){
+        if(content.charAt(i) != pre){
+            if(pre != '0') sb.append(count).append(pre);
+            count = 1;pre = content.charAt(i);
+        }else{
+            count +=1;
+        }
+    }
+    if (count>0) {
+        sb.append(count).append(pre);
+    }
+    return sb.toString();
+}
+```
