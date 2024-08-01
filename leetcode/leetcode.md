@@ -30,6 +30,9 @@
 - [36 有效的数独(中)](#36-有效的数独中)
 - [37 解数独(难)](#37-解数独难)
 - [38 报数序列(中)](#38-报数序列中)
+- [39 组合总和(中)](#39-组合总和中)
+- [40 组合总和 II(中)](#40-组合总和-ii中)
+- [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
 
 
 
@@ -1932,5 +1935,92 @@ public String countAndSay(int n) {
         sb.append(count).append(pre);
     }
     return sb.toString();
+}
+```
+# 39 组合总和(中)
+    Given an array of distinct integers candidates and a target integer target, return a list of all unique combinations of candidates where the chosen numbers sum to target. You may return the combinations in any order.
+
+    The same number may be chosen from candidates an unlimited number of times. Two combinations are unique if the frequency of at each candidate number is different.
+
+    The test cases are generated such that the number of unique combinations that sum to target is less than 150 combinations for the given input.
+
+* 约束
+  * `1 <= candidates.length <= 30`
+  * `1 <= candidates[i] <= 200`
+  * `candidates` contains distinct elements.
+  * `1 <= target <= 500`
+
+* 思路
+  * 使用回溯算法，每次递归时，判断当前值是否小于目标值，小于则继续递归，否则返回
+```java
+
+```
+# 40 组合总和 II(中)
+    Given a collection of candidate numbers (candidates) and a target number (target), find all unique combinations in candidates where the candidate numbers sum to target. Each number in candidates may only be used once in the combination.
+
+    Note: The solution set must not contain duplicate combinations.
+
+* 约束
+  * `1 <= candidates.length <= 100`
+  * `1 <= candidates[i] <= 50`
+  * `1 <= target <= 30`
+  * All elements of candidates are unique.
+
+* 思路
+```java
+
+```
+# 41 缺失的第一个正数(难)
+    Given an unsorted integer array nums. Return the smallest positive integer that is not present in nums.
+
+    You must implement an algorithm that runs in O(n) time and uses O(1) auxiliary space.
+
+* 约束
+  * `1 <= nums.length <= 5 * 10^5`
+  * `-2^31 <= nums[i] <= 2^31 - 1`
+* 思路
+  * 先排序，后处理
+  * 非正整数统统过滤
+  * 从1开始对比，向等继续+1对比，
+    * 至大于对比数或至数组结束终止
+```java
+public int firstMissingPositive(int[] nums) {
+    Arrays.sort(nums);
+    int pos = 1;
+    for(int i=0;i<nums.length;i++){
+        if(nums[i]<=0) continue;
+        if(nums[i]>pos) break;
+        if(nums[i] == pos) pos++;
+    }
+
+    return pos;
+}
+```
+* 官方最优解
+  * 过滤非正整数
+  * 理论情况应为连续正整数，将小于等于数组长度count的值置为负数，最后找到第一个正整数，返回其下标+1
+  * 注意：不能直接将值置为负数，因为负数可能已经置为负数，所以需要取绝对值
+```java
+public int firstMissingPositive(int[] nums) {
+    int size = nums.length;
+    int count= 0;
+    for(int i=0;i<size;i++){ // 过滤非正整数，有效正整数个数为count
+        if(nums[i]>0){
+            nums[count] = nums[i];
+            count++;
+        }
+    }
+    for(int i=0;i<count;i++){ // 将正整数小于count的值置为负数，理论情况下，count个数都转为负
+        int val = Math.abs(nums[i]);
+        if(val - 1 < count && nums[val - 1]>0){ 
+            nums[val - 1] = -nums[val-1];
+        }
+    }
+    for(int i=0;i<count;i++){
+        if(nums[i]>0){ // 找到第一个正整数，返回其下标+1
+            return i+1;
+        }
+    }
+    return count + 1; 
 }
 ```
