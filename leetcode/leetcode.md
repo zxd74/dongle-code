@@ -1951,12 +1951,129 @@ public String countAndSay(int n) {
   * `1 <= target <= 500`
 
 * 思路
-  * 使用回溯算法，每次递归时，判断当前值是否小于目标值，小于则继续递归，否则返回
+  * 对数组排序
+  * 当当前值大于目标值，则终止
+  * 使用回溯算法，将余数当作新目标值，递归获取结果
+  * 对结果进行去重
 ```java
+public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    Arrays.sort(candidates); // 对candidates排序，便于递归逻辑中终止
+    Set<Integer> set = Arrays.stream(candidates).boxed().collect(Collectors.toSet());
+    Map<Integer,List<List<Integer>>> map = new HashMap<>();
+    return combinationSum(candidates,set,map,target);
+}
 
+public List<List<Integer>> combinationSum(int[] candidates,Set<Integer> set,Map<Integer,List<List<Integer>>> map, int target) {
+    Set<List<Integer>> result = new HashSet<>(); // 结果去重，避免重复
+    for (int i = 0; i < candidates.length; i++) {
+        int cur = candidates[i];
+        if (cur>target) { // 因以排序，所以后续的数肯定大于target
+            break;
+        }
+        int quote = target/cur,remain = target % cur;
+        while (quote > 0) {
+            if (remain == 0) { // 代表整除
+                List<Integer> tmp = new ArrayList<>();
+                for (int j = 0; j < quote; j++) tmp.add(cur);
+                result.add(tmp);
+            }else { // 代表非整除,对余数进行递归
+                List<List<Integer>> remainResult;
+                if (map.containsKey(remain)) { // map避免同值重复递归
+                    remainResult = map.get(remain);
+                }else{
+                    remainResult = combinationSum(candidates,set,map,remain); // 结果一定不为空，因result已经初始化
+                    map.put(remain,remainResult);
+                }
+                for (List<Integer> list : remainResult) {
+                    List<Integer> tmp = new ArrayList<>(list);
+                    for (int j = 0; j < quote; j++) tmp.add(cur);
+                    tmp.sort((t1,t2)->t1-t2);
+                    result.add(tmp);
+                }
+            }
+            // 对商减一，对余数追加，进行下一轮循环
+            quote--;remain+=cur;
+        }
+    }
+    return result.stream().collect(Collectors.toList());
+}
 ```
+* **改进版**(官方)
+  * 直接使用目标值减去当前值，做递归循环，直到
+    * 目标值为0，代表可以被整除
+    * 起始索引不小于数组长度，代表遍历结束
+```java
+public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    List<List<Integer>> result = new ArrayList<>();
+    Arrays.sort(candidates); // 对candidates排序，便于递归逻辑中终止
+    combinationSum(candidates,result,new ArrayList<>(),0,target);
+    return result;
+}
+
+public void combinationSum(int[] candidates,List<List<Integer>> result,List<Integer> curr,int idx, int target) {
+    if (target == 0) { // 当余数为0，代表可以被整除，返回上一层
+        result.add(new ArrayList<>(curr)); // 代表数组有效，可将数组加入结果集中
+        return;
+    }
+    for (int i = idx; i < candidates.length; i++) { // 当起始位置溢出时，代表已经遍历完，返回上一层
+        int cur = candidates[i];
+        if (cur>target) break; // 因以排序，所以后续的数肯定大于target
+        curr.add(cur); // 将当前值加入当前数组中
+        combinationSum(candidates,result,curr,i,target-cur);// 递归余数
+        curr.remove(curr.size()-1); // 移除当前值,继续下一轮循环
+    }
+}
+```
+* **官方最优版**
+  * 因为是返回一个抽象数组，初始化时不会执行逻辑
+  * 仅在对结果内容获取时，才会执行逻辑，故而执行逻辑不会耗时(**耗时逻辑在结果调用时**)
+```java
+public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    return new AbstractList<List<Integer>>() {
+        List<List<Integer>> ret;
+        ArrayList<Integer> curr;
+        void init() {
+            if (ret != null) {
+                return;
+            }
+            ret = new LinkedList<>();
+            curr = new ArrayList<>();
+            Arrays.sort(candidates);
+            rec(candidates, 0, target);
+        }
+        @Override
+        public List<Integer> get(int index) {
+            init();
+            return ret.get(index);
+        }
+        @Override
+        public int size() {
+            init();
+            return ret.size();
+        }
+        void rec(int[] candidates, int idx, int target) {
+            if (target == 0) {
+                ret.add(new ArrayList<>(curr));
+                return;
+            }
+            for (int i = idx; i < candidates.length; i++) {
+                int num = candidates[i];
+                if (num > target) {
+                    break;
+                }
+                curr.add(num);
+                rec(candidates, i, target - num);
+                curr.remove(curr.size() - 1);
+            }
+        }
+    };
+    }
+```
+
 # 40 组合总和 II(中)
-    Given a collection of candidate numbers (candidates) and a target number (target), find all unique combinations in candidates where the candidate numbers sum to target. Each number in candidates may only be used once in the combination.
+    Given a collection of candidate numbers (candidates) and a target number (target), find all unique combinations in candidates where the candidate numbers sum to target. 
+    
+    Each number in candidates may only be used once in the combination.
 
     Note: The solution set must not contain duplicate combinations.
 
@@ -1964,7 +2081,6 @@ public String countAndSay(int n) {
   * `1 <= candidates.length <= 100`
   * `1 <= candidates[i] <= 50`
   * `1 <= target <= 30`
-  * All elements of candidates are unique.
 
 * 思路
 ```java
