@@ -1,4 +1,147 @@
-# IP 获取
+# 并发编程
+## 多线程&并发
+1. 方式：thread，runnable,callable
+2. 线程状态：new,runnable,running,blocked,waiting,timed_waiting
+3. 线程同步：synchronized,lock
+4. 线程通信：wait,notify,notifyAll
+5. 线程池：Executor,ExecutorService,ThreadPoolExecutor
+6. 线程安全：synchronized,lock,volatile,final
+7. 线程调度：schedule,scheduleAtFixedRate,scheduleWithFixedDelay
+8. 线程中断：interrupt,interrupted
+9. 线程上下文：ThreadLocal
+
+### Thread
+    无返回值，以对象形式存在的线程任务
+```java
+new Thread(){
+    @Override
+    public void run() {
+        System.out.println("Thread one");
+    }
+}.start();
+```
+### Runnable
+    无返回值的线程任务
+```java
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Runnable one");
+            }
+        }).start(); // new Thread(()-> "Runnable one").start()
+```
+### Callable
+    带返回值的线程任务
+```java
+String result = new Callable<String>(){
+    @Override
+    public String call() throws Exception {
+        return "callable one";
+    }
+}.call(); // ((Callable<String>)() -> "callable one").call()
+System.out.println(result);
+```
+### Future
+```java
+// 创建线程池
+ExecutorService executorService = Executors.newFixedThreadPool(1);
+// 创建任务
+Callable<String> c = new Callable<String>(){
+    @Override
+    public String call() throws Exception {
+        return "callable one";
+    }
+};
+// 绑定任务
+Future<String> future = executorService.submit(c);
+// 等待结果；阻塞式
+String result = future.get();
+System.out.println(result);
+```
+
+### FutureTask&Callable
+```java
+    FutureTask<String> task = new FutureTask<>(()->Integer.valueof("123"));
+    new Thread(task).start(); // 必需或run()，开启任务，否则就单纯是个任务，不会执行
+    if (task.isDone()){
+        ctx.writeAndFlush(task.get());
+    }
+```
+
+### CountDownLatch
+    多线程同步计数器，适用于指定数量的任务，比如商品秒杀
+```java
+public static void main(String[] args) {
+    final int count = 3;
+    final CountDownLatch latch = new CountDownLatch(count);
+
+    for (int i = 0; i < count; i++) {
+        new Thread(() -> {
+            // 线程执行任务
+            System.out.println(Thread.currentThread().getName() + " 执行任务...");
+            // 任务执行完毕，计数器减1
+            latch.countDown();
+        }).start();
+    }
+
+    // 等待所有任务执行完毕
+    latch.await();
+    System.out.println("所有任务执行完毕...");
+}
+```
+
+## 线程池
+### Executors创建线程池
+1. 可缓存无界限：newCachedThreadPool
+2. 指定大小，可控最高并发：newFixedThreadPool
+3. 指定大小、核心线程数、定时周期：newScheduledThreadPool
+4. 单线程化：newSingleThreadExecutor
+
+### 自定义线程池
+参考Executors.newFixedThreadPool
+```java
+
+// int corePoolSize  核心线程数
+// int maximumPoolSize  最大线程数
+// long keepAliveTime 活跃时间，超过这个时间不活跃会自动关闭线程
+// TimeUnit unit    活跃时间单位，与keepAliveTime关联
+// BlockingQueue<Runnable> workQueue 线程队列
+// faThreadFactory threadFactory 线程工厂，指定线程属性
+// RejectedExecutionHandler handler 线程数量到达边界时的处理程序
+
+
+    public static void main(String[] args) {
+        int corePoolSize = 10;
+        int maximumPoolSize = 60;
+        long keepAliveTime = 60;
+        TimeUnit unit = TimeUnit.DAYS;
+        BlockingQueue workQueue = new LinkedBlockingQueue<Runnable>();
+        ThreadFactory threadFactory = r -> {
+            Thread t = new Thread(r,"dongle thread");
+            if (t.isDaemon()) {
+                t.setDaemon(false);
+            }
+            if (t.getPriority() != Thread.NORM_PRIORITY) {
+                t.setPriority(Thread.NORM_PRIORITY);
+            }
+            return t;
+        };
+        RejectedExecutionHandler handler = (r, executor) -> {
+            throw new RejectedExecutionException("Task " + r.toString() +
+                    " rejected from " +
+                    executor.toString());
+        };
+
+        ExecutorService dongle1 = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+        // 绑定factory
+        ExecutorService dongle2 = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,threadFactory);
+        // 绑定超出处理程序
+        ExecutorService dongle3 = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,threadFactory,handler);
+    }
+```
+
+# Net 网络编程
+## IP 获取
 默认网卡IP地址获取
 ```java
 InetAddress.getLocalHost().getHostAddress();
@@ -17,8 +160,7 @@ InetAddress.getLocalHost().getHostAddress();
         }
     }
 ```
-
-# TCP
+## TCP
 ```java
 import java.io.*;
 import java.net.ServerSocket;
@@ -100,7 +242,7 @@ public class Tcp{
     }
 }
 ```
-# UDP
+## UDP
 ```java
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -171,8 +313,8 @@ public class Udp {
 }
 
 ```
-# IO模型
-## 阻塞IO(BIO)
+## IO模型
+### 阻塞IO(BIO)
 * `ServerSocke`t 服务端socket，用于监听客户端连接
 * `Socket` 客户端socket，用于与服务端通信
 * `InputStream` 输入流，用于读取数据
@@ -218,7 +360,7 @@ public class Udp {
         }
     }
 ```
-## 非阻塞IO(NIO)
+### 非阻塞IO(NIO)
 * Buffer 数据缓冲区，用于发送或接收数据
 * Selector 通道选择器，用于监听通道事件
   * `SelectorKey` 通道事件Enum
@@ -332,7 +474,7 @@ public class Udp {
      }  
 ```
 
-## 异步IO(AIO)
+### 异步IO(AIO)
 * `AsynchronousServerSocketChannel`: 异步服务端套接字通道
 * Asynchr`onousSocketChannel: 异步客户端套接字通道
 * `AsynchronousFileChannel`: 异步文件通道
@@ -397,5 +539,90 @@ public class Udp {
             readBuffer.clear();
         }
     }
+```
 
+# JDBC 数据库编程
+`Java DataBase Connectivity`,一种用于执行SQL语句的Java API，链接数据库和Java应用程序的纽带
+
+## 步骤
+1. 加载驱动Driver
+2. 创建链接对象Connection
+3. 发送SQL：Statement
+```java
+// 本实例采用mysql驱动，
+Class.forName("com.mysql.jdbc.Driver");
+// 数据源格式：  jdbc:odbc:数据源
+Connection conn = DriverManager.getConnection("jdbc:mysql:数据源","user name","password");
+Statement sql = conn.createStatement();
+
+// 其他数据源仿照即可
+```
+## 组成
+1. `DriverManager` 类：管理数据库中的所有驱动程序
+2. `Connection` 接口：数据库连接接口
+3. `Statement` 接口：用于在已建立连接的基础上向数据库发送SQL语句
+    1. `Statement`：执行**不带参数**的SQL语句
+    2. `PreparedStatement`：执行**带参数**的SQL语句
+    3. `CallableStatement`：继承PreparedStatement，执行**存储过程**
+4. `ResultSet` 接口：类似临时表，暂存sql执行结果(**查询**)
+
+## 示例
+* MYSQL驱动: `com.mysql.jdbc.Driver`
+```java
+package language.java.jdbc;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+/**
+ * 1. 加载驱动
+ * 2. 创建连接
+ * 3. 执行SQL
+ * 4. 接收结果
+ */
+public class JdbcDemo {
+    static Connection conn;
+    public static Connection getConnection(){
+        try {
+            // 加载JDBC驱动
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/test","test","123456");
+        }catch (Exception ignore){}
+        return conn;
+    }
+    
+    public static ResultSet execute(){
+        ResultSet resultSet = null;
+        try {
+            // 创建Statement，用于执行SQL语句
+            Statement sql = conn.createStatement();
+            // 接受执行结果
+            resultSet = sql.executeQuery("select  * from users");
+        }catch (Exception ignore){}
+        return resultSet;
+    }
+
+    /**
+     * 事务处理
+     */
+    public static void executeTransication(){
+        try{
+            conn.setAutoCommit(false); // 默认自动
+            // 设置事务级别
+            conn.setTransactionIsolation(Connection.TRANSACTION_NONE);
+            Statement sql = conn.createStatement();
+            sql.executeUpdate("");
+            conn.commit();
+            conn.setAutoCommit(true);
+        }catch(Exception ex){
+            try{
+                conn.rollback(); // 触发回滚
+            }catch (Exception eex){
+                eex.printStackTrace();
+            }
+        }
+    }
+}
 ```
