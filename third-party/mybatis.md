@@ -1,3 +1,184 @@
+# Java配置
+* `Resources，InputStream`读取配置资源
+* `SqlSessionFactory` ：`SqlSession`工厂，由`SqlSessionFactoryBuilder`构建
+* `SqlSession`: 执行SQL
+* 在`sqlSessionFactory.openSession`步骤之前都不会进行配置校验(仅读取配置)，只有该步骤之后才会进行配置验证，因为要实际建立连接
+
+```xml
+<dependency>
+    <groupId>org.mybatis</groupId>
+    <artifactId>mybatis</artifactId>
+    <version>3.5.8</version>
+</dependency>
+```
+## with XML
+```java
+String resource = "org/mybatis/example/mybatis-config.xml";
+InputStream inputStream = Resources.getResourceAsStream(resource);
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+// 以上逻辑不进行数据库连接
+SqlSession session = sqlSessionFactory.openSession(); 
+```
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <environments default="development">
+        <environment id="development">
+        <transactionManager type="JDBC"/>
+        <dataSource type="POOLED">
+            <property name="driver" value="${driver}"/>
+            <property name="url" value="${url}"/>
+            <property name="username" value="${username}"/>
+            <property name="password" value="${password}"/>
+        </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <mapper resource="org/mybatis/example/BlogMapper.xml"/>
+    </mappers>
+</configuration>
+```
+## without XML
+```java
+DataSource dataSource = BlogDataSourceFactory.getBlogDataSource();
+TransactionFactory transactionFactory = new JdbcTransactionFactory();
+Environment environment = new Environment("development", transactionFactory, dataSource);
+Configuration configuration = new Configuration(environment);
+configuration.addMapper(BlogMapper.class);
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
+// 以上逻辑不进行数据库连接
+SqlSession session = sqlSessionFactory.openSession(); 
+```
+
+# Spring配置
+## Spring基础
+    需要SpringFramework依赖，和Mybatis依赖，具体逻辑和SpringBoot一致，只是配置文件比较冗余
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.1.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd">
+   
+    <!-- 配置文件 -->
+    <context:property-placeholder location="classpath:config/*.properties"/>
+    <!-- 数据源 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+       destroy-method="close">
+       <property name="url" value="${jdbc.url}" />
+       <property name="username" value="${jdbc.username}" />
+       <property name="password" value="${jdbc.password}" />
+       <property name="driverClassName" value="${jdbc.driver}" />
+       <property name="maxActive" value="10" />
+       <property name="minIdle" value="5" />
+       <property name="logAbandoned" value="true" />
+    </bean>
+    <!-- 配置sqlsessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+       <property name="configLocation" value="classpath:mybatis/SqlMapConfig.xml"></property>
+       <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!-- 配置扫描包，加载mapper代理对象 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+       <property name="basePackage" value="com.ssm.manager.mapper"></property>
+    </bean>
+</beans>
+```
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+ 
+    <!-- 事务管理器 -->
+    <bean id="transactionManager"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+       <!-- 数据源 -->
+       <property name="dataSource" ref="dataSource" />
+    </bean>
+    <!-- 通知 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+       <tx:attributes>
+           <!-- 传播行为 -->
+           <tx:method name="save*" propagation="REQUIRED" />
+           <tx:method name="insert*" propagation="REQUIRED" />
+           <tx:method name="add*" propagation="REQUIRED" />
+           <tx:method name="create*" propagation="REQUIRED" />
+           <tx:method name="delete*" propagation="REQUIRED" />
+           <tx:method name="update*" propagation="REQUIRED" />
+           <tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+           <tx:method name="select*" propagation="SUPPORTS" read-only="true" />
+           <tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+       </tx:attributes>
+    </tx:advice>
+    <!-- 切面 -->
+    <aop:config>
+       <aop:advisor advice-ref="txAdvice"
+           pointcut="execution(* com.ssm.manager.service.*.*(..))" />
+    </aop:config>
+</beans>
+```
+## SpringBoot
+1. 添加依赖
+```xml
+<dependency>
+    <groupId>org.mybatis</groupId>
+    <artifactId>mybatis</artifactId>
+    <version>3.5.0</version>
+</dependency>
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+1. 创建Mapper接口：`@Mapper,@Dao,..`
+```java
+package com.dongle.spring.boot.dao;
+
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserDao {
+
+    int insert();
+    // ...
+}
+```
+3. 配置Mapper接口对应Mapper配置文件：通常使用插件一键生成初始化文件
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+  
+<!-- 指定工作空间，要与接口名相同，源代码没有去看，猜测应该是通过"这里的namespace.下边方法的id"来定位方法的 -->  
+<mapper namespace="com.dongle.spring.boot.dao">  
+
+    <!-- insert user -->
+    <insert id = "insert" parameterType="com.dongle.spring.boot.entity.User">
+        INSERT INTO USER(id,username,age,sex,cp,birthdate) VALUES(#{id},#{username},#{age},#{sex},#{cp},#{birthdate});
+    </insert>
+    
+    <!-- .... -->
+</mapper>
+```
+4. spring配置mybatis mapper路径
+```properties
+# 注意 spring boot集成mybatis，有特定属性标识mybatis参数，不要自定义，否则spring boot找不到
+mybatis.mapperLocations=classpath:mapper/*.xml
+```
+
 # generator
 [官网: http://mybatis.org/generator/index.html]
 
@@ -280,43 +461,4 @@ public class MyCommonGenerator implements CommentGenerator {
         }
     }
 }
-```
-
-# Building SqlSessionFactory
-## with XML
-```java
-String resource = "org/mybatis/example/mybatis-config.xml";
-InputStream inputStream = Resources.getResourceAsStream(resource);
-SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-```
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE configuration
- PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
- "http://mybatis.org/dtd/mybatis-3-config.dtd">
-<configuration>
-    <environments default="development">
-        <environment id="development">
-        <transactionManager type="JDBC"/>
-        <dataSource type="POOLED">
-            <property name="driver" value="${driver}"/>
-            <property name="url" value="${url}"/>
-            <property name="username" value="${username}"/>
-            <property name="password" value="${password}"/>
-        </dataSource>
-        </environment>
-    </environments>
-    <mappers>
-        <mapper resource="org/mybatis/example/BlogMapper.xml"/>
-    </mappers>
-</configuration>
-```
-## without XML
-```java
-DataSource dataSource = BlogDataSourceFactory.getBlogDataSource();
-TransactionFactory transactionFactory = new JdbcTransactionFactory();
-Environment environment = new Environment("development", transactionFactory, dataSource);
-Configuration configuration = new Configuration(environment);
-configuration.addMapper(BlogMapper.class);
-SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
 ```
