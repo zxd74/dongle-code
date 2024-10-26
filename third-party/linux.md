@@ -20,3 +20,17 @@ curl http://mirrors.aliyun.com/repo/Centos-7.repo -o /etc/yum.repos.d/CentOS-Bas
 yum clean all
 yum makecache fast
 ```
+# 更换软件源
+```shell
+mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+
+yum clean all
+yum makecache
+
+yum update -y
+yum install gcc-c++ wget openssl -y # 基础工具
+yum lsof net-tools -y # 网络工具
+```
+# 第三方
+* [docker](./docker.md#安装)
