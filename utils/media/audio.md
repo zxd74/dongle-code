@@ -11,4 +11,5 @@
   * `com.baidu.duersdk.opensdk`
   * `com.iflytek.tts`
 * java
-  * `jacob`
+  * `com.hynnet:jacob`
+  * `com.microsoft.cognitiveservices.speech:client-sdk`
