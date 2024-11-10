@@ -1,3 +1,30 @@
+# 集成SDK
+## 离线SDK
+1. Android Studio切换成项目Project目录
+2. 将{SDK}.jar包添加到{app}/libs目录下(与src同级)
+3. 并将其`*.jar`作为library引入到项目中(右键或build.gradle配置)
+```gradle
+dependencies {
+    // ...
+    implementation files('libs\\{SDK}.jar') // 离线SDK导入
+
+    implementation 'androidx.core:core-ktx:1.3.1' // 在线依赖导入
+}
+```
+## 本地Module
+1. 将SDK作为Module导入项目中
+2. 在使用项目下的build.gradle添加module依赖
+```gradle
+dependencies {
+    // ...
+    // compile project(':{SDK}') // 本地Module导入
+    implementation project(':{SDK}') // 本地Module导入
+}
+```
+## 自定义SDK
+
+
+
 # 数据转换
 ## TextToSpeech(TTS)
 
