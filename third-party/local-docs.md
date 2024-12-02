@@ -1,6 +1,94 @@
-# 本地环境部署
+**提示**：
+* 部分项目在github仓库中的action中有官方打包结果，可以参考使用
+* 部分项目使用了hugo框架，本地部署采用docker容器时，需确保内外访问url一致(尤其端口)，否则会被跳转，导致访问失败(暂未解决)
+    * 可修改`hogo.toml`配置中的`baseURL`
 
-## React.dev
+# docs.docker.com
+* 克隆 ：`git@github.com:docker/docs.git`
+* 构建项目
+  * 修改hugo.yaml:`proxy:https://goproxy.cn,direct`,国内代理
+  * 增加nginx配置文件`default.conf`，用于代理
+  * 修改Dockerfile：适应本地部署，并补充DOCS_URL
+    ```Dockerfile
+    # syntax=docker/dockerfile:1
+
+    # GO_VERSION sets the Go version for the base stage
+    ARG GO_VERSION=1.22
+
+    # base is the base stage with build dependencies
+    FROM golang:${GO_VERSION}-alpine AS base
+    WORKDIR /src
+    RUN apk --update add nodejs npm git gcompat
+
+    # node installs Node.js dependencies
+    FROM base AS node
+    COPY package.json .
+    ENV NODE_ENV=production
+    RUN npm config set registry https://registry.npmmirror.com
+    RUN npm install
+
+    # hugo downloads and extracts the Hugo binary
+    FROM base AS hugo
+    ARG HUGO_VERSION=0.127.0
+    ARG TARGETARCH
+    WORKDIR /tmp/hugo
+    COPY hugo_extended_0.127.0_linux-amd64.tar.gz hugo.tar.gz
+    RUN tar -xf "hugo.tar.gz" hugo
+
+    # build-base is the base stage for building the site
+    FROM base AS build-base
+    COPY --from=hugo /tmp/hugo/hugo /bin/hugo
+    COPY --from=node /src/node_modules /src/node_modules
+    COPY . .
+
+    # build creates production builds with Hugo
+    FROM build-base AS build
+    ARG HUGO_ENV=production
+    # 配置的地址和外部访问地址应完全一致，否则跳转失败
+    ARG DOCS_URL=http://localhost:1310
+    RUN hugo --gc --minify -e $HUGO_ENV -b $DOCS_URL
+
+    # deploy on nginx
+    FROM nginx 
+    COPY --from=build /src/public /usr/share/nginx/html
+    COPY default.conf /etc/nginx/conf.d/default.conf
+    EXPOSE 1310
+    ```
+  * 容器部署
+    ```shell
+    docker build -t dongle/docker-docs .
+    docker run -d --name docker-docs -p 1310:1310 dongle/docker-docs
+    ```
+* 访问：`http://localhost:<port>`
+* 提示：
+  * docker官方仓库中有镜像`docs/docker.github.io`，可以参考使用,不过不再持续更新了
+
+# git-scm.com
+* 克隆仓库：`git@github.com:git/git-scm.git`
+* 构建项目：做一些本地适配
+    ```Dockerfile
+    # Dockerfile
+    # 包含node和hugo环境
+    FROM dongle/node   
+
+    LABEL maintainer="Dongle"
+    LABEL version="1.0.0"
+    LABEL description="Git Docs by Dongle"
+    WORKDIR /src
+    # 拷贝打包后的文件
+    COPY git-scm.com/ .
+    RUN npm install
+    RUN hugo -b http://localhost:1311  
+    EXPOSE 1311
+    CMD []
+    ```
+    ```shell
+    docker build -t dongle/git-docs .
+    docker run -d --name git-docs -p 1311:1311 dongle/git-docs  # 端口映射内外需要一致
+    ```
+* 访问：`http://localhost:1311`
+
+# React.dev
 1. 克隆仓库：`git@github.com:reactjs/react.dev.git` (`84f29eb20af17e9c154b9ad71c21af4c9171e4a2`)
 2. 调整项目
     ```shell
