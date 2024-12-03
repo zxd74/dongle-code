@@ -3,6 +3,25 @@
 * 部分项目使用了hugo框架，本地部署采用docker容器时，需确保内外访问url一致(尤其端口)，否则会被跳转，导致访问失败(暂未解决)
     * 可修改`hogo.toml`配置中的`baseURL`
 
+
+# Docker config
+* env环境变量
+```env
+DONGLE_DOCKER_PORT=1310
+DONGLE_GIT_PORT=1311
+DONGLE_HUGO_PORT=1313
+DONGLE_REACT_PORT=1314
+DONGLE_REACT_NATIVE_PORT=1315
+DONGLE_VITE_PORT=1316
+DONGLE_VITE_CN_PORT=1317
+DONGLE_VUE_PORT=1318
+DONGLE_WEBPACK_PORT=1319
+```
+* compose.yml
+```yaml
+
+```
+
 # docs.docker.com
 * 克隆 ：`git@github.com:docker/docs.git`
 * 构建项目
@@ -65,22 +84,31 @@
 
 # git-scm.com
 * 克隆仓库：`git@github.com:git/git-scm.git`
+* 下载hugo: `hugo_extended_0.139.3_linux-amd64.tar.gz`
 * 构建项目：做一些本地适配
     ```Dockerfile
-    # Dockerfile
-    # 包含node和hugo环境
-    FROM dongle/node   
-
-    LABEL maintainer="Dongle"
-    LABEL version="1.0.0"
-    LABEL description="Git Docs by Dongle"
+    FROM dongle/node AS base
     WORKDIR /src
-    # 拷贝打包后的文件
-    COPY git-scm.com/ .
-    RUN npm install
-    RUN hugo -b http://localhost:1311  
+    RUN apk --update add gcompat # 重要，否则hugo即使在/bin也不会被发现
+
+    FROM base AS hugo
+    ARG HUGO_VERSION=0.139.3
+    WORKDIR /tmp/hugo
+    COPY hugo_extended_0.139.3_linux-amd64.tar.gz hugo.tar.gz
+    RUN tar -xf "hugo.tar.gz" hugo
+
+    FROM base AS build-base
+    COPY --from=hugo /tmp/hugo/hugo /bin/hugo
+    COPY git-scm/ .
+
+    FROM build-base AS build
+    RUN hugo
+
+    FROM base
+    COPY --from=build /src/public /src/public
+    COPY --from=build /src/script /src/script
     EXPOSE 1311
-    CMD []
+    CMD ["node","script/serve-public.js"]
     ```
     ```shell
     docker build -t dongle/git-docs .
@@ -141,3 +169,52 @@
     # 注意，如果外部访问，需要对外开放<port>端口
     ```
 5. 访问: `http://<host|ip>:<port>`
+
+# redis.io
+```Dockerfile
+FROM dongle/node AS base
+WORKDIR /src
+RUN apk --update add gcompat
+
+FROM base AS hugo
+WORKDIR /tmp/hugo
+COPY hugo_extended_0.127.0_linux-amd64.tar.gz hugo.tar.gz
+RUN tar -xf "hugo.tar.gz" hugo
+
+FROM base AS build
+COPY --from=hugo /tmp/hugo/hugo /bin/hugo
+COPY redis-docs .
+RUN hugo -b "http://localhost:1321"
+
+FROM nginx
+COPY --from=build /src/public usr/share/nginx/html
+COPY default.conf /etc/nginx/conf.d/
+```
+
+# tailwindcss.com
+* `git clone git@github.com:tailwindlabs/tailwindcss.com.git`
+* 调整项目
+  * 修改`next.config.js`
+    ```txt
+    export default {
+        //...
+        images:{unoptimized: true} // 允许使用非优化图片
+    }
+    ```
+* 项目构建部署
+    ```Dockerfile
+    FROM dongle/node AS build 
+    WORKDIR /src
+    # RUN npm config set registry https://registry.npmmirror.com # 原始node镜像需配置代理仓库
+    COPY tailwindcss.com/ .
+    RUN npm install
+    RUN npm run export
+
+    FROM nginx
+    COPY --from=build /src/out  /usr/share/nginx/html
+    ```
+    ```shell
+    docker build -t dongle/tailwindcss-docs .
+    docker run -d --name tailwindcss-website -p <port>:80 dongle/tailwindcss-docs
+    ```
+* 访问: `http://<host|ip>:<port>`
