@@ -171,25 +171,48 @@ DONGLE_WEBPACK_PORT=1319
 5. 访问: `http://<host|ip>:<port>`
 
 # redis.io
+* 克隆仓库：`git@github.com:redis/redis-doc.git` (`v3.0.0`)
+* 下载hugo: `hugo_extended_0.111.2_linux-amd64.tar.gz`
+* 调整项目：做一些本地适配
+  * 修改`redis-docs/build/components/component.py`,`def _git_clone`方法中取消`run(f'git fetch --all --tags', cwd=to)`内容
+  * 修改`config.toml`配置`baseURL`为合适地址，如`http://localhost:1321`
+  * 准备`sources.list`文件，使其采用国内源代理(python镜像基础系统debina)
+  * 准备`default.conf`文件，修改端口监听与准备地址端口一致
+* 构建项目
 ```Dockerfile
-FROM dongle/node AS base
+FROM python AS base 
+COPY sources.list /etc/apt/sources.list
 WORKDIR /src
-RUN apk --update add gcompat
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
+RUN apt-get update 
+RUN apt-get install -y nodejs npm rsync
+#RUN pipx ensurepath
+RUN git config --global http.sslverify false
+RUN echo '20.205.243.166 github.com' >> /etc/hosts
+RUN npm config set registry https://registry.npmmirror.com
 
 FROM base AS hugo
 WORKDIR /tmp/hugo
-COPY hugo_extended_0.127.0_linux-amd64.tar.gz hugo.tar.gz
+COPY hugo_extended_0.111.2_linux-amd64.tar.gz hugo.tar.gz
 RUN tar -xf "hugo.tar.gz" hugo
 
-FROM base AS build
+FROM base AS build-base
 COPY --from=hugo /tmp/hugo/hugo /bin/hugo
 COPY redis-docs .
-RUN hugo -b "http://localhost:1321"
+
+FROM build-base AS build
+RUN make 
 
 FROM nginx
 COPY --from=build /src/public usr/share/nginx/html
 COPY default.conf /etc/nginx/conf.d/
 ```
+```shell
+docker build -t dongle/redis-docs .
+# port 必需与配置的baseUrl中的port一致，否则跳转异常
+docker run -d --name redis-website -p <port>:<port> dongle/redis-docs
+```
+* **注意**：认真阅读`redis-docs/README`，了解构建准备工作（hugo必需是`v0.111.2`版本）
 
 # tailwindcss.com
 * `git clone git@github.com:tailwindlabs/tailwindcss.com.git`
