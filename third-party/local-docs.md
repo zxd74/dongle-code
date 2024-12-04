@@ -178,17 +178,18 @@ DONGLE_WEBPACK_PORT=1319
   * 修改`config.toml`配置`baseURL`为合适地址，如`http://localhost:1321`
   * 准备`sources.list`文件，使其采用国内源代理(python镜像基础系统debina)
   * 准备`default.conf`文件，修改端口监听与准备地址端口一致
+  * 准备`hosts`文件，配置`github.com`地址(通过各中ping测速网站获取有效IP):`20.205.243.166 github.com`
 * 构建项目
 ```Dockerfile
 FROM python AS base 
 COPY sources.list /etc/apt/sources.list
+COPY hosts /etc/hosts
 WORKDIR /src
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
 RUN apt-get update 
 RUN apt-get install -y nodejs npm rsync
 #RUN pipx ensurepath
 RUN git config --global http.sslverify false
-RUN echo '20.205.243.166 github.com' >> /etc/hosts
 RUN npm config set registry https://registry.npmmirror.com
 
 FROM base AS hugo
