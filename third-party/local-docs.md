@@ -242,3 +242,33 @@ docker run -d --name redis-website -p <port>:<port> dongle/redis-docs
     docker run -d --name tailwindcss-website -p <port>:80 dongle/tailwindcss-docs
     ```
 * 访问: `http://<host|ip>:<port>`
+
+# nodejs.org
+* `git clone git@github.com:nodejs/nodejs.org.git`
+* 调整项目: 因下载相关模块需要关联访问一些国外网站
+  * 因环境问题
+    * 将本地下载地址转到官网地址: `/download`=> `https://nodejs.org/en/download`
+    * 将本地博客转到官网地址：`/blog`=> `https://nodejs.org/en/blog`
+  * 因静态化操作比较复杂，同样会涉及外网，故不做静态处理
+  * 修改`package.json`: 为`dev`脚本绑定端口
+    ```json
+    //...
+    "scripts": {
+        "dev": "cross-env NODE_NO_WARNINGS=1 next dev --turbopack -p 1312",
+        //...
+    }    
+    ```
+* 项目构建部署
+    ```Dockerfile
+    FROM dongle/node
+    WORKDIR /src
+    COPY nodejs.org/ .
+    RUN npm config set registry https://registry.npmmirror.com
+    RUN npm install
+    EXPOSE 1312 # 与pakcage.json中dev命令绑定的端口一致
+    ENTRYPOINT ["npm", "run","dev"]
+    ```
+    ```shell
+    docker build -t dongle/nodejs.org .
+    docker run -d --name nodejs.org -p 1312:1312 dongle/nodejs.org
+    ```
