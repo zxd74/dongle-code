@@ -272,3 +272,73 @@ docker run -d --name redis-website -p <port>:<port> dongle/redis-docs
     docker build -t dongle/nodejs.org .
     docker run -d --name nodejs.org -p 1312:1312 dongle/nodejs.org
     ```
+
+# mongodb.com
+* `git clone git@github.com:mongodb/docs.git`
+* 调整项目
+  * 修改requirements.txt: 指定sphin版本，参考`https://github.com/mongodb/docs-tools/requirements.txt`
+* 构建项目(python2环境)
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM python:2 AS build
+    RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
+    COPY hosts /etc/hosts
+    COPY sources.list /etc/apt/sources.list
+    WORKDIR /src
+    COPY docs/ .
+    # 推荐启动容器，在内部执行构建过程，存在部分问题需要解决
+    #RUN apt update && apt install vim rsync
+    #RUN pip install -r requirements.txt
+    #RUN make html
+
+    #FROM nginx:alpine
+    #COPY --from=build /src/build/master/html /usr/share/nginx/html
+    ```
+  * 容器内构建
+    ```shell
+    python2 -m pip install giza # 注意giza包依赖的部分版本比实际限制版本高，需要查看docs-tools/giza/requirements.txt重新安装冲突依赖
+    echo "185.199.109.133 raw.githubusercontent.com" >> /etc/hosts
+    make html # 构建可能需要多次，原因未知，这也是不直接通过Dockerfile直接构建的原因
+    # 打包成功后
+        # 在 build/master/html 目录为为打包为html的结果
+        # 在 build/public/master/manual-master.tar.gz 为build/master/html的打包结果
+    ```
+  * 部署新Dockerfile
+    ```Dockerfile
+    FROM nginx
+    COPY html /usr/share/nginx/html
+    ```
+
+# vuejs.org
+* 克隆项目
+  * v2.x：`git clone git@github.com:vuejs/v2.vuejs.org.git`
+  * v3.x: `git clone git@github.com:vuejs/docs.git`
+    * cn版：`git@github.com:vuejs-translations/docs-zh-cn.git`
+* 构建项目
+  * 2.x构建，采用`hexo`构建,默认输出路径为 `public`
+    ```Dockerfile
+    FROM dongle/node AS build
+    WORKDIR /src
+    # Vue2.x强制node>=18 and npm=10.9.2版本,并且构建时需要git功能
+    COPY v2.vuejs.org/ . 
+    RUN apk add --no-cache git
+    RUN npm install -g npm@10.9.2
+
+    RUN npm install && npm build
+
+    FROM nginx:alpine
+    COPY --from=build /src/public/ /usr/share/nginx/html/
+    ```
+  * 3.x构建，采用`vitepress`构建,默认输出路径为 `.vitepress/dist`
+    ```Dockerfile
+    FROM dongle/node AS build
+    WORKDIR /src
+    COPY docs .
+    RUN npm install -g pnpm@9.1.4 # 指定pnpm版本
+    RUN pnpm install
+    RUN pnpm run build
+
+    # vue3.x 强制使用pnpm包管理，并且采用vitepree构建项目，默认输出路径为 .vitepress/dist
+    FROM nginx:alpine
+    COPY --from=build /src/.vitepress/dist /usr/share/nginx/html
+    ```
