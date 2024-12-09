@@ -116,7 +116,7 @@ DONGLE_WEBPACK_PORT=1319
     ```
 * 访问：`http://localhost:1311`
 
-# React.dev
+# react.dev
 1. 克隆仓库：`git@github.com:reactjs/react.dev.git` (`84f29eb20af17e9c154b9ad71c21af4c9171e4a2`)
 2. 调整项目
     ```shell
@@ -174,46 +174,62 @@ DONGLE_WEBPACK_PORT=1319
 * 克隆仓库：`git@github.com:redis/redis-doc.git` (`v3.0.0`)
 * 下载hugo: `hugo_extended_0.111.2_linux-amd64.tar.gz`
 * 调整项目：做一些本地适配
-  * 修改`redis-docs/build/components/component.py`,`def _git_clone`方法中取消`run(f'git fetch --all --tags', cwd=to)`内容
-  * 修改`config.toml`配置`baseURL`为合适地址，如`http://localhost:1321`
   * 准备`sources.list`文件，使其采用国内源代理(python镜像基础系统debina)
-  * 准备`default.conf`文件，修改端口监听与准备地址端口一致
-  * 准备`hosts`文件，配置`github.com`地址(通过各中ping测速网站获取有效IP):`20.205.243.166 github.com`
+  * 修改Makefile，为components添加`--skip-clone`，将以下克隆仓库提前克隆
+    * 修改`build/components/component.py#ALL.__init__`方法中`self._skip_clone = self.get('skip_clone')`为`self._skip_clone = args.get('skip_clone')`（可能时bug还未修复）
+    ```Makefile
+    components:
+        @python3 build/make.py --skip-clone
+    hugo:
+	    @hugo $(HUGO_DEBUG) $(HUGO_BUILD) -b /
+    ```
+  * 提前克隆`example`仓库：详情见`data/components/index.json#clients`,具体地址见`data/components/{name}.json#examples.git_uri`
+    ```shell
+    git clone https://github.com/redis/NRedisStack.git
+    git clone https://github.com/redis/go-redis.git
+    git clone https://github.com/redis/node-redis.git
+    git checkout emb-examples # 对node-redis切换emb-examples分支
+
+    git clone https://github.com/redis/jedis.git
+    git clone https://github.com/redis/lettuce.git
+    git checkout doctests # 对lettuce切换doctests分支
+
+    git clone https://github.com/redis/redis-vl-python.git
+    git clone https://github.com/redis/redis-py
+    ```
+  * 修改layout目录中html中定义的部分本地url跳转：因hugo会将所有页面生成对应文档，其内包含index.html，若访问的URL后没有根`/`，则会直接找对应文件，而不是目录中的index.html
+    * 注意：仅限`layout`目录
+    ```txt
+    正则：(\{\{ .Scratch.Get "path" \}\}/.*[^/])(') =》 $1/'
+    正则：("./.*[^/])(") =》 $1/"
+    ```
+    * 另外对于以`https://redis.io/docs/`和`https://redis.io/docs/latest`开头的链接，是本项目的链接，可移除前缀，其它不变
 * 构建项目
-```Dockerfile
-FROM python AS base 
-COPY sources.list /etc/apt/sources.list
-COPY hosts /etc/hosts
-WORKDIR /src
-RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
-RUN apt-get update 
-RUN apt-get install -y nodejs npm rsync
-#RUN pipx ensurepath
-RUN git config --global http.sslverify false
-RUN npm config set registry https://registry.npmmirror.com
+    ```Dockerfile
+    FROM dongle/node AS base
+    RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    RUN apk add make python3 py3-pip git bash rsync gcompat 
+    RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MANAGED.bk
+    RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
+    WORKDIR /src
 
-FROM base AS hugo
-WORKDIR /tmp/hugo
-COPY hugo_extended_0.111.2_linux-amd64.tar.gz hugo.tar.gz
-RUN tar -xf "hugo.tar.gz" hugo
+    FROM base AS hugo
+    WORKDIR /tmp/hugo
+    COPY hugo_extended_0.111.2_linux-amd64.tar.gz hugo.tar.gz
+    RUN tar -xf "hugo.tar.gz" hugo
 
-FROM base AS build-base
-COPY --from=hugo /tmp/hugo/hugo /bin/hugo
-COPY redis-docs .
+    FROM base AS build-base
+    COPY --from=hugo /tmp/hugo/hugo /bin/hugo
+    COPY redis-docs .
+    COPY clients/ /tmp/
 
-FROM build-base AS build
-RUN make 
+    FROM build-base AS build
+    RUN make 
 
-FROM nginx
-COPY --from=build /src/public usr/share/nginx/html
-COPY default.conf /etc/nginx/conf.d/
-```
-```shell
-docker build -t dongle/redis-docs .
-# port 必需与配置的baseUrl中的port一致，否则跳转异常
-docker run -d --name redis-website -p <port>:<port> dongle/redis-docs
-```
-* **注意**：认真阅读`redis-docs/README`，了解构建准备工作（hugo必需是`v0.111.2`版本）
+    FROM nginx:alpine
+    COPY --from=build /src/public usr/share/nginx/html
+    ```
+* **注意**：认真阅读`redis-docs/README`，了解构建准备工作（如hugo必需是`v0.111.2`版本）
 
 # tailwindcss.com
 * `git clone git@github.com:tailwindlabs/tailwindcss.com.git`
@@ -341,4 +357,47 @@ docker run -d --name redis-website -p <port>:<port> dongle/redis-docs
     # vue3.x 强制使用pnpm包管理，并且采用vitepree构建项目，默认输出路径为 .vitepress/dist
     FROM nginx:alpine
     COPY --from=build /src/.vitepress/dist /usr/share/nginx/html
+    ```
+# sphinx-docs.org
+* `git clone git@github.com:sphinx-doc/sphinx-docs.git`
+* 构建项目
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM dongle/node AS build
+    RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    RUN apk add make python3 py3-pip 
+    RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MANAGED.bk
+    RUN pip install docutils sphinx
+    WORKDIR /src
+    COPY sphinx-master/ .
+    RUN npm install
+    RUN make docs target=html
+
+    FROM nginx:alpine
+    COPY --from=build /src/doc/_build/html /usr/share/nginx/html
+    ```
+
+# dubbo
+* `git clone git@github.com:apache/dubbo-website.git`
+* 构建项目
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM dongle/node AS base
+    RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    RUN apk add go git gcompat
+    RUN go env -w GO111MODULE=on && go env -w  GOPROXY=https://goproxy.cn,direct
+    WORKDIR /src
+
+    FROM base AS hugo
+    COPY hugo_extended_0.139.3_linux-amd64.tar.gz hugo.tar.gz
+    RUN tar -zxvf hugo.tar.gz -C /tmp/hugo
+
+    FROM  base AS build
+    COPY --from=hugo /tmp/hugo/hugo /bin/hugo
+    COPY dubbo-website .
+    RUN npm install
+    RUN hugo -b /
+
+    FROM nginx:alpine
+    COPY public /usr/share/nginx/html
     ```
