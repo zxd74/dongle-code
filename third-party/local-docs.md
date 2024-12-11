@@ -129,46 +129,64 @@ DONGLE_WEBPACK_PORT=1319
     cp src/content/errors/index.md src/content/errors/default.md
 
     # 修改`/community/translations`对应文件(translations可能是某些插件的内部成员)
-    cp src/content/community/translations.md src/content/community/translations/translations.md
+    cp src/content/community/translations.md src/content/community/translations-doc.md
     # 同理修改各调用方的调用路径`/community/translations` 改为`/community/translations-doc`
     vi .sidebarCommunity.tsx
     vi src/components/Layout/TopNav/TopNav.tsx
 
-    # 下载 https://raw.githubusercontent.com/facebook/react/main/scripts/error-codes/codes.json 存储为src/pages/errors/error-codes.json
+    # 下载 https://raw.githubusercontent.com/facebook/react/main/scripts/error-codes/codes.json 存储为src/pages/errors/codes.json
     # 并修改 src/pages/errors/[errors].tsx中获取errorcodes的方式
     vi src/pages/errors/[errors].tsx
-    # 导入error-codes.json
-    import * as ErrorCodes from './error-codes.json';
-    # 修改 let cachedErrorCodes: Record<string, string> | null = null;
-    let cachedErrorCodes: Record<string, string> | null = ErrorCodes;
+    import * as ErrorCodes from './codes.json';
+    let cachedErrorCodes: Record<string, string> = ErrorCodes;
 
-    # 删除patches目录
-    rm -rf patches
-    # 删除原依赖锁定(便于通过代理下载依赖)
-    rm -f yarn.lock
+    # 对scripts/downloadFonts.mjs的下载功能做try..catch处理，防止下载失败导致构建失败
+
+    # 删除部分文件
+    rm -rf patches yarn.lock
+
+    # 由于需要导出静态html，额外做一些配置
+    vi next.config.js
+    export: {
+        output:'export',
+        images:{unoptimized:true,},
+    },
     ```
 3. 构建打包：为`next.config.js`配置`output:export`, 执行`yarn build`
    1. next v10之前需要额外使用`yarn export`命令才能生成静态HTML(也需要在`package.json`绑定脚本)
    2. 打包生成`out`目录
 4. 部署(docker部署)
     ```Dockerfile
-    # Dockerfile
-    FROM nginx
-    
-    LABEL maintainer="Dongle"
-    LABEL version="1.0.0"
-    LABEL description="React Site by Dongle"
-    WORKDIR /usr/share/nginx/html
-    # 拷贝打包后的文件
-    COPY out/ .
-    ```
-    ```shell
-    docker build -t dongle/react-docs .
-    docker run -d --name react-website -p <port>:80 dongle/react-docs
+    FROM dongle/node AS build
+    RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    RUN apk add curl
+    RUN yarn config set registry https://registry.npmmirror.com
+    WORKDIR /src
+    COPY react.dev .
+    RUN yarn install
+    RUN yarn add react@0.0.0-experimental-16d053d59-20230506 react-dom@0.0.0-experimental-16d053d59-20230506
+    RUN yarn build
 
-    # 注意，如果外部访问，需要对外开放<port>端口
+    FROM nginx:alpine
+    COPY --from=build /src/out /usr/share/nginx/html
     ```
-5. 访问: `http://<host|ip>:<port>`
+
+## reactnative.dev
+* 克隆仓库：`git@github.com:reactnative/react-native-website.git`
+* 调整项目：做一些本地适配
+  * 修改`website/package.json`中`build`脚本，只执行`docusaurus build`即可
+* 构建项目镜像
+    ```Dockerfile
+    FROM dongle/node AS build
+    RUN yarn config set registry https://registry.npmmirror.com
+    WORKDIR /src
+    COPY react-native-website .
+    RUN yarn install
+    RUN yarn build
+
+    FROM nginx:alpine
+    COPY --from=build /src/website/build /usr/share/nginx/html
+    ```
 
 # redis.io
 * 克隆仓库：`git@github.com:redis/redis-doc.git` (`v3.0.0`)
@@ -400,4 +418,58 @@ DONGLE_WEBPACK_PORT=1319
 
     FROM nginx:alpine
     COPY public /usr/share/nginx/html
+    ```
+
+# django
+* `git clone git@github.com:django/django.git`
+* 构建项目
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM dongle/python:alpine AS build
+    RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
+    RUN apk add make
+    WORKDIR /src
+    COPY  django/docs .
+    RUN pip install -r requirements.txt
+    RUN make html
+
+    FROM nginx:alpine
+    COPY --from=build /src/_build/html /usr/share/nginx/html
+    ```
+
+## docs.django.com
+* `git clone git@github.com:django/django.git`
+* 构建项目
+  * 构建环境Dockerfile
+```Dockerfile
+```
+
+# go-docs
+* `git clone git@github.com:go/website.git`
+* 构建项目
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM dongle/golang # alpine
+    WORKDIR /src
+    COPY go-website .
+    RUN go mod tidy
+    EXPOSE 80
+    CMD ["go","run","./cmd/golangorg","-http","0.0.0.0:80"]
+    ```
+
+# docusaurus
+* `git clone git@github.com:facebook/docusaurus.git`
+* 构建项目
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM dongle/node AS build
+    RUN yarn config set registry https://registry.npmmirror.com
+    WORKDIR /src
+    COPY docusaurus .
+    RUN yarn install
+    RUN yarn build:website
+
+    FROM nginx:alpine
+    COPY --from=build /src/website/build /usr/share/nginx/html
     ```
