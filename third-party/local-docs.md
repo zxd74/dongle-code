@@ -459,17 +459,28 @@ DONGLE_WEBPACK_PORT=1319
     ```
 
 # docusaurus
-* `git clone git@github.com:facebook/docusaurus.git`
+* `git clone git@github.com:facebook/docusaurus.git`(3.6.3)
+  * 最好从github仓库下载tag已经发布的版本，不要使用`git clone`命令，否则会出现构建失败的问题(部分环境问题)
+    * 例如`website/_dogfooding/_asset-tests/image with spaces.png`空格问题，导致引用失败(需要转码引用，如空格转%20)
+* 环境：`node>=18`(推荐18)
+* 调整项目
+  * 删除`yarn.lock`文件(加速)
+  * 将`package.json`中的`workspaces`去除`packages/*`内容，完全依赖官方资源库(本地构建存在bug)
+  * 将`website/docusaurus.config.ts`中的`svgr`相关配置移除(docusaurus暂不支持)
 * 构建项目
   * 构建环境Dockerfile
     ```Dockerfile
-    FROM dongle/node AS build
+    FROM dongle/node:18-alpine AS build
+    # node 22需要额外安装(会因环境不同触发不同编译) add python3 py3-pip make gcc g++ vips
+    # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    # RUN apk add python3 py3-pip make gcc g++ vips
     RUN yarn config set registry https://registry.npmmirror.com
-    WORKDIR /src
-    COPY docusaurus .
+    COPY docusaurus /src
+    WORDIR /src/website
     RUN yarn install
-    RUN yarn build:website
+    RUN yarn add @docusaurus/faster @docusaurus/logger
+    RUN yarn build
 
     FROM nginx:alpine
-    COPY --from=build /src/website/build /usr/share/nginx/html
+    COPY --from=build /src/website/build /usr/share/nginx/html/
     ```
