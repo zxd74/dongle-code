@@ -484,3 +484,42 @@ DONGLE_WEBPACK_PORT=1319
     FROM nginx:alpine
     COPY --from=build /src/website/build /usr/share/nginx/html/
     ```
+
+# k8s website
+* `git clone git@github.com:kubernetes/website.git`
+* 准备工作: 可省略`make module-init`操作(`git clone github`)
+  * `https://github.com/kubernetes-sigs/reference-docs/` 保存为`website/api-ref-generator`
+  * `https://github.com/google/docsy`保存为`website/theme/docsy`
+  * `https://raw.githubusercontent.com/kubernetes-sigs/downloadkubernetes/master/dist/release_binaries.json`也可考虑下载到本地,修改`website/layouts/shortcodes/release-binaries.html`中的引用地址为本地即可
+* 构建项目
+```Dockerfile
+FROM dongle/golang AS base
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN apk add build-base libc6-compat git rsync npm
+RUN go env -w GO111MODULE=on
+RUN go env -w  GOPROXY=https://goproxy.cn,direct
+WORKDIR /src
+
+FROM base AS hugo
+WORKDIR /tmp/hugo
+COPY hugo_extended_0.139.3_linux-amd64.tar.gz hugo.tar.gz
+RUN tar -xf "hugo.tar.gz" hugo
+
+FROM base AS node
+RUN npm config set registry https://registry.npmmirror.com
+COPY website/package.json .
+RUN npm install
+
+FROM base AS build-base
+COPY --from=hugo /tmp/hugo/hugo /bin/hugo
+COPY --from=node /src/node_modules /src/node_modules
+COPY website .
+
+FROM build-base AS build
+# 若已提前下载github资源,可省略次不住
+RUN make module-init
+RUN hugo --cleanDestinationDir --minify --environment development -b /
+
+FROM nginx:alpine
+COPY --from=build /src/public /usr/share/nginx/html
+```
