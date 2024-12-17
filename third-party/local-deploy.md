@@ -523,3 +523,22 @@ RUN hugo --cleanDestinationDir --minify --environment development -b /
 FROM nginx:alpine
 COPY --from=build /src/public /usr/share/nginx/html
 ```
+
+# angular.dev
+* `git clone git@github.com:angular/angular.git`
+* 构建项目: **由于网络限制过多，实际无法本地构建**
+  * 可直接在`github`上下载官方构建`Build adev for preview deployment`结果`adev-preview.zip`
+```Dockerfile
+FROM dongle/node:20 AS build
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN apk add git
+RUN npm install -g @angular/cli
+WORKDIR /src
+COPY angular .
+RUN yarn
+RUN yarn docs:build
+
+FROM nginx:alpine
+COPY --from=build /src/ /usr/share/nginx/html
+```
+**注意**: 由于本项目依赖过多github.com资源,建议在可访问外网环境下构建
