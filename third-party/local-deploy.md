@@ -376,6 +376,36 @@ DONGLE_WEBPACK_PORT=1319
     FROM nginx:alpine
     COPY --from=build /src/.vitepress/dist /usr/share/nginx/html
     ```
+
+## vue-router
+* `git clone git@github.com:vuejs/router.git`(Router 4 for Vue3)
+* 构建项目
+```Dockerfile
+FROM dongle/node AS build
+RUN npm install -g pnpm
+WORKDIR /src
+COPY router .
+RUN pnpm install
+RUN pnpm docs:build
+
+FROM nginx:alpine
+COPY --from=build /src/packages/docs/.vitepress/dist /usr/share/nginx/html
+```
+* Router 3(for vue2)
+  * `git clone git@github.com:vuejs/vue-router.git`
+  * 构建项目
+```Dockerfile
+FROM dongle/node AS build
+RUN yarn config set registry https://registry.npmmirror.com
+WORKDIR /src
+COPY router .
+RUN yarn install
+RUN yarn docs:build
+
+FROM nginx:alpine
+COPY --from=build /src/docs/.vuepress/dist /usr/share/nginx/html
+```
+
 # sphinx-docs.org
 * `git clone git@github.com:sphinx-doc/sphinx-docs.git`
 * 构建项目
