@@ -34,6 +34,18 @@ systemctl restart docker # server docker restart
 # 使用
 docker pull/push <registry.server.host>:<port>/reposition_name:tag
 ```
+
+## 有效镜像源(持续更新 20250104)
+```txt
+"https://docker.unsee.tech",
+"https://docker.1panel.live",
+"https://hub.rat.dev",
+"https://proxy.1panel.live",
+"https://docker.1panel.top",
+"https://docker.m.daocloud.io",
+"https://docker.1ms.run"
+```
+
 # docker脚本
 ```shell
 # python environment
