@@ -43,8 +43,14 @@ docker pull/push <registry.server.host>:<port>/reposition_name:tag
 "https://proxy.1panel.live",
 "https://docker.1panel.top",
 "https://docker.m.daocloud.io",
-"https://docker.1ms.run"
+"https://docker.1ms.run",
 ```
+* 特定容器
+  * google
+    ```txt
+    "https://registry.aliyuncs.com/google_containers"
+    "https://registry.cn-hangzhou.aliyuncs.com/google_containers"
+    ```
 
 # docker脚本
 ```shell
