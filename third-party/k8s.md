@@ -130,6 +130,60 @@ hk80j0.m0id4vj2zhmka1vv   23h         2025-01-08T04:16:36Z   authentication,sign
 * 创建新token:`kubeadm token create`
   * `--print-join-command`：参数可输出完整新节点加入命令
 
+## 部署dashboard
+1. 下载dashboard配置
+```bash
+wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+```
+2. 执行部署
+   1. 修改service指定类型为`NodePort`，默认为`ClusterIP`
+    ```bash
+    vi recommended.yaml
+
+    kind: Service
+    apiVersion: v1
+    metadata:
+        labels:
+            k8s-app: kubernetes-dashboard
+        name: kubernetes-dashboard
+        namespace: kubernetes-dashboard
+    spec:
+        type: NodePort # 类型为NodePort，默认为`ClusterIP`
+        ports:
+          - port: 443
+            targetPort: 8443
+            nodePort: 30001 # 映射主机端口
+    selector:
+        k8s-app: kubernetes-dashboard
+    ```
+    2. 执行Pod
+    ```bash
+    kubectl apply -f recommended.yaml
+    ```
+3. 查看服务状态
+   1. 若非`Running`状态，建议通过`kubectl describe pod`命令查看详情
+    ```bash
+    # 查看Pod状态: running 为成功启动状态
+    kubectl get pods --all-namespaces
+
+    # 查看dashboard服务：可查看实际映射端口
+    kubectl get svc -n kubernetes-dashboard
+    ```
+4. 登陆系统
+   * 创建登陆Token，权限很低，临时性
+    ```bash
+    kubectl -n kubernetes-dashboard create token kubernetes-dashboard
+    ```
+   * 创建`service account`访问用户(管理员)
+    ```bash
+    # 创建用户
+    kubectl create serviceaccount dashboard-admin -n kube-system
+    # 授予用户权限
+    kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:dashboard-admin
+    # 获取token
+    kubectl create token dashboard-admin -n kubernetes-dashboard
+    ```
+
 ## 节点加入
 在**新节点操作**，将节点注册到`kubeadm`中，需要从控制节点获取`token`和`hash`
 * 所有准备加入集群的从节点
