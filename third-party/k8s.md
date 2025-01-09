@@ -108,10 +108,11 @@ kubeadm join 192.168.74.250:6443 --token 1ozaan.m0id4vj2zhmka1vv \
 ```
 * 后续操作
 ```bash
+# 集群环境时
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
+# root用户时
 export KUBECONFIG=/etc/kubernetes/admin.conf
 ```
 ## 网路插件(必需)
