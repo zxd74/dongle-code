@@ -86,6 +86,106 @@ xsi:schemaLocation="http://www.springframework.org/schema/mvc
 提示：任务类需要配置@Component等注解
 
 # 自定义处理
+## 属性绑定
+* **java方法**: 通过`InputStream`读取配置文件，并通过`Properties`对象存储配置文件中的键值对
+  * 读取配置文件`new FileInputStream("/config.properties")`
+  * 读取资源文件`this.getClass().getResourceAsStream("/config.properties")`
+```java
+Properties prop = readPropertiesFile("config.properties");
+// 输出读取到的属性值
+System.out.println("host : " + prop.getProperty("host"));
+
+// 可定义一个静态方法，用于读取属性文件并返回 Properties 对象
+public static Properties readPropertiesFile(String fileName) throws IOException {
+    // 声明 FileInputStream 对象，用于读取文件
+    FileInputStream fis = null;
+    // 声明 Properties 对象，用于存储从文件中读取的属性
+    Properties prop = null;
+    try {
+        // 创建 FileInputStream 对象，用于从指定文件读取数据
+        fis = new FileInputStream(fileName);
+        // 创建 Properties 对象，用于存储属性文件中的键值对
+        prop = new Properties();
+        // 加载属性文件内容到 Properties 对象中
+        prop.load(fis);
+    } catch (FileNotFoundException e) {
+        // 捕获文件未找到的异常，并打印堆栈跟踪信息
+        e.printStackTrace();
+    } catch (IOException e) {
+        // 捕获 I/O 异常，并打印堆栈跟踪信息
+        e.printStackTrace();
+    } finally {
+        // 确保文件流在读取结束后关闭
+        if (fis != null) {
+            fis.close();
+        }
+    }
+    // 返回存储了属性内容的 Properties 对象
+    return prop;
+}
+```
+* 使用`Environment`：通过`@Resource`注解引入`Environment`对象，通过`getProperty()`方法获取配置文件中的属性值
+```java
+@Resource
+private Environment env;
+
+env.getProperty("env.var1");
+```
+* 使用`@Value`注解：通过`@Value`注解，将配置文件中的属性值注入到类的属性中
+```java
+@Value("${env.var1}")
+private String var1;
+```
+* 使用`@ConfigurationProperties`注解：通过`@ConfigurationProperties`注解，将配置文件中的属性值注入到类的属性中
+```java
+@Configuration
+@ConfigurationProperties(prefix = "env")
+public class MyConf {
+    private String var1;
+    private String var2;
+}
+```
+* 使用`@PropertySources`注解：通过`@PropertySources`注解，将多个配置文件中的属性值注入到类的属性中
+```java
+@Configuration
+@PropertySources({
+    @PropertySource(value = "classpath:dongle.properties", encoding = "utf-8"),
+    @PropertySource(value = "classpath:dongle1.properties", encoding = "utf-8")
+})
+public class PropertySourcesConf {
+    @Value("${env.var10}")
+    private String var10;
+    @Value("${env.var9}")
+    private String var9;
+}
+```
+* 使用`YamlPropertiesFactoryBean`加载YAML文件
+```java
+@Configuration
+public class MyYamlConfig {
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer yamlConfigurer() {
+        PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+        YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+        yaml.setResources(new ClassPathResource("dongle.yml"));
+        configurer.setProperties(Objects.requireNonNull(yaml.getObject()));
+        return configurer;
+    }
+}
+
+@Value("${env.var11}")
+private String var11;
+```
+* 自定义读取：通过`PropertySources`对象获取配置文件中的属性值
+```java
+@Autowired
+private PropertySources propertySources;
+
+for (PropertySource<?> propertySource : propertySources) {
+    log.info("自定义获取 配置获取 name {} ,{}", propertySource.getName(), propertySource.getSource());
+}
+```
+
 ## 跨域处理
 ```java
 import org.springframework.stereotype.Component;
