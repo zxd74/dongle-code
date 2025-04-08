@@ -132,3 +132,232 @@ CREATE TABLE ad_reports (
     INDEX idx_start_date (start_date)
 ); -- 广告报告表
 ```
+
+# 业务设计
+## 竞价模块
+1. 分层架构
+```txt
+graph TD
+    A[API层] --> B[业务逻辑层]
+    B --> C[竞价引擎]
+    C --> D[规则引擎]
+    B --> E[缓存层]
+    E --> F[数据库]
+```
+2. 核心实现
+   1. 竞价策略接口设计（策略模式）
+    ```java
+    // 竞价策略接口
+    public interface BiddingStrategy {
+        /**
+         * @param bidRequest 竞价请求
+         * @param context 竞价上下文（包含市场数据等）
+         * @return 竞价结果（包含出价和元数据）
+         */
+        BidResult evaluate(BidRequest bidRequest, BiddingContext context);
+    }
+
+    // 示例策略1：CPM竞价
+    public class CPMStrategy implements BiddingStrategy {
+        @Override
+        public BidResult evaluate(BidRequest request, BiddingContext context) {
+            double basePrice = request.getImpressionPrice();
+            double adjustedPrice = basePrice * context.getMarketCompetitionFactor();
+            return new BidResult(request.getAdId(), adjustedPrice);
+        }
+    }
+
+    // 示例策略2：CPC竞价（带质量控制）
+    public class CPCStrategy implements BiddingStrategy {
+        @Override
+        public BidResult evaluate(BidRequest request, BiddingContext context) {
+            double qualityScore = calculateQualityScore(request.getAdCreative());
+            double bidPrice = request.getClickPrice() * qualityScore;
+            return new BidResult(request.getAdId(), bidPrice);
+        }
+        
+        private double calculateQualityScore(AdCreative creative) {
+            // 质量评估逻辑
+        }
+    }
+    ```
+   2.  竞价引擎核心（工厂模式 + 责任链）
+    ```java
+    public class BiddingEngine {
+        private final Map<BidType, BiddingStrategy> strategies;
+        private final BidRuleEngine ruleEngine;
+
+        // 通过依赖注入初始化
+        public BiddingEngine(
+            Map<BidType, BiddingStrategy> strategies,
+            BidRuleEngine ruleEngine
+        ) {
+            this.strategies = strategies;
+            this.ruleEngine = ruleEngine;
+        }
+
+        public BidResponse process(BidRequest request) {
+            // 1. 基础验证
+            if (!validateRequest(request)) {
+                return BidResponse.error("Invalid request");
+            }
+
+            // 2. 并行获取候选广告（高性能关键点）
+            List<AdCandidate> candidates = fetchCandidatesAsync(request);
+
+            // 3. 规则过滤
+            List<AdCandidate> filtered = ruleEngine.applyRules(candidates);
+
+            // 4. 策略竞价
+            BidResult winner = filtered.parallelStream()
+                .map(ad -> {
+                    BiddingStrategy strategy = strategies.get(ad.getBidType());
+                    return strategy.evaluate(request, ad);
+                })
+                .max(Comparator.comparingDouble(BidResult::getPrice))
+                .orElse(null);
+
+            // 5. 构建响应
+            return buildResponse(winner);
+        }
+    }
+    ```
+    3. 高性能优化关键代码
+    ```java
+    // 使用异步非阻塞IO获取广告候选
+    public List<AdCandidate> fetchCandidatesAsync(BidRequest request) {
+        CompletableFuture<List<AdCandidate>> dbFuture = CompletableFuture.supplyAsync(
+            () -> adRepository.findByTargeting(request.getTargeting()),
+            dbExecutor); // 专用线程池
+
+        CompletableFuture<List<AdCandidate>> cacheFuture = CompletableFuture.supplyAsync(
+            () -> cacheService.getHotAds(request.getUserSegment()),
+            cacheExecutor);
+
+        return Stream.of(dbFuture, cacheFuture)
+            .map(CompletableFuture::join)
+            .flatMap(List::stream)
+            .distinct()
+            .collect(Collectors.toList());
+    }
+
+    // 基于Caffeine的本地缓存
+    public class AdCache {
+        private final Cache<String, List<AdCandidate>> cache;
+
+        public AdCache() {
+            this.cache = Caffeine.newBuilder()
+                .maximumSize(10_000)
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .build();
+        }
+
+        public List<AdCandidate> get(String key) {
+            return cache.get(key, k -> loadFromDB(k));
+        }
+    }
+    ```
+1. 扩展性设计方案
+   1. 动态规则引擎（Drools实现示例）
+    ```java
+    // 规则配置化示例
+    rule "HighValueUserRule"
+        when
+            $request : BidRequest(user.valueTier > 8)
+            $ad : AdCandidate(budget > 10000)
+        then
+            insert(new BidBoost($ad.getId(), 1.2)); // 高价用户提升20%出价
+    end
+
+    // 规则引擎执行
+    public class BidRuleEngine {
+        private KieContainer kieContainer;
+
+        public List<AdCandidate> applyRules(List<AdCandidate> candidates) {
+            KieSession session = kieContainer.newKieSession();
+            candidates.forEach(session::insert);
+            session.fireAllRules();
+            
+            return candidates.stream()
+                .filter(ad -> !ad.isFiltered())
+                .collect(Collectors.toList());
+        }
+    }
+    ```
+   2. 策略动态加载（SPI机制）
+    ```txt
+    # resources/META-INF/services/com.xxx.BiddingStrategy
+    com.xxx.CPMStrategy
+    com.xxx.CPCStrategy
+    com.xxx.CPAStrategy
+    ```
+    ```java
+    // 策略自动发现
+    ServiceLoader<BiddingStrategy> loader = ServiceLoader.load(BiddingStrategy.class);
+    Map<BidType, BiddingStrategy> strategies = loader.stream()
+        .collect(Collectors.toMap(
+            p -> p.get().getSupportedType(),
+            ServiceLoader.Provider::get
+        ));
+    ```
+4. 优化手段
+   1. 缓存分层：
+      * 本地缓存（Caffeine）：存储高频广告
+      * Redis集群：存储实时竞价数据
+      * 数据库分片：广告主数据按ID哈希分片
+   2. 异步处理：
+    ```java
+    // 使用Disruptor实现高并发事件处理
+    public class BidEventProcessor {
+        private final Disruptor<BidEvent> disruptor;
+        
+        public void onEvent(BidEvent event) {
+            // 异步记录竞价日志
+            logQueue.add(event);
+            // 实时统计
+            statsAggregator.record(event);
+        }
+    }
+    ```
+   3. 实时监控：
+    ```java
+    // Micrometer指标监控
+    public class BiddingMetrics {
+        private final Counter requestCounter;
+        private final Timer processingTimer;
+        
+        public void recordSuccess(long latency) {
+            requestCounter.increment();
+            processingTimer.record(latency, TimeUnit.MILLISECONDS);
+        }
+    }
+    ```
+5. 数据库设计建议：
+```sql
+-- 广告主表（分库键）
+CREATE TABLE advertiser (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(100),
+    budget DECIMAL(20,2),
+    balance DECIMAL(20,2)
+) PARTITION BY HASH(id) PARTITIONS 16;
+
+-- 广告计划表（按时间分区）
+CREATE TABLE ad_campaign (
+    id BIGINT PRIMARY KEY,
+    advertiser_id BIGINT,
+    bid_type ENUM('CPM','CPC','CPA'),
+    start_time DATETIME,
+    end_time DATETIME,
+    INDEX idx_time (start_time, end_time)
+) PARTITION BY RANGE (TO_DAYS(start_time)) (
+    PARTITION p202301 VALUES LESS THAN (TO_DAYS('2023-02-01')),
+    PARTITION p202302 VALUES LESS THAN (TO_DAYS('2023-03-01'))
+);
+```
+6. 关键设计思想
+   * 策略模式：支持灵活扩展新竞价类型
+   * 规则引擎：实现业务逻辑与代码解耦
+   * 异步并行：最大化利用多核CPU
+   * 分层缓存：减少数据库访问压力
+   * 动态加载：支持不停机更新策略
