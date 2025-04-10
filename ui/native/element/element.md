@@ -68,3 +68,4 @@
 * `element.cancelAnimationFrame(id)` 取消动画帧
 * `element.requestIdleCallback(callback, options)` 请求空闲回调
 * `element.cancelIdleCallback(id)` 取消空闲回调
+* 部分特殊方法可直接通过赋值方式操作，如 `element.onclick = function(e){}`
