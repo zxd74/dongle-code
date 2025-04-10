@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高性能视频播放器</title>
+    <style>
+        /* 播放器容器样式 */
+        .video-player-container {
+            position: relative;
+            max-width: 800px;
+            margin: 20px auto;
+            background: #000;
+        }
+        
+        .video-player-container video {
+            width: 100%;
+            display: block;
+        }
+        
+        /* 控制栏样式 */
+        .video-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+        }
+        
+        .video-controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+        
+        .video-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 进度条样式 */
+        .progress-container {
+            flex: 1;
+            height: 20px;
+            position: relative;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        
+        .progress-bar, .buffered-bar {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        .buffered-bar {
+            width: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+        }
+        
+        .progress-bar {
+            width: 0;
+            background: #ff0000;
+            z-index: 2;
+        }
+        
+        .time-display {
+            font-size: 12px;
+            margin-left: 10px;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        /* 音量控制 */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        
+        .volume-control input[type="range"] {
+            width: 80px;
+            margin-left: 5px;
+        }
+        
+        /* 全屏样式 */
+        .video-player-container:-webkit-full-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        
+        .video-player-container:-moz-full-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        
+        .video-player-container:-ms-fullscreen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        
+        .video-player-container:fullscreen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        
+        /* 控制按钮样式 */
+        .control-buttons {
+            text-align: center;
+            margin: 20px;
+        }
+        
+        .control-buttons button {
+            padding: 8px 16px;
+            margin: 0 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .control-buttons button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">高性能视频播放器</h1>
+    
+    <div class="video-player-container" id="video-container">
+        <!-- 视频元素将由JavaScript动态创建 -->
+    </div>
+    
+    <div class="control-buttons">
+        <button id="load-video-btn">加载视频</button>
+        <button id="change-source-btn">切换视频源</button>
+        <button id="play-btn">播放</button>
+        <button id="pause-btn">暂停</button>
+        <button id="fullscreen-btn">全屏</button>
+        
+        <div class="control-hide">
+            <div class="control-hide-item video-file" style="display: none;">
+                <input type="file" id="video-file-input" multiple accept="video/*">
+            </div>
+            <dialog class="control-hide-item video-url" id="video-url">
+                <input type="text" id="video-url-input" placeholder="请输入视频URL">
+                <button id="video-url-btn">确定</button>
+            </dialog>
+        </div>
+
+    </div>
+
+
+    <!-- 引入视频播放器核心JS文件 -->
+    <script src="video-play.js"></script>
+    
+    <script>
+        // 初始化播放器
+        const player = new VideoPlayerCore({
+            autoplay: false,
+            muted: false,
+            preload: 'metadata'
+        });
+
+        // 挂载到DOM
+        player.mount('#video-container');
+
+        // 添加控制栏插件
+        player.use(ControlBarPlugin, {
+            showPlayPause: true,
+            showProgress: true,
+            showVolume: true,
+            showFullscreen: true
+        });
+
+        // 定义播放列表
+        let videoSources = [];
+
+        let currentSourceIndex = 0;
+
+        // 本地视频源加载代码
+        function selectVideoFiles(){
+            return new Promise((resolve) => {
+                const fileInput = document.getElementById('video-file-input');
+                fileInput.addEventListener('change', (e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length === 0) return;
+            
+                    // 清空原有播放列表
+                    videoSources = [];
+                    
+                    // 创建播放列表
+                    files.forEach(file => {
+                        videoSources.push({
+                            name: file.name,
+                            src: URL.createObjectURL(file)
+                        });
+                    });
+                    resolve(); // 解析Promise
+                });
+                fileInput.click(); // 触发文件选择对话框
+            })
+        }
+
+        function selectVideoUrl(){
+            return new Promise((resolve) => {
+                const urlInput = document.getElementById('video-url');
+                urlInput.showModal(); // 显示URL输入框
+
+                document.getElementById('video-url-btn').addEventListener('click', () => {
+                    const url = document.getElementById('video-url-input').value;
+                    if (!url) return urlInput.close();
+                    // 清空原有播放列表
+                    videoSources = [];
+                    // 添加视频源
+                    videoSources.push(url);
+                    resolve(); // 解析Promise
+                    urlInput.close();
+                });
+            });
+        }
+
+        
+
+        // 加载当前视频
+        function loadCurrentVideo() {
+            currentSourceIndex = 0
+            player.loadSource(videoSources[currentSourceIndex])
+            .then(() => {
+                console.log('视频加载完成');
+            })
+            .catch(err => {
+                console.error('视频加载失败:', err);
+            });
+        }
+        
+        // 加载视频按钮
+        document.getElementById('load-video-btn').addEventListener('click', async () => {
+            // await selectVideoFiles(); 
+            await selectVideoUrl(); // 选择视频源
+            loadCurrentVideo();
+        });
+
+        // 切换视频源按钮
+        document.getElementById('change-source-btn').addEventListener('click', () => {
+            currentSourceIndex = (currentSourceIndex + 1) % videoSources.length;
+            player.loadSource(videoSources[currentSourceIndex])
+                .then(() => {
+                    console.log('已切换到视频源:', videoSources[currentSourceIndex]);
+                    if (player.isPlaying) {
+                        player.play(); // 如果之前是播放状态，继续播放
+                    }
+                })
+                .catch(err => {
+                    console.error('视频切换失败:', err);
+                });
+        });
+
+        // 播放按钮
+        document.getElementById('play-btn').addEventListener('click', () => {
+            player.play();
+        });
+
+        // 暂停按钮
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            player.pause();
+        });
+
+        // 全屏按钮
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                player.enterFullscreen();
+            } else {
+                player.exitFullscreen();
+            }
+        });
+
+        // 添加事件监听
+        player.on('play', () => {
+            console.log('视频开始播放');
+        });
+
+        player.on('pause', () => {
+            console.log('视频已暂停');
+        });
+
+        player.on('ended', () => {
+            console.log('视频播放结束');
+        });
+
+        player.on('volumeChange', (volume) => {
+            console.log('音量已改变:', volume);
+        });
+    </script>
+</body>
+</html>
