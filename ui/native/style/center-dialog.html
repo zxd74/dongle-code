@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>居中对话框</title>
+    <style>
+        /* 对话框遮罩层 - 固定定位覆盖全屏 */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+            /* 使用flex实现完美居中 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 对话框主体 - 绝对居中 */
+        .dialog {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 500px;
+            max-width: calc(100vw - 40px); /* 留出边距 */
+            max-height: calc(100vh - 40px); /* 留出边距 */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: dialogFadeIn 0.3s ease;
+            
+            /* 确保对话框不会超出视口 */
+            position: relative;
+            margin: 20px; /* 最小边距 */
+        }
+        
+        /* 对话框内容区域 - 可滚动 */
+        .dialog-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 60vh; /* 限制最大高度 */
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .dialog {
+                width: 90%;
+                margin: 10px;
+            }
+            .dialog-body {
+                padding: 15px;
+            }
+        }
+        
+        /* 淡入动画 */
+        @keyframes dialogFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="show-dialog">显示居中对话框</button>
+    
+    <!-- 对话框结构 -->
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3>居中对话框标题</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <p>这是一个完美居中的对话框。</p>
+                <p>无论页面滚动到什么位置，对话框都会保持在视窗正中央。</p>
+                <p>内容过多时会自动出现滚动条。</p>
+                <!-- 更多测试内容 -->
+                <div style="height: 1000px; background: linear-gradient(#f5f5f5, #e0e0e0);">
+                    <p style="padding: 20px;">可滚动内容区域</p>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="cancel-btn">取消</button>
+                <button class="confirm-btn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const dialogOverlay = document.getElementById('dialogOverlay');
+        const showDialogBtn = document.getElementById('show-dialog');
+        const closeBtn = document.querySelector('.close-btn');
+        const cancelBtn = document.querySelector('.cancel-btn');
+        const confirmBtn = document.querySelector('.confirm-btn');
+        
+        // 显示对话框
+        function showDialog() {
+            dialogOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // 禁止背景滚动
+        }
+        
+        // 隐藏对话框
+        function hideDialog() {
+            dialogOverlay.style.display = 'none';
+            document.body.style.overflow = ''; // 恢复背景滚动
+        }
+        
+        // 事件监听
+        showDialogBtn.addEventListener('click', showDialog);
+        closeBtn.addEventListener('click', hideDialog);
+        cancelBtn.addEventListener('click', hideDialog);
+        confirmBtn.addEventListener('click', () => {
+            alert('您点击了确定按钮');
+            hideDialog();
+        });
+        
+        // 点击遮罩层关闭
+        dialogOverlay.addEventListener('click', (e) => {
+            if (e.target === dialogOverlay) {
+                hideDialog();
+            }
+        });
+        
+        // ESC键关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && dialogOverlay.style.display === 'flex') {
+                hideDialog();
+            }
+        });
+    </script>
+</body>
+</html>
