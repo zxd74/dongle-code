@@ -434,3 +434,156 @@ public class PropertyReader {
 }
 
 ```
+
+## AI
+* 依赖
+  * starter模式
+    * 在`1.0.0-M6`及以前版本时，自动装配使用`spring-ai-{xxx}-spring-boot-starter`
+    * 使用`1.0.0-M7`及以后版本时，使用`spring-ai-starter-model-{XXX}`
+    ```xml
+    <!-- <= 1.0.0-M6 -->
+    <dependency>
+        <groupId>io.springboot.ai</groupId>
+        <artifactId>spring-ai-{xxx}-spring-boot-starter</artifactId>
+        <version>1.0.0-M6</version>
+    </dependency>
+
+    <!-- 1.0.0-M7 +  -->
+    <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-starter-model-{xxx}</artifactId>
+    </dependency>
+    ```
+  * 非starter模式
+    * `spring-ai-{xxx}`
+    * 需自主实例化所需**Model**类，如`ChatModel,ImageModel,AudioModel,ModerationModel`等等
+    ```xml
+    <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-{xxx}</artifactId>
+        <version>1.0.0-M6</version>
+    </dependency>
+    ```
+* 以starter自动装配为例
+  * 注入**Model**类，，以`ChatModel`或`ChatClient`为例
+```java
+@RestController
+@RequestMapping("/ai")
+public class AIController {
+
+    private final ChatClient chatClient;
+    // @Autowired
+    // private final ChatModel chatModel;
+
+    @Autowired
+    public AIController(ChatClient chatClient) {
+        this.chatClient = chatClient;
+    }
+
+    @PostMapping("/chat")
+    public String generateText(@RequestBody String prompt) {
+        // chatModel.call(prompt);
+        return chatClient.call(prompt);
+    }
+}
+```
+* **高级参数**`ChatOptions`调整
+    ```java
+    @PostMapping("/chat/advanced")
+    public String advancedChat(@RequestBody String prompt) {
+        // 自定义参数
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+            .withModel("gpt-4")
+            .withTemperature(0.5)
+            .withMaxTokens(2000)
+            .build();
+
+        // 构建 Prompt
+        Prompt request = new Prompt(prompt, options);
+        
+        return chatClient.call(request);
+    }
+    ```
+*** 流式响应** `StreamingChatClient`
+```java
+@Autowired
+private StreamingChatClient streamingChatClient;
+
+public Flux<String> streamChat(@RequestParam String prompt) {
+    return streamingChatClient.stream(prompt);
+}
+```
+* **异常处理**
+```java
+@RestControllerAdvice
+public class AIExceptionHandler {
+
+    @ExceptionHandler(OpenAiApiException.class)
+    public ResponseEntity<String> handleOpenAiException(OpenAiApiException ex) {
+        return ResponseEntity.status(ex.getStatusCode())
+            .body("OpenAI 服务错误: " + ex.getMessage());
+    }
+}
+```
+* **多模态支持**（图片生成）
+```java
+@Autowired
+private OpenAiImageClient imageClient;
+
+@PostMapping("/generate-image")
+public String generateImage(@RequestParam String prompt) {
+    ImageResponse call = imageClient.call(
+        new ImagePrompt(prompt)
+    );
+    return call.getResult().getOutput().getUrl();
+}
+```
+* **嵌入向量**（Embeddings）
+```java
+@Autowired
+private EmbeddingClient embeddingClient;
+
+@PostMapping("/embed")
+public List<Double> getEmbedding(@RequestBody String text) {
+    return embeddingClient.embed(text);
+}
+```
+* **测试**
+  * 单元测试
+    ```java
+    @SpringBootTest
+    public class AIControllerTest {
+
+        @Autowired
+        private ChatClient chatClient;
+
+        @Test
+        void testChat() {
+            String response = chatClient.generate("Hello World!");
+            assertNotNull(response);
+            System.out.println("AI Response: " + response);
+        }
+    }
+    ```
+  * CURL测试
+    ```sh
+    curl -X POST "http://localhost:8080/ai/chat" \
+        -H "Content-Type: application/json" \
+        -d '{"prompt": "Hello World!"}'
+    ```
+
+* 安全与优化
+  * 密钥管理：使用环境变量或 `Vault` 注入 `api-key`,禁止在代码中硬编码密钥
+  * 性能调优：连接超时，读取超时等配置
+  * 限流和熔断
+    ```java
+    // Resilience4j 熔断器配置
+    @Bean
+    public CircuitBreakerConfig circuitBreakerConfig() {
+        return CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)  # 失败率阈值
+            .waitDurationInOpenState(Duration.ofSeconds(30))
+            .build();
+    }
+    ```
+
