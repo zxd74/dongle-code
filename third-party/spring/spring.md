@@ -464,6 +464,7 @@ public class PropertyReader {
         <version>1.0.0-M6</version>
     </dependency>
     ```
+### ChatModel
 * 以starter自动装配为例
   * 注入**Model**类，，以`ChatModel`或`ChatClient`为例
 ```java
@@ -587,3 +588,53 @@ public List<Double> getEmbedding(@RequestBody String text) {
     }
     ```
 
+### ImageModel
+* 注入`ImageModel`
+  * 使用`ImagePrompt`请求
+```java
+@RestController
+@RequestMapping("/image")
+public class ImageController {
+    private final ImageModel imageModel;
+
+    public ImageController(ImageModel imageModel) {
+        this.imageModel = imageModel;
+    }
+
+    @GetMapping
+    public void generateImage(HttpServletResponse response, @RequestParam String prompt) {
+        // 创建ImagePrompt并配置参数
+        ImagePrompt prompt = new ImagePrompt(prompt, 
+            DashScopeImageOptions.builder
+                .withModel("wanx-v1") // 默认模型
+                .withWidth(512)
+                .withHeight(512)
+                .build
+        );
+        
+        // 调用生成接口
+        ImageResponse response = imageModel.call(prompt);
+        Image image = response.getResult.getOutput;
+        
+        // 返回图片流或URL
+        try (InputStream in = new URL(image.getUrl).openStream) {
+            response.setContentType(MediaType.IMAGE_PNG_VALUE);
+            response.getOutputStream.write(in.readAllBytes);
+        } catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC内饰错误_500);
+        }
+    }
+}
+```
+* 响应处理
+  * 直接返回流：通过`HttpServletResponse`写入图片流，适用于前端直接渲染。
+  * 返回URL：获取`Image.getUrl`，需考虑临时URL的过期时间。
+* 参数优化
+  * 权重控制：通过`ImageMessage`的`weight`字段调整生成效果。
+  * 多图生成：设置`ImageOptions.setN(3)`生成多张图片。
+* 性能与存储
+  * 频繁调用可能触发API限流，建议添加重试机制。
+  * 临时图片URL需持久化存储（如阿里云OSS）。
+* 扩展场景
+  * 多模型切换：通过动态配置`spring.ai.model.image`属性，实现不同模型的无缝切换。
+  * 与`Spring Security`集成：保护生成接口，限制调用频率和权限。
