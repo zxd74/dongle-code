@@ -436,10 +436,45 @@ public class PropertyReader {
 ```
 
 ## AI
-* 依赖
-  * starter模式
-    * 在`1.0.0-M6`及以前版本时，自动装配使用`spring-ai-{xxx}-spring-boot-starter`
-    * 使用`1.0.0-M7`及以后版本时，使用`spring-ai-starter-model-{XXX}`
+### 依赖
+* 由于spring ai发布情况限制，需要补充仓库和依赖管理配置
+```xml
+<repositories>
+    <repository>
+        <id>spring-snapshots</id>
+        <name>Spring Snapshots</name>
+        <url>https://repo.spring.io/snapshot</url>
+        <releases>
+            <enabled>false</enabled>
+        </releases>
+    </repository>
+    <repository>
+        <name>Central Portal Snapshots</name>
+        <id>central-portal-snapshots</id>
+        <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+        <releases>
+            <enabled>false</enabled>
+        </releases>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-bom</artifactId>
+            <version>1.0.0-M7</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+* starter模式
+ * 在`1.0.0-M6`及以前版本时，自动装配使用`spring-ai-{xxx}-spring-boot-starter`
+ * 使用`1.0.0-M7`及以后版本时，使用`spring-ai-starter-model-{XXX}`
     ```xml
     <!-- <= 1.0.0-M6 -->
     <dependency>
@@ -454,9 +489,9 @@ public class PropertyReader {
         <artifactId>spring-ai-starter-model-{xxx}</artifactId>
     </dependency>
     ```
-  * 非starter模式
-    * `spring-ai-{xxx}`
-    * 需自主实例化所需**Model**类，如`ChatModel,ImageModel,AudioModel,ModerationModel`等等
+* 非starter模式
+  * `spring-ai-{xxx}`
+  * 需自主实例化所需**Model**类，如`ChatModel,ImageModel,AudioModel,ModerationModel`等等
     ```xml
     <dependency>
         <groupId>org.springframework.ai</groupId>
@@ -464,6 +499,7 @@ public class PropertyReader {
         <version>1.0.0-M6</version>
     </dependency>
     ```
+
 ### ChatModel
 * 以starter自动装配为例
   * 注入**Model**类，，以`ChatModel`或`ChatClient`为例
@@ -638,3 +674,215 @@ public class ImageController {
 * 扩展场景
   * 多模型切换：通过动态配置`spring.ai.model.image`属性，实现不同模型的无缝切换。
   * 与`Spring Security`集成：保护生成接口，限制调用频率和权限。
+
+### VectorStore
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-starter-vector-store-mariadb</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-starter-model-openai</artifactId>
+    </dependency>
+</dependencies>
+```
+```java
+public class VectorStoreService {
+    @Autowired
+    VectorStore vectorStore;
+
+    public void saveDocument(){
+        List<Document> documents = List.of(
+                new Document("Spring AI rocks!! Spring AI rocks!! Spring AI rocks!! Spring AI rocks!! Spring AI rocks!!", Map.of("meta1", "meta1")),
+                new Document("The World is Big and Salvation Lurks Around the Corner"),
+                new Document("You walk forward facing the past and you turn back toward the future.", Map.of("meta2", "meta2")));
+
+// Add the documents to MariaDB
+        vectorStore.add(documents);
+
+// Retrieve documents similar to a query
+        List<Document> results = vectorStore.similaritySearch(SearchRequest.builder().query("Spring").topK(5).build());
+    }
+}
+
+public VectorStore vectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel embeddingModel) {
+    return MariaDBVectorStore.builder(jdbcTemplate, embeddingModel)
+            .dimensions(1536)                      // Optional: defaults to 1536
+            .distanceType(MariaDBVectorStore.MariaDBDistanceType.COSINE) // Optional: defaults to COSINE
+            .schemaName("mydb")                    // Optional: defaults to null
+            .vectorTableName("custom_vectors")     // Optional: defaults to "vector_store"
+            .contentFieldName("text")             // Optional: defaults to "content"
+            .embeddingFieldName("embedding")      // Optional: defaults to "embedding"
+            .idFieldName("doc_id")                // Optional: defaults to "id"
+            .metadataFieldName("meta")           // Optional: defaults to "metadata"
+            .initializeSchema(true)               // Optional: defaults to false
+            .schemaValidation(true)              // Optional: defaults to false
+            .removeExistingVectorStoreTable(false) // Optional: defaults to false
+            .maxDocumentBatchSize(10000)         // Optional: defaults to 10000
+            .build();
+}
+```
+
+## MCP
+### MCP Client
+```xml
+<!-- 标准MCP Client -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-client</artifactId>
+</dependency>
+<!-- WebFlux -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-client-webflux</artifactId>
+</dependency>
+```
+* 自定义Client，实现`McpSyncClientCustomizer`
+```java
+//sync
+@Component
+public class CustomMcpSyncClientCustomizer implements McpSyncClientCustomizer {
+    @Override
+    public void customize(String serverConfigurationName, McpClient.SyncSpec spec) {
+
+        // Customize the request timeout configuration
+        spec.requestTimeout(Duration.ofSeconds(30));
+
+        // Sets the root URIs that this client can access.
+        spec.roots(roots);
+
+        // Sets a custom sampling handler for processing message creation requests.
+        spec.sampling((CreateMessageRequest messageRequest) -> {
+            // Handle sampling
+            CreateMessageResult result = ...
+            return result;
+        });
+
+        // Adds a consumer to be notified when the available tools change, such as tools
+        // being added or removed.
+        spec.toolsChangeConsumer((List<McpSchema.Tool> tools) -> {
+            // Handle tools change
+        });
+
+        // Adds a consumer to be notified when the available resources change, such as resources
+        // being added or removed.
+        spec.resourcesChangeConsumer((List<McpSchema.Resource> resources) -> {
+            // Handle resources change
+        });
+
+        // Adds a consumer to be notified when the available prompts change, such as prompts
+        // being added or removed.
+        spec.promptsChangeConsumer((List<McpSchema.Prompt> prompts) -> {
+            // Handle prompts change
+        });
+
+        // Adds a consumer to be notified when logging messages are received from the server.
+        spec.loggingConsumer((McpSchema.LoggingMessageNotification log) -> {
+            // Handle log messages
+        });
+    }
+}
+
+// async
+@Component
+public class CustomMcpAsyncClientCustomizer implements McpAsyncClientCustomizer {
+    @Override
+    public void customize(String serverConfigurationName, McpClient.AsyncSpec spec) {
+        // Customize the async client configuration
+        spec.requestTimeout(Duration.ofSeconds(30));
+    }
+}
+```
+### MCP Server
+```xml
+```xml
+<!-- 标准MCP Server -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server</artifactId>
+</dependency>
+<!-- WebMvc -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+</dependency>
+<!-- WebFlux -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server-webflux</artifactId>
+</dependency>
+```
+* 配置
+```properties
+# Using spring-ai-starter-mcp-server
+spring:
+  ai:
+    mcp:
+      server:
+        name: stdio-mcp-server
+        version: 1.0.0
+        type: SYNC # or ASYNC
+```
+* Creating a Spring Boot Application with MCP Server
+```java
+@Service
+public class WeatherService {
+
+    @Tool(description = "Get weather information by city name")
+    public String getWeather(String cityName) {
+        // Implementation
+    }
+}
+
+@SpringBootApplication
+public class McpServerApplication {
+
+    private static final Logger logger = LoggerFactory.getLogger(McpServerApplication.class);
+
+    public static void main(String[] args) {
+        SpringApplication.run(McpServerApplication.class, args);
+    }
+
+	@Bean
+	public ToolCallbackProvider weatherTools(WeatherService weatherService) {
+		return MethodToolCallbackProvider.builder().toolObjects(weatherService).build();
+	}
+}
+```
+* Tools
+```java
+@Bean
+public ToolCallbackProvider myTools(...) {
+    List<ToolCallback> tools = ...
+    return ToolCallbackProvider.from(tools);
+}
+
+// low-level API
+@Bean
+public List<McpServerFeatures.SyncToolSpecification> myTools(...) {
+    List<McpServerFeatures.SyncToolSpecification> tools = ...
+    return tools;
+}
+```
+* Resource Management
+```java
+@Bean
+public List<McpServerFeatures.SyncResourceSpecification> myResources(...) {
+    var systemInfoResource = new McpSchema.Resource(...);
+    var resourceSpecification = new McpServerFeatures.SyncResourceSpecification(systemInfoResource, (exchange, request) -> {
+        try {
+            var systemInfo = Map.of(...);
+            String jsonContent = new ObjectMapper().writeValueAsString(systemInfo);
+            return new McpSchema.ReadResourceResult(
+                    List.of(new McpSchema.TextResourceContents(request.uri(), "application/json", jsonContent)));
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to generate system info", e);
+        }
+    });
+
+    return List.of(resourceSpecification);
+}
+```
