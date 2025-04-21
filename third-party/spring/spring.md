@@ -1,5 +1,36 @@
 # 依赖
+```xml
+<dependencyManagement>
+	<dependencies>
+		<dependency>
+			<!-- Import dependency management from Spring Boot -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-dependencies</artifactId>
+			<version>3.4.4</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
 
+        <!-- Import dependency management from Spring cloud -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>2024.0.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+
+        <!-- Import dependency management from Spring AI -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-bom</artifactId>
+            <version>1.0.0-M7</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+	</dependencies>
+</dependencyManagement>
+```
 ## 基本依赖
 org.springframework：
 1. spring-beans
@@ -361,8 +392,7 @@ public @interface LogRecode {
 public void logRecode(){}
 ```
 
-
-## Config配置中心
+## Config
 ### 服务端
 1. 添加cloud config server依赖
 ```xml
@@ -432,8 +462,181 @@ public class PropertyReader {
         return name;
     }
 }
-
 ```
+
+## Cloud
+### Bus
+    集成RabbitMQ和Kafka用轻量级消息代理连接分布式系统的节点
+* 依赖
+```xml
+<!-- rabbitmq -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+</dependency>
+<!-- kafka -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-bus-kafka</artifactId>
+</dependency>
+```
+* 配置
+```yml
+spring:
+  rabbitmq:
+    host: mybroker.com
+    port: 5672
+    username: user
+    password: secret
+```
+```properties
+management.endpoints.web.exposure.include=busrefresh # Bus Refresh Endpoint
+management.endpoints.web.exposure.include=busenv # Bus Env Endpoint
+management.endpoints.web.exposure.include=busshutdown # Bus Shutdown Endpoint
+
+spring.cloud.bus.id  # 唯一标识，默认为spring.application.name,spring.application.index,
+```
+```java
+@Configuration
+//@RemoteApplicationEventScan({"com.acme", "foo.bar"})
+//@RemoteApplicationEventScan(basePackages = {"com.acme", "foo.bar", "fizz.buzz"})
+@RemoteApplicationEventScan(basePackageClasses = BusConfiguration.class)
+public class BusConfiguration {
+    ...
+}
+```
+
+### Consul
+    统一服务发现和配置管理
+
+* 安装Consul
+* 依赖
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-consul-discovery</artifactId>
+</dependency>
+```
+* **服务发现**
+```yml
+spring:
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+```
+```java
+@SpringBootApplication
+@RestController
+public class Application {
+
+    @RequestMapping("/")
+    public String home() {
+        return "Hello world";
+    }
+
+    public static void main(String[] args) {
+        new SpringApplicationBuilder(Application.class).web(true).run(args);
+    }
+}
+```
+* 配置管理
+```xml
+spring:
+  cloud:
+    consul:
+      config:
+        enabled: true
+        prefix: configuration
+        defaultContext: apps
+        profileSeparator: '::'
+        format: YAML  # or PROPERTIES，FILES
+```
+
+### Gateway
+    API网关，提供路由、过滤、监控等功能
+
+```xml
+<!-- Gateway For Reactive -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway</artifactId>
+</dependency>
+<!-- Gateway For MVC -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway-mvc</artifactId>
+</dependency>
+<!-- Gateway For WebFlux -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway-webflux</artifactId>
+</dependency>
+```
+以`WebMvc`为例
+* 配置
+```yml
+spring:
+  cloud:
+    gateway:
+      mvc:
+        routes:
+        - id: after_route
+          uri: https://example.org
+          predicates:
+          - After=2017-01-20T17:42:47.789-07:00[America/Denver]
+```
+```java
+@Configuration
+class RouteConfiguration {
+
+    @Bean
+    public RouterFunction<ServerResponse> gatewayRouterFunctionsAfter() {
+        return route("after_route")
+            .route(after(ZonedDateTime.parse("2017-01-20T17:42:47.789-07:00[America/Denver]")), http())
+            .before(uri("https://example.org"))
+            .build();
+    }
+}
+
+class MyFilter implements Filter, Ordered {
+
+    @Override
+    public int getOrder() {
+        return FormFilter.FORM_FILTER_ORDER - 1;
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+            throws IOException, ServletException {
+        // ...
+        filterChain.doFilter(request, response);
+        // ...
+    }
+}
+```
+* Proxy Exchange Gateway：`ProxyExchange`
+```java
+@RestController
+@SpringBootApplication
+public class GatewaySampleApplication {
+
+	@Value("${remote.home}")
+	private URI home;
+
+	@GetMapping("/test")
+	public ResponseEntity<?> proxy(ProxyExchange<byte[]> proxy) throws Exception {
+		return proxy.uri(home.toString() + "/image/png").get();
+	}
+
+    @GetMapping("/proxy/path/**")
+    public ResponseEntity<?> proxyPath(ProxyExchange<byte[]> proxy) throws Exception {
+        String path = proxy.path("/proxy/path/");
+        return proxy.uri(home.toString() + "/foos/" + path).get();
+    }
+}
+```
+
 
 ## AI
 ### 依赖
@@ -725,8 +928,8 @@ public VectorStore vectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel embeddi
 }
 ```
 
-## MCP
-### MCP Client
+### MCP
+#### MCP Client
 ```xml
 <!-- 标准MCP Client -->
 <dependency>
@@ -795,7 +998,7 @@ public class CustomMcpAsyncClientCustomizer implements McpAsyncClientCustomizer 
     }
 }
 ```
-### MCP Server
+#### MCP Server
 ```xml
 ```xml
 <!-- 标准MCP Server -->
