@@ -1,12 +1,18 @@
 # Pom.xml配置
 ## Build
 主要配置通过`pom.xml`的`build`标签
-
+```xml
+<build></build>
+```
 ### 插件
 ```xml
-    <build>
-        <plugins></plugins>
-    </build>
+<plugins>
+    <plugin>
+        <groupId></groupId>
+        <artifactId></artifactId>
+        <!-- 其它配置 -->
+    </plugin>
+</plugins>
 ```
 * 编译
 ```xml
@@ -89,4 +95,23 @@
         </execution>
     </executions>
 </plugin>
+```
+### 非标准Java项目打包
+需要声明source和resources目录，否则打包时不会包含这些目录
+```xml
+    <sourceDirectory>.</sourceDirectory>
+    <resources>
+        <resource>
+            <directory>.</directory>      <!-- 资源目录也是项目根目录 -->
+            <includes>
+                <include>**/*.properties</include>  <!-- 包含你需要的资源文件 -->
+                <include>**/*.xml</include>
+            </includes>
+            <excludes>
+                <exclude>target/**</exclude>      <!-- 排除target目录 -->
+                <exclude>pom.xml</exclude>         <!-- 排除pom文件 -->
+                <exclude>*.md</exclude>            <!-- 排除其他不需要的文件 -->
+            </excludes>
+        </resource>
+    </resources>
 ```
