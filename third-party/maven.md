@@ -99,8 +99,8 @@
 ### 非标准Java项目打包
 需要声明source和resources目录，否则打包时不会包含这些目录
 ```xml
-    <sourceDirectory>.</sourceDirectory>
-    <resources>
+    <sourceDirectory>.</sourceDirectory> <!-- 默认src/main/java -->
+    <resources>     <!-- 默认src/main/resources -->
         <resource>
             <directory>.</directory>      <!-- 资源目录也是项目根目录 -->
             <includes>
