@@ -138,6 +138,55 @@ def merge_sort(arr:list):
     left, right= arr[0:mid],arr[mid:]
     return merge(merge_sort(left), merge_sort(right))
 ```
+```java
+static void mergeSort(int[] arr) {
+    int[] aux = new int[arr.length];
+    mergeSortByTopToDown(arr, aux, 0, arr.length - 1);
+}
+
+// 自顶向下的归并排序
+static void mergeSortByTopToDown(int[] arr, int[] aux, int lo, int hi) {
+    if (hi >= lo)
+        return;
+    int mid = lo + (hi - lo) / 2;
+    mergeSortByTopToDown(arr, aux, lo, mid);
+    mergeSortByTopToDown(arr, aux, mid + 1, hi);
+    // TODO 以下逻辑会重复，由内层向万层重复，内层会重复多次，可需要优化
+    merge(arr, aux, lo, mid, hi);
+}
+
+// 合并两个有序的子数组
+static void merge(int[] arr, int[] aux, int lo, int mid, int hi) {
+    // i指向左子数组的第一个元素，j指向右子数组的第一个元素
+    int i = lo, j = mid + 1;
+    // 将原数组复制到辅助数组中
+    for (int k = lo; k <= hi; k++)  
+        aux[k] = arr[k];
+    // 合并两个有序的子数组
+    for (int k = lo; k <= hi; k++) {
+        // 如果左子数组已经遍历完，则将右子数组的元素复制到原数组中
+        if (i > mid) // 当左半有序数组已经遍历完，则将右半部分剩余的元素复制到原数组中
+            arr[k] = aux[j++];
+        else if (j > hi) // 当右半有序数组已经遍历完，则将左半部分剩余的元素复制到原数组中
+            arr[k] = aux[i++];
+        else if (less(arr[j], arr[i])) // 当右半有序数组的元素小于左半有序数组的元素时，将右半有序数组的元素复制到原数组中
+            arr[k] = aux[j++];
+        else // 当左半有序数组的元素小于等于右半有序数组的元素时，将左半有序数组的元素复制到原数组中
+            arr[k] = aux[i++];
+    }
+}
+
+// 自底向上的归并排序：简化自顶向下的归并排序中的归并重复逻辑
+static void mergeSortByBottomToUp(int[] arr) {
+    int N = arr.length;
+    int[] aux = new int[N];
+    for (int sz = 1; sz < N; sz += sz) { // sz子数组的大小
+        for (int lo = 0; lo < N - sz; lo += 2 * sz) { // lo子数组的起始位置
+            merge(arr, aux, lo, lo + sz - 1, Math.min(lo + 2 * sz - 1, N - 1));
+        }
+    }
+}
+```
 
 # 快速排序
 ```python
