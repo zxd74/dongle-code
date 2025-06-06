@@ -12,6 +12,19 @@
 - [桶排序](#桶排序)
 - [基数排序](#基数排序)
 
+```java
+static void exch(int[] arr, int i, int j){
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
+
+// 判断两个数的大小关系
+static boolean less(int i,int j){
+    return i-j<0;
+}
+```
+
 # 冒泡排序
 ```java
     public static void sort(int[] array){
@@ -189,6 +202,36 @@ static void mergeSortByBottomToUp(int[] arr) {
 ```
 
 # 快速排序
+```java
+static void quickSort(int[] arr){
+    quickSort(arr,0,arr.length-1);
+}
+
+static void quickSort(int[] arr, int lo, int hi) {
+    if (hi <= lo)
+        return;
+    int j = partation(arr, lo, hi);
+    quickSort(arr, lo, j - 1);
+    quickSort(arr, j + 1, hi);
+}
+
+static int partation(int[] arr, int lo, int hi) {
+    int i = lo, j = hi + 1, v = arr[lo];
+    while (true) {
+        while (less(arr[++i], v))
+            if (i == hi)
+                break;
+        while (less(v, arr[--j]))
+            if (j == lo)
+                break;
+        if (i >= j)
+            break;
+        exch(arr, i, j); // 代表存在左序列大于v，有序列小于v，即arr[j]<v<arr[i]
+    }
+    exch(arr, lo, j);
+    return j;
+}
+```
 ```python
 # 位置值交换
 def swap(arr,i,j):
