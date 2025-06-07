@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 
+相关知识：
+1. 网格布局：grid，行，列，模板，区域
+2. 动画：旋转
+3. 图片自适应
+4. 弹性布局：居中
+5. nth-child选择器
+-->
+<head>
+    <style type="text/css">
+        .container {
+            width: 300px;
+            height: 300px;
+            margin:0 auto;
+            margin-top: 100px;
+
+            /* 设置容器为网格布局*/
+            display: grid; 
+            grid-template-rows: repeat(3, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+            grid-template: /* 网格模板自定义(元素通过对应区域布局) */
+                "A A B"
+                "C D B "
+                "C E E";
+            gap: 10px; /* 设置网格间距*/
+
+            /* 整组旋转*/
+            animation: rotation 10s linear infinite ;
+        }
+        .item {
+            overflow: hidden; /* 超出部分隐藏 */
+            border: 1px solid #000;
+            width: 100%;
+            height: 100%;
+            display: flex; /*弹性布局*/
+            justify-content: center; /* 横向对齐 */
+            align-items: center; /* 纵向对齐 */
+        }
+        .item img{
+            height: 260%;
+            width: 260%;
+            object-fit: cover; /* 图片自适应 */
+            animation: rotation 10s linear infinite reverse; /* 内部图片与组反向旋转动作*/
+        }
+        .item:nth-child(1){
+            grid-area: A; /* 配置占用网格区域为A区域，见自定义模板*/
+        }
+        .item:nth-child(2){
+            grid-area: B;
+        }
+        .item:nth-child(3){
+            grid-area: C;
+        }
+        .item:nth-child(4){
+            grid-area: D;
+        }
+        .item:nth-child(5){
+            grid-area: E;
+        }
+        /* 旋转动画 .eg to,from,%0,1%,...,50%,...100%*/
+        @keyframes rotation {
+            to{transform: rotate(360deg);}
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="item">
+            <img src="./1.png" alt="图片1">
+        </div>
+        <div class="item">
+            <img src="./2.png" alt="图片2">
+        </div>
+        <div class="item">
+            <img src="./3.jpg" alt="图片3">
+        </div>
+        <div class="item">
+            <img src="./4.jpg" alt="图片4">
+        </div>
+        <div class="item">
+            <img src="./5.png" alt="图片5">
+        </div>
+    </div>
+</body>
+
+</html>

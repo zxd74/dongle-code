@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 
+相关知识：
+1. display:none; 移除DOC树，无法交互
+2. visibility: hidden; 仅视觉不显示空间仍占用，但也无法交互
+3. opacity + transition: 可实现视觉隐藏，亦可交互
+    opacity：透明度，取值0-1，0为完全透明，1为完全不透明
+-->
+<head>
+    <style type="text/css">
+        .container{
+            /* display:none; 移除DOC树，无法交互*/
+            /*visibility: hidden; 仅视觉不显示空间仍占用，但也无法交互*/
+            /* opacity + transition: 可实现视觉隐藏，亦可交互*/
+            opacity: 0 ;
+            transition: opacity 0.3s;
+        }
+        .container:hover{ /* 需元素可交互 */
+            /* display:black; 需通过js执行，才能交互*/
+            /* visibility: visible; 需通过js执行，才能交互*/
+            opacity: 1 ;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button id="btn"> 中国</button>
+    </div>
+</body>
+
+</html>
