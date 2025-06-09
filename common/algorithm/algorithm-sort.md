@@ -48,24 +48,49 @@ static boolean less(int i,int j){
 # 直接排序
 ```java
 public static void selectSort(int[] array){
-        // 一般先排最右侧结果
-        // 因第一排序位置是比较值，无需从第一元素排序，外层代表需要排序的位置，
-        for (int i = 1; i < array.length; i++) {
-            int index = 0;
-            // 因每次循环都是从第一元素作为比较，故从第二元素开始比较，且不超出已排好序的位置
-            for (int j = 1; j <= array.length - i; j++) {
-                // 该判断由排序要求决定
-                if (array[j] > array[index]){
-                    index = j;
-                }
+    // 一般先排最右侧结果
+    // 因第一排序位置是比较值，无需从第一元素排序，外层代表需要排序的位置，
+    for (int i = 1; i < array.length; i++) {
+        int index = 0;
+        // 因每次循环都是从第一元素作为比较，故从第二元素开始比较，且不超出已排好序的位置
+        for (int j = 1; j <= array.length - i; j++) {
+            // 该判断由排序要求决定
+            if (array[j] > array[index]){
+                index = j;
             }
-            // 定位最后侧位置值，定义临时变量，交换右侧位置与index位置值
-            int tmp = array[array.length -i];
-            array[array.length-i] = array[index];
-            array[index] = tmp;
         }
+        // 定位最后侧位置值，定义临时变量，交换右侧位置与index位置值
+        int tmp = array[array.length -i];
+        array[array.length-i] = array[index];
+        array[index] = tmp;
     }
+}
 ```
+* 定位最右侧：**通常使用**，相对逻辑易理解，如从小到大排序，先找大
+* 定位最左侧：相对逻辑较多，如从小到大排序，先找小
+```java
+static void selectSort(int[] arr){
+    int index;
+    // 方法一：定位最右侧(如从小到大排序，先找大)
+    for(int i = 1;i<arr.length;i++){ 
+        index = 0;
+        for(int j = 1;j<arr.length-i;j++){ // 减i代表已经排序好的元素个数
+            if(less(arr[index],arr[j])) index = j; // 找最大
+        }
+        exch(arr,index,arr.length-i);
+    }
+
+    // 方法二： 定位最左侧(如从小到大排序，先找小)
+    for(int i = 0;i<arr.length-1;i++){ // 最后一位无需外层排序，已无可比
+        index = i;
+        for(int j = i+1;j<arr.length;j++){  // 从i+1开始，因为i是初次比较位（估计这也是为啥通常不是先找最小值，先找最大值的原因）
+            if(less(arr[j],arr[index])) index = j; //找最小
+        }
+        if(index > i) exch(arr,i,index);
+    }
+}
+```
+
 # 反转排序
 ```java
     public static void reverseSort(int[] array){
