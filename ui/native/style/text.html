@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style type="text/css">
+    .content {
+        width: 200px;
+        border: 1px solid #000;
+    }
+    .format{
+        margin-top: 10px;
+        width: 200px;
+        border: 1px solid #ccc;
+        word-break: break-all;
+    }
+</style>
+</head>
+<body>
+    <h1>文本换行</h1>
+    <div class="content">
+        <p>p和div标签内自动单词换行，但单词内无法换行</p>
+        <p>bbbbbbbbbbbbbbbbbbbdfsaaaaaaafewra</p>
+        <div>divdivdivdivdivdfdsfdfewarewdffserwdivda</div>
+    </div>
+    <div class="format">
+        <p>通过word-wrap或word-break属性实现单词内换行</p>
+        <p>bbbbbbbbbbbbbbbbbbbdfsaaaaaaafewra</p>
+        <div>divdivdivdivdivdfdsfdfewarewdffserwdivda</div>
+    </div>
+</body>
+</html>
