@@ -10,11 +10,11 @@
 * CARP: 合成复用原则，Composite And Reuse Principle
 
 # 分类
-* **创建型**：抽象了对象实例化的过程，用来帮助创建对象的实例(**5种**)
+* **创建型**：**抽象了对象实例化**的过程，用来**帮助创建**对象的实例(**5种**)
   * 单例、工厂、抽象工厂、建造者、原型。
-* **结构型**：描述如何组合类和对象，以获得更大的结构(**7种**)
+* **结构型**：描述如何**组合类和对象**，以获得更大的结构(**7种**)
   * 适配器、桥接、装饰、组合、外观、享元、代理。
-* **行为**：描述算法和对象间职责的分配(**11种**)
+* **行为**：描述算法和**对象间职责**的分配(**11种**)
   * 模板方法、命令、迭代器、观察者、中介、备忘录、解释器、状态、策略、职责、访问者。
 
 # 创建型
@@ -129,6 +129,31 @@
         @Override
         public ProductB getProductB() {return new JdProductB();}
     }
+```
+
+## 原型
+作用：**复制对象**，分深浅拷贝
+* 浅拷贝：复制对象，但**引用类型**的属性**引用同一个对象**
+* 深拷贝：复制对象，**引用类型**的属性**引用不同对象**
+  * 拷贝构造器
+  * 重写clone方法
+  * 序列化
+```java
+/**
+ * 默认Cloneable实现的是浅拷贝
+ * 若想实现深拷贝，则需要重写clone方法，或自定义深拷贝方法
+ */
+class Dongle implements Cloneable{
+    ArrayList<String> list = new ArrayList<>(); 
+
+    @Override
+    public Dongle clone() throws CloneNotSupportedException {
+        // return (Dongle) super.clone(); // 默认super.clone为浅克隆 list引用同一个对象
+        Dongle clone = (Dongle) super.clone();
+        clone.list = new ArrayList<>(this.list); // 创建新集合
+        return clone;
+    }
+}
 ```
 
 # 结构型
