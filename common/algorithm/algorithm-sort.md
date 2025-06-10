@@ -72,12 +72,12 @@ public static void selectSort(int[] array){
 static void selectSort(int[] arr){
     int index;
     // 方法一：定位最右侧(如从小到大排序，先找大)
-    for(int i = 1;i<arr.length;i++){ 
+    for(int i = 0;i<arr.length-1;i++){ 
         index = 0;
         for(int j = 1;j<arr.length-i;j++){ // 减i代表已经排序好的元素个数
             if(less(arr[index],arr[j])) index = j; // 找最大
         }
-        exch(arr,index,arr.length-i);
+        exch(arr,index,arr.length-i-1);
     }
 
     // 方法二： 定位最左侧(如从小到大排序，先找小)
