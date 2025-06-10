@@ -1,3 +1,15 @@
+# 基础实现
+## 前端(Web)
+```html
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <input type="file" name="file1">
+    <input type="file" name="file2">
+    <input type="submit" value="上传">
+</form>
+```
+## 后端(java)
+```java
 // 单文件上传
 public void upload(HttpServletRequest request,MultipartFile file){
 
@@ -24,3 +36,6 @@ public void upload(HttpServletRequest request){
     Map<String,MultipartFile> fileMap = multipartRequest.getFileMap();
     // map以参数名，值为文件关联
 }
+```
+
+# 大文件分片上传
