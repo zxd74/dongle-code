@@ -7,6 +7,7 @@
 - [希尔排序](#希尔排序)
 - [归并排序](#归并排序)
 - [快速排序](#快速排序)
+  - [三切分快速排序](#三切分快速排序)
 - [堆排序](#堆排序)
 - [计数排序](#计数排序)
 - [桶排序](#桶排序)
@@ -257,57 +258,30 @@ static int partation(int[] arr, int lo, int hi) {
     return j;
 }
 ```
-```python
-# 位置值交换
-def swap(arr,i,j):
-    arr[i],arr[j] = arr[j],arr[i]
-
-# 定义基准数，比较位一左一右
-def partition(arr, left, right):
-    if left > right:
-        return
-    partition_index = left
-    i = right
-    while partition_index != i :
-        while arr[i] >= arr[left] and i > partition_index:
-            i -= 1
-        while arr[partition_index] <= arr[left] and partition_index< i:
-            partition_index += 1
-        if i > partition_index:
-            swap(arr,partition_index,i)
-    swap(arr,left,partition_index)
-    return partition_index
-
-# 定义基准，比较位从左向右
-def partition1(arr,left,right):
-    if left > right:
-        return
-    index = left + 1
-    i = index
-    while i <= right:
-        if arr[i] < arr[left]:
-            swap(arr,i,index)
-            index += 1
-        i += 1
-    partition_index = index - 1
-    swap(arr,left,partition_index)
-    return partition_index
-
-# 实现快速排序：分治+递归方式
-def sort(arr,left,right):
-    if left is None:
-        left = 0
-    if right is None:
-        right = len(arr) - 1
-
-    if left < right:
-        partition_index = partition1(arr, left, right)
-        sort(arr,left,partition_index - 1)
-        sort(arr,partition_index + 1,right)
+## 三切分快速排序
+* 循环时对**初始索引lo的数值**进行定位，(**实际一直以首元素数值对比**`v=arr[lo]`)
+  * 当后面元素小于初始值，则索引对应数值交换，并都后移继续对比
+  * 当后面元素大于初始值，与最后值`gt`交换，`gt`前移，继续对比(可以理解为只要大于初始值，就默认为最大值)
+```java
+static void quick3waySort(int[] arr){
+    quick3waySort(arr,0,arr.length-1);
+}
+static void quick3waySort(int[] arr,int lo,int hi){
+    if(hi<=lo) return;
+    int lt=lo,i=lo+1,gt=hi,v=arr[lo];
+    while(i<=gt){
+        int cmp = arr[i]-v;
+        if(cmp<0) exch(arr,lt++,i++); // lt无论如何变化，始终数值为v
+        else if(cmp>0) exch(arr,i,gt--); //若i大于lt，则默认i为最大，与原最大值调换，继续比较i，lt
+        else i++; // i == lt
+    }
+    // 此时 arr[lo~i-1]<arr[i]<=arr[lt..gt]<arr[i+1~hi]
+    quick3waySort(arr,lo,lt-1);
+    quick3waySort(arr,gt+1,hi);
+}
 ```
 
 # 堆排序
-
 ```python
 # 位置值交换
 def swap(arr,i,j):
