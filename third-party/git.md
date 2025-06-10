@@ -37,17 +37,18 @@ git add HEAD filepath # 撤销上一次add提交的某文件
 
 ## 项目回滚
 * `reset`模式：旨在删除原来commit，重新提交commit（一般的master分支是受保护的，不允许删除提交）
-* `revert`模式：旨在回滚某一个版本的提交（推荐）
+* `revert`模式：旨在回滚某一个版本的提交（推荐，安全回滚）
 
 ### `reset`模式
-重新提交代码后，需要强制覆盖远程:`git push -f orgin master`
-
-**注意**：需要注意强制覆盖需要由权限，否则覆盖失败
+适用于本地commited但未推送至远程仓库的情况
+`git reset --hard <commit id>`
 
 ### `revert`模式
-* 普通回滚：`git revert -n 版本序列号（commit id）`
-* 合并回滚：`git revert -n 版本序列号（commit id）-m 2 (m参数1是合并后的，2为合并前的)`
+* 普通回滚：`git revert -n <commit id>`
+* 合并回滚：`git revert -n <commit id> -m 2 (m参数1是合并后的，2为合并前的)`
 * **注意**：当前版本与需要回滚的版本之间如果存在代码合并，需要加上回滚合并，否则只能回滚之前版本提交的文件
+  
+注意：重新提交代码后，需要强制覆盖远程:`git push -f orgin master`
 
 
 ## 克隆指定分支
