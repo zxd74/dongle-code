@@ -24,42 +24,38 @@
   * 懒汉式存在并发问题，需要加锁
 ```java
     // 单例模式
-    static class NormalObject{
-        private NormalObject(){} // 隐藏构造函数
-
-        private static final NormalObject nobj = new NormalObject(); // 饿汉式，不会存在并发问题
-        public static NormalObject getNormalObject(){
-            return nobj;
+    static class SingleObject{
+        private SingleObject(){}
+        private static final SingleObject obj = new SingleObject(); // 饿汉式
+        public static SingleObject getObj(){
+            return obj;
         }
-        private static NormalObject nobj1;// 懒汉式存在并发问题
-        public static NormalObject getNormalObject1(){
-            if (nobj1 == null) {
-                nobj1= new NormalObject(); // 多线程时容易
-            }
-            return nobj1;
+    
+        private static SingleObject obj1; // 懒汉式
+        public static SingleObject getObj1(){ // 为加锁，线程不安全
+            if(obj1==null) obj1= new SingleObject();
+            return obj1;
         }
-
-        private static NormalObject instance; // 并发安全的懒汉式
-        public static synchronized NormalObject getInstanceByMethSych(){ // 方法同步锁实现并发安全
-            if(instance == null) instance = new NormalObject();
-            return instance;
+        public static synchronized SingleObject getObj2(){ // 方法加锁
+            if(obj1==null) obj1= new SingleObject();
+            return obj1;
         }
-        
-        public static NormalObject getInstanceByDubbleCheckAndSych(){ // 通过双重校验+同步锁实现并发安全
-            if(instance == null){
-                synchronized(this){
-                    if(instance == null) instance =new NormalObject();
+        public static SingleObject getObj3(){
+            if(obj1==null){
+                synchronized(SingleObject.class){ // 代码块加锁
+                    if(obj1==null) obj1= new SingleObject();
+                    return obj1;
                 }
             }
-            return instance;
+            return obj1;
         }
     }
 
     public static void main(String[] args) {
-        NormalObject normalObject = getNormalObject();
-        NormalObject normalObject1 = getNormalObject1();
-        NormalObject normalObject2 = normalObject.getInstanceByMethSych();
-        NormalObject normalObject3 = normalObject.getInstanceByDubbleCheckAndSych();
+        SingleObject normalObject = getObj();
+        SingleObject normalObject1 = getObj1();
+        SingleObject normalObject2 = getObj2();
+        SingleObject normalObject3 = getObj3();
     }
 ```
 
@@ -68,64 +64,39 @@
 * **一个工厂生产一种产品,不同产品不同工厂**
   * 工厂负责具体的产品
 ```java
-    static abstract class Product{ // 定义抽象产品
-        void method();
+    static interface Product {}
+    static class ProductA implements Product {}
+    static class ProductB implements Product {}
+
+    interface ProductFactory {
+        Product getProduct();
     }
-    static class ProductThree extends Product{
-        public void method(){System.out.println("Method of ProductThree");}
-    }
-    static class ProductFour extends Product{
-        public void method(){System.out.println("Method of ProductFour");}
-    }
-    static interface ProductFactory{ // 定义同类型产品接口
-        Product getProduct(); // 定义产品都为同一类型
-    }
-    static class ProductThreeFactory implements ProductFactory{
+    class ProductAFactory implements ProductFactory { // 具体产品工厂生产具体产品
         @Override
-        public Product getProduct() {
-            return new ProductThree();
-        }
+        public Product getProduct() {return new ProductA();}
     }
-    static class ProductFourFactory implements ProductFactory{
+    class ProductBFactory implements ProductFactory { // 具体产品工厂生产具体产品
         @Override
-        public Product getProduct() {
-            return new ProductFour();
-        }
+        public Product getProduct() {return new ProductB();}
     }
+
 ```
 
 ### 简单工厂模式
-* 不属于GOF范式，因不符合**开放封闭原则**，会修改工厂代码
+* **不属于GOF范式**，不符合**开放封闭原则**，会**修改工厂代码**
 ```java
-    // 工厂模式：适用于不同系列产品
-    // 简单工厂
-    static class ProductOne{
-        public void method(){System.out.println("Method of ProductOne");}
-    }
-    static class ProductTwo{
-        public void method(){System.out.println("Method of ProductTwo");}
-    }
-    static class ProductFactory{
-        // 有多少产品要对外提供多少方法，代码冗余
-        public ProductOne productOne(){return new ProductOne();}
-        public ProductTwo productTwo(){return new ProductTwo();}
-
-        // 强化版，通过一个方法，传入参数，返回对应产品
-        public Object product(String productType){ // 此方法的方法只能是产品同一上层，如父级及以上或接口
-            if(productType.equals("one")) return new ProductOne();
-            if(productType.equals("two")) return new ProductTwo();
-            return null;
-            // 此方法为强化版，虽然减少了方法数量，但增加了判断逻辑，代码仍有冗余
+    static class SampleProductFactory{
+        public  ProductA getProductA(){return new ProductA();}
+        public  ProductB getProductB(){return new ProductB();}
+        // 每次增加或去除产品时，都要手动修改SampleProductFactory，不符合开闭原则
+        
+        public Product getProduct(String type){
+            switch(type){ // 亦可使用if-else
+                case "A": return new ProductA();
+                case "B": return new ProductB(); 
+                default: return null;
+            }
         }
-    }
-
-    public static void main(String[] args) {
-        ProductFactory productFactory = new ProductFactory();
-        productFactory.productOne().method();
-        productFactory.productTwo().method();
-        // 强化版使用
-        ((ProductOne) productFactory.product("one")).method();
-        ((ProductTwo) productFactory.product("two")).method();
     }
 ```
 
@@ -137,58 +108,26 @@
   * 工厂模式工厂对应的单一产品
   * 抽象工厂模式工厂对应的是系列产品
 ```java
-    static interface ProductA{ // 定义A产品接口或抽象类
-        void a();
-    }
-    static interface ProductB{ // 定义B产品接口或抽象类
-        void b();
-    }
-    static class ProductOneA implements ProductA{ // ProductOne系列A产品
-        public void a(){System.out.println("Method of ProductOneA");}
-    }
-    static class ProductOneB implements ProductB{ // ProductOne系列B产品
-        public void b(){System.out.println("Method of ProductOneA");}
-    }
-    static class ProductTwoA implements ProductA{ // ProductTwo系列A产品
-        public void a(){System.out.println("Method of ProductTwoA");}
-    }
-    static class ProductTwoB implements ProductB{ // ProductTwo系列B产品
-        public void b(){System.out.println("Method of ProductTwoB");}
-    }
-    
-    static interface ProductFactory{ // 定义同系列产品工厂接口
-        ProductA productA();
-        ProductB productB();
-    }
-    static class ProductOneFactory implements ProductFactory{ // ProductOne系列工厂
-        @Override
-        public ProductA productA() {
-            return new ProductOneA();
-        }
-        @Override
-        public ProductB productB() {
-            return new ProductOneB();
-        }
-    }
-    static class ProductTwoFactory implements ProductFactory{ // ProductTwo系列工厂
-        @Override
-        public ProductA productA() {
-            return new ProductTwoA();
-        }
-        @Override
-        public ProductB productB() {
-            return new ProductTwoB();
-        }
-    }
+    static class TbProductA extends ProductA {}
+    static class TbProductB extends ProductB {}
+    static class JdProductA extends ProductA {}
+    static class JdProductB extends ProductB {}
 
-    public static void main(String[] args) {
-        ProductOneFactory oneFactory = new ProductOneFactory();
-        oneFactory.productA().a();
-        oneFactory.productB().b();
-
-        ProductTwoFactory twoFactory = new ProductTwoFactory();
-        twoFactory.productA().a();
-        twoFactory.productB().b();
+    static interface XProductFactory {
+        ProductA getProductA();
+        ProductB getProductB();
+    }
+    static class TbProductFactory implements XProductFactory {
+        @Override
+        public ProductA getProductA() {return new TbProductA();}
+        @Override
+        public ProductB getProductB() {return new TbProductB();}
+    }
+    static class JdProductFactory implements XProductFactory {
+        @Override
+        public ProductA getProductA() {return new JdProductA();}
+        @Override
+        public ProductB getProductB() {return new JdProductB();}
     }
 ```
 
