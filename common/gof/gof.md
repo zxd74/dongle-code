@@ -234,7 +234,7 @@ class Director{
 | **观察者模式**       | 一对多的依赖关系                     | 主题通知所有观察者，解耦发布者和订阅者           | 事件处理系统、消息通知机制              |
 | **命令模式**         | 将请求封装为对象                     | 解耦请求发送者和接收者，支持撤销/重做            | 菜单操作、事务管理、任务队列             |
 | **状态模式**         | 根据状态改变行为                     | 将状态转移逻辑分散到不同状态类中                | 订单状态流转、游戏角色状态切换           |
-| **责任链模式**       | 链式处理请求                         | 多个处理器按顺序尝试处理请求                    | 审批流程、异常处理链、过滤器链           |
+| **职责链模式**       | 链式处理请求                         | 多个处理器按顺序尝试处理请求                    | 审批流程、异常处理链、过滤器链           |
 | **模板方法模式**     | 定义算法骨架                         | 父类定义步骤，子类实现具体细节                   | 框架设计、标准化流程（如饮料制作）        |
 | **访问者模式**       | 分离数据结构与操作                   | 在不修改类的前提下添加新操作                    | 编译器AST处理、复杂对象结构操作          |
 | **中介者模式**       | 集中控制对象交互                     | 通过中介者减少对象间直接耦合                    | 聊天室、GUI组件协调                   |
@@ -322,6 +322,60 @@ public static void main(String[] args) {
     subject.update(); // 被观察者更新，调用所有观察者更新方法
 }
 ```
+
+## 命令
+* 逻辑
+  * 有命令调用方, 用于通知命令执行
+  * 有具体执行逻辑，但具体执行人不确定
+  * 有具体命令执行者，根据命令执行
+* 改进：
+  * 在调用方绑定多个命令组成命令集合，并进行排序，亦可以取消命令(将命令从命令集合中移除)
+```java
+class Receiver{} // 具体命令执行者
+abstract class Command{ 
+    private Receiver Receiver; // 命令绑定执行者
+    public Command(Receiver Receiver){
+        this.Receiver = Receiver;
+    }
+    public abstract void execute(); //执行具体命令
+}
+class CommandOne extends Receiver{ // 命令1的逻辑
+    public CommandOne(Executor Receiver){
+        super(Receiver);
+    }
+    public void execute(){
+        System.out.println("Receiver execute CommandOne");
+    }
+}
+class CommandTwo extends Command{ // 命令2的逻辑
+    public CommandTwo(Receiver Receiver){
+        super(Receiver);
+    }
+    public void execute(){
+        System.out.println("Receiver execute CommandTwo");
+    }
+}
+class Invoker{ // 命令调用者
+    private Command command;
+    public void setCommand(Command command){
+        this.command = command;
+    }
+    public void action(){
+        command.execute();
+    }
+}
+public static void main(String[] args) {
+    Receiver Receiver = new Receiver();
+    Waiter waiter = new Waiter();
+    waiter.setCommand(new CommandOne(executor));
+    waiter.action();
+    waiter.setCommand(new CommandTwo(executor)); //每设置一个新命令，上一个命令丢失
+    waiter.action();
+}
+```
+
+## 模板方法
+
 
 # 实践
 ## 集合创建型模式
