@@ -1,3 +1,49 @@
+# FileUtils
+```python
+# 读取文件
+def read_file(path):
+    with open(path, 'r') as f:
+        return f.read()
+
+# 按行读取文件
+def read_file_line(path):
+    with open(path, 'r') as f:
+        for line in f:
+            yield line
+
+
+# 写入文件
+def write_file(path, content):
+    with open(path, 'w') as f:
+        f.write(content)
+# 分行写入：批次写入行数据，或使用换行符\n全部写入
+
+import os
+# 删除文件
+def delete_file(path):
+    os.remove(path)
+
+# 判断文件是否存在
+def is_file_exist(path):
+    return os.path.exists(path)
+
+# 获取文件大小
+def get_file_size(path):
+    return os.path.getsize(path)
+
+# 获取文件后缀名
+def get_file_extension(path):
+    return os.path.splitext(path)[1]
+
+# 获取目录下所有文件
+def get_all_files(path):
+    return os.listdir(path)
+
+# 重命名
+def rename_file(old_path, new_path):
+    os.rename(old_path, new_path)
+```
+
 # DataUtils
 ```python
 import datetime
