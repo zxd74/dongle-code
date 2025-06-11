@@ -89,7 +89,7 @@
 
 ```
 
-### 简单工厂模式
+### 简单工厂
 * **不属于GOF范式**，不符合**开放封闭原则**，会**修改工厂代码**
 ```java
     static class SampleProductFactory{
@@ -154,7 +154,7 @@ class OnePrototype extends Prototype{
 // class OnePrototype extends Prototype implements Cloneable // 或实现Cloneable接口，重写clone方法
 ```
 
-## 建造者模式
+## 建造者
 * 适用于**复杂对象**，将对象的创建过程与对象本身分离，通过**链式调用**创建对象
   * 优点：创建过程与对象本身分离，可以复用
   * 缺点：代码冗余，需要创建Builder类
@@ -180,6 +180,15 @@ class Director{
 ```
 
 # 结构型
+| 设计模式              | 主要用途                              | 关键特点                                      | 适用场景                              |
+|----------------------|-------------------------------------|--------------------------------------------|-------------------------------------|
+| **适配器模式**       | 接口转换                            | 包装不兼容接口，使其协同工作                    | 整合旧系统、第三方库兼容                |
+| **桥接模式**         | 分离抽象与实现                      | 用组合代替继承，独立变化维度                     | 跨平台应用、多维度扩展系统               |
+| **组合模式**         | 统一处理树形结构                    | 以一致方式处理单个对象和组合对象                 | 文件系统、UI组件树、组织结构管理          |
+| **装饰器模式**       | 动态添加职责                        | 透明扩展功能，避免子类爆炸                      | I/O流增强、权限校验链                  |
+| **外观模式**         | 简化复杂系统接口                    | 提供统一高层接口，隐藏子系统细节                  | 框架封装、API网关设计                  |
+| **享元模式**         | 共享细粒度对象                      | 缓存可复用对象，减少内存消耗                     | 文字编辑器字符对象、游戏粒子系统           |
+| **代理模式**         | 控制对象访问                        | 添加间接层，实现延迟加载/访问控制                 | 远程调用、图片懒加载、AOP拦截            |
 ## 代理
 * 代理模式核心：代理者实际控制被代理者
   * 持有被代理者(**必需**)
@@ -216,6 +225,102 @@ class Director{
         proxy.method();
         proxy.method1();
     }
+```
+
+# 行为型
+| 设计模式              | 主要用途                              | 关键特点                                      | 适用场景                              |
+|----------------------|-------------------------------------|--------------------------------------------|-------------------------------------|
+| **策略模式**         | 动态切换算法或行为                   | 定义算法族，封装每个算法，使它们可互换          | 支付方式选择、排序算法切换等            |
+| **观察者模式**       | 一对多的依赖关系                     | 主题通知所有观察者，解耦发布者和订阅者           | 事件处理系统、消息通知机制              |
+| **命令模式**         | 将请求封装为对象                     | 解耦请求发送者和接收者，支持撤销/重做            | 菜单操作、事务管理、任务队列             |
+| **状态模式**         | 根据状态改变行为                     | 将状态转移逻辑分散到不同状态类中                | 订单状态流转、游戏角色状态切换           |
+| **责任链模式**       | 链式处理请求                         | 多个处理器按顺序尝试处理请求                    | 审批流程、异常处理链、过滤器链           |
+| **模板方法模式**     | 定义算法骨架                         | 父类定义步骤，子类实现具体细节                   | 框架设计、标准化流程（如饮料制作）        |
+| **访问者模式**       | 分离数据结构与操作                   | 在不修改类的前提下添加新操作                    | 编译器AST处理、复杂对象结构操作          |
+| **中介者模式**       | 集中控制对象交互                     | 通过中介者减少对象间直接耦合                    | 聊天室、GUI组件协调                   |
+| **备忘录模式**       | 保存和恢复对象状态                   | 外部化对象状态，支持撤销功能                    | 游戏存档、事务回滚                     |
+| **迭代器模式**       | 统一遍历集合元素                     | 提供一致的遍历接口，隐藏集合内部结构              | 集合类遍历（如List、Tree等）           |
+| **解释器模式**       | 解释特定语法或表达式                 | 定义语法规则，构建语法树解释执行                 | 正则表达式、SQL解析、数学公式计算        |
+## 策略
+* 定义一个**抽象公共类**
+* 定义具体实现类
+* 与职责链区别：所有实现类都是同等级的，没有链式职责
+* 由其它类绑定抽象公共类，在用户实例化其他类时，绑定具体策略类
+```java
+abstract class Strategy{
+    // 公共内容
+}
+class FirstStrategy extends Strategy{}
+class SecondStrategy extends Strategy{}
+class Context {
+    Strategy strategy; // 绑定公共类
+    public Context(Strategy strategy){ //在用户实例化其他类时，绑定具体策略类
+        this.strategy = strategy;
+    }
+}
+```
+## 职责链
+* 定义一个**抽象公共类**
+  * 定义下一个**公共类属性**
+  * 定义下一个函数，用于**绑定**下一个公共类
+  * 定义一个抽象方法，用于**处理职责**
+* 定义多个公共类，并实现其职责逻辑
+  * 在职责完成后判断是否还有下一个公共类，有继续执行，没有终止
+```java
+abstract class Handler{ // 定义一个抽象公共类
+    protected Handler processor; // 定义下一个公共类属性
+    public void setNextProcessor(Handler processor){ // 绑定下一个公共类
+        this.processor = processor;
+    }
+    abstract void handler(); // 定义一个抽象方法，用于处理职责
+}
+class FirstHandler extends Handler{
+    @Override
+    public void handler(){
+        /** 自身职责处理 */
+        // 自身职责处理完，执行下一个职责
+        if(processor !=null){processor.handler();}
+    }
+}
+class SecondHander extends Handler{
+    @Override
+    public void handler(){
+        if(processor !=null){processor.handler();}
+    }
+}
+public static void main(String[] args) {
+    FirstHandler first = new FirstHandler();
+    SecondHander second = new SecondHander();
+    first.setNextProcessor(second);
+    first.handler(); // 执行自身职责,当First职责处理完会继续Second职责
+}
+```
+## 观察者
+* 被观察者绑定**观察者列表**
+  * 并定义一个用于**通知**观察者更新的方法
+* 观察者定义**更新方法**
+* 被观察者更新时，遍历观察者列表，调用观察者更新方法
+```java
+abstract class Observer{abstract void update();}
+class ObserverA extends Observer{public void update(){System.out.println("ObserverA update");}}
+class ObserverB extends Observer{public void update(){System.out.println("ObserverB update");}}
+class Subject{
+    List<Observer> observers = new ArrayList<>(); // 绑定观察者列表
+    public void addObserver(Observer observer){observers.add(observer);}
+    public void removeObserver(Observer observer){observers.remove(observer);}
+    public void update(){ // 被观察者更新时，遍历观察者列表，调用观察者更新方法
+        for(Observer observer:observers){
+            observer.update();
+        }
+    }
+}
+
+public static void main(String[] args) {
+    Subject subject = new Subject();
+    subject.addObserver(new ObserverA());
+    subject.addObserver(new ObserverB());
+    subject.update(); // 被观察者更新，调用所有观察者更新方法
+}
 ```
 
 # 实践
