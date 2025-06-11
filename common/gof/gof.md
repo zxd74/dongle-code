@@ -18,6 +18,13 @@
   * 模板方法、命令、迭代器、观察者、中介、备忘录、解释器、状态、策略、职责、访问者。
 
 # 创建型
+| 设计模式          | 主要用途                              | 关键特点                                      | 适用场景                              |
+|------------------|-------------------------------------|--------------------------------------------|-------------------------------------|
+| **单例模式**      | 确保一个类只有一个实例                | 全局访问点，私有构造函数，延迟初始化           | 配置管理、日志系统、线程池等            |
+| **工厂方法模式**  | 由子类决定创建的对象类型              | 定义接口，子类实现具体创建逻辑                 | 需要扩展产品类型时（如不同数据库连接）     |
+| **抽象工厂模式**  | 创建相关或依赖的对象家族              | 提供一组接口，隐藏具体实现类                   | 跨平台UI组件、不同风格的产品族（如家具）  |
+| **建造者模式**    | 分步构建复杂对象                     | 分离构造过程与表示，支持链式调用                | 构造多参数对象（如SQL查询、HTML生成器）   |
+| **原型模式**      | 通过克隆现有对象创建新对象            | 实现 `Cloneable` 接口，避免重复初始化开销       | 创建成本高的对象（如游戏角色复制）        |
 ## 单例
 * 隐藏构造函数，通过静态方法获取实例
 * 实现：饿汉式和懒汉式
@@ -59,7 +66,7 @@
     }
 ```
 
-## 工厂
+## 工厂方法
 * 适用于提供**不同类型**产品
 * **一个工厂生产一种产品,不同产品不同工厂**
   * 工厂负责具体的产品
@@ -130,6 +137,47 @@
         public ProductB getProductB() {return new JdProductB();}
     }
 ```
+## 原型
+即克隆复制操作，关于深浅克隆不在这里多叙述，转至各语言的克隆实现
+* 自定义提供克隆方法
+* 或由语言内在提供，如java提供`Cloneable`接口，实现`clone()`方法(**默认浅克隆**)
+```java
+abstract class Prototype{
+	// 关键点：clone自身的方法
+	abstract Prototype clone(); // 提供自定义克隆方法
+}
+class OnePrototype extends Prototype{
+	Prototype clone(){
+		return (Prototype)this.clone();
+	}
+}
+// class OnePrototype extends Prototype implements Cloneable // 或实现Cloneable接口，重写clone方法
+```
+
+## 建造者模式
+* 适用于**复杂对象**，将对象的创建过程与对象本身分离，通过**链式调用**创建对象
+  * 优点：创建过程与对象本身分离，可以复用
+  * 缺点：代码冗余，需要创建Builder类
+```java
+class ProductA{
+    // ProductA创建属性列表和方法列表
+}
+class ProductABuilder{
+    // ProductA创建属性列表
+    // 提供方法支持属性绑定
+    // 结合属性生成ProductA
+    public ProductA build(){
+        return new ProductA();
+    }
+}
+class Director{
+    // 调用ProductABuilder的属性绑定方法
+    // 调用ProductABuilder的生成方法
+    public ProductA construct(ProductABuilder builder){
+        return builder.build();
+    }
+}
+```
 
 # 结构型
 ## 代理
@@ -170,3 +218,91 @@
     }
 ```
 
+# 实践
+## 集合创建型模式
+* `TbProductABuilder,TbProductBBuilder` **建造者**
+* `TbProductAFactory,TbProductBFactory` **工厂方法**
+* `TbProductFactory` **抽象工厂**
+* `TbProductFactory` **单例**
+* `ProductB` **原型**
+```java
+abstract class Product {}
+
+abstract class ProductA extends Product {}
+abstract class ProductB extends Product implements Cloneable{
+    @Override
+    public ProductB clone() throws CloneNotSupportedException { //支持克隆，即原型模式
+        return (TbProductB)super.clone();
+    }
+}
+
+class TbProductA extends ProductA {}
+class TbProductB extends ProductB {}
+
+class TbProductABuilder{ // 建造者模式
+    // ProductA创建属性列表
+    // 提供方法支持属性绑定
+    // 结合属性生成ProductA
+    public TbProductA build(){return new TbProductA();}
+}
+class TbProductBBuilder{
+    // ProductB创建属性列表
+    // 提供方法支持属性绑定
+    // 结合属性生成ProductB
+    public TbProductB build(){return new TbProductB();}
+}
+
+interface ProductFactory { // 工厂方法模式
+    Product createProduct();
+}
+
+class TbProductAFactory implements ProductFactory {
+    public Product createProduct() {
+        TbProductABuilder builder = new TbProductABuilder();
+        // 设置属性
+        return builder.build();
+    }
+}
+
+class TbProductBFactory implements ProductFactory {
+    public Product createProduct() {
+        TbProductBBuilder builder = new TbProductBBuilder();
+        // 设置属性
+        return builder.build();
+    }
+    public ProductB createProductB(ProductB product) {
+        return product.clone(); // 使用原型模式创建对象
+    }
+}
+
+
+interface XProductFactory { // 抽象工厂模式
+    ProductA createProductA();
+
+    ProductB createProductB();
+    ProductB createProductB(ProductB product);
+}
+
+class TbProductFactory implements XProductFactory { 
+    private TbProductAFactory factoryA = new TbProductAFactory();
+    private TbProductBFactory factoryB = new TbProductBFactory();
+
+    private TbProductFactory (){}
+    private static TbProductFactory instance = new TbProductFactory();
+    public static TbProductFactory getInstance(){ // 单例模式
+        return instance;
+    }
+
+    public ProductA createProductA() {
+        return (ProductA)factoryA.createProduct();
+    }
+
+    public ProductB createProductB() {
+        return (ProductB)factoryB.createProduct();
+    }
+    public ProductB createProductB(ProductB product) {
+        TbProductBFactory factory = new TbProductBFactory();
+        return factoryB.createProductB(product);
+    }
+}
+```
