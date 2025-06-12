@@ -401,7 +401,163 @@ public static void main(String[] args) {
 ```
 
 ## 模板方法
+* 由父类定义**一系列抽象方法**，由子类具体实现
+* 由父类**决定**抽象方法**处理流程**(及调用抽象方法的流程)
+* 适用于**流程一致，细节不一致**的场景
+```java
+static  abstract class Template{
+    public abstract void templateOperationOne(); // 具体步骤实现由子类完成
+    public abstract void templateOperationTwo();
+    // ...more template abstract methods		
 
+    public final void template(){  // 抽象类提供统一模板处理步骤处理流程
+        templateOperationOne();
+        templateOperationTwo();
+        // invoker more template methods
+    }
+}
+
+public static class TemplateA extends Template{
+    @Override
+    public void templateOperationOne(){
+        System.out.println("TemplateA templateOperationOne");
+    }
+    @Override
+    public void templateOperationTwo(){
+        System.out.println("TemplateA templateOperationTwo");
+    }
+}
+public static class TemplateB extends Template{
+    @Override
+    public void templateOperationOne(){
+        System.out.println("TemplateB templateOperationOne");
+    }
+    @Override
+    public void templateOperationTwo(){
+        System.out.println("TemplateB templateOperationTwo");
+    }
+}
+```
+
+## 状态
+* 定义**上下文**(任意有状态的都可以)，**关联状态对象**
+  * 定义一个方法，用于执行状态处理
+* 抽象状态，定义状态处理(绑定上下文)
+  * 状态实现处理中切换下一个状态
+* 与**职责链**区别：
+  * 职责链是**顺序执行**，状态是**循环执行**
+  * 职责链是**内部关联自身**，状态是**外部关联状态**
+  * 职责链只需要自身，状态模式需要对象是有状态的
+```java
+static class Context{
+    private State state;
+    public void setState(State state){
+        this.state = state;
+    }
+
+    public void request(){
+        state.handle(this); // 处理请求，并内部设置下一个状态
+    }
+}
+
+static abstract class State{
+    public abstract void handle(Context context);
+}
+static class StateOne extends State{
+    @Override
+    public void handle(Context context){
+        context.setState(new StateTwo ());
+    }
+}
+
+static class StateTwo extends State{
+    @Override
+    public void handle(Context context){
+        context.setState(new StateOne());
+    }
+}
+
+public static void main(String[] args){
+    Context context = new Context();
+    context.setState(new StateOne());
+    // 每请求一次更换一次状态
+    context.request(); // 转换成StateTwo
+    context.request(); // 转换成StateOne
+    context.request(); // 转换成StateTwo
+}
+```
+
+## 访问者模式
+* 定义
+  * **访问者 Visitor**，定义访问行为
+  * **元素 Element**，定义接受访问者
+  * **具体访问者**，实现访问行为
+  * **具体元素**，实现接受访问者
+* **特点**
+  * 元素类和访问者类分离
+  * 元素类绑定访问类，由访问类调用元素类的方法
+  * 元素类与访问类是**多对多**关系
+* **适用场景**
+  * **数据结构稳定**但操作频繁变化的场景
+  * 需要对复杂结构统一执行多种操作的场景
+  * 避免污染原有类结构的场景
+  * 操作需要访问对象的私有状态的场景
+  * 双分派（Double Dispatch）需求的场景
+```java
+interface Visitor{
+    void visit(ConcreteElementA element);
+    void visit(ConcreteElementB element);
+}
+interface Element{
+    void accept(Visitor visitor);
+}
+class ConcreteVisitorA implements Visitor{
+    @Override
+    public void visit(ConcreteElementA element){
+        element.operationA();
+    }
+}
+class ConcreteVisitorB implements Visitor{
+    @Override
+    public void visit(ConcreteElementB element){
+        element.operationB();
+    }
+}
+class ConcreteElementA implements Element{
+    @Override
+    public void accept(Visitor visitor){
+        visitor.visit(this);
+    }
+    public void operationA(){}
+}
+class ConcreteElementB implements Element{
+    @Override
+    public void accept(Visitor visitor){
+        visitor.visit(this);
+    }
+    public void operationB(){}
+}
+
+class ObjectStructure{  // 可以枚举元素类
+    private List<Element> elements = new ArrayList();
+    public void addElement(Element element){
+        elements.add(element);
+    }
+    public void accept(Visitor visitor){
+        for (Element element : elements){
+            element.accept(visitor);
+        }
+    }
+}
+
+public static void main(String[] args){
+    ObjectStructure objectStructure = new ObjectStructure();
+    objectStructure.addElement(new ConcreteElementA());
+    objectStructure.addElement(new ConcreteElementB());
+    objectStructure.accept(new ConcreteVisitorA());
+    objectStructure.accept(new ConcreteVisitorB());
+}
+```
 
 # 实践
 ## 集合创建型模式
