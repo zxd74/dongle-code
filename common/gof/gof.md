@@ -65,6 +65,31 @@
         SingleObject normalObject3 = getObj3();
     }
 ```
+### 静态内部类单例
+静态内部类单例**延迟加载**，**适用于初始化成本高**的情况
+
+特性	|直接静态字段初始化	|静态内部类Holder模式
+--	|----	|--
+初始化时机	|类加载时立即初始化	|第一次调用`getInstance()`时初始化
+内存占用	|可能更早占用内存	|真正按需加载
+线程安全性	|由类加载机制保证	|由类加载机制保证
+实现复杂度	|更简单直接	|需要额外内部类
+适用场景	|确定会使用的轻量级单例	|不确定是否使用或初始化成本高的单例
+
+```java
+public class Singleton {
+    private Singleton() {}
+    
+    private static class Holder {
+        static final Singleton INSTANCE = new Singleton();
+    }
+    
+    public static Singleton getInstance() {
+        return Holder.INSTANCE;
+    }
+}
+```
+
 
 ## 工厂方法
 * 适用于提供**不同类型**产品
@@ -140,11 +165,11 @@
 ## 原型
 即克隆复制操作，关于深浅克隆不在这里多叙述，转至各语言的克隆实现
 * 自定义提供克隆方法
-* 或由语言内在提供，如java提供`Cloneable`接口，实现`clone()`方法(**默认浅克隆**)
+* 或由语言内在提供，如java提供`Cloneable`接口，实现` Object.clone()`方法(**默认浅克隆**)
 ```java
 abstract class Prototype{
 	// 关键点：clone自身的方法
-	abstract Prototype clone(); // 提供自定义克隆方法
+	public abstract Prototype clone(); // 提供自定义克隆方法
 }
 class OnePrototype extends Prototype{
 	Prototype clone(){
@@ -357,6 +382,7 @@ class CommandTwo extends Command{ // 命令2的逻辑
 }
 class Invoker{ // 命令调用者
     private Command command;
+    // private List<Command> commands = new ArrayList<>(); // 命令集合
     public void setCommand(Command command){
         this.command = command;
     }
