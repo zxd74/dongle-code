@@ -33,6 +33,7 @@
 - [39 组合总和(中)](#39-组合总和中)
 - [40 组合总和 II(中)](#40-组合总和-ii中)
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
+- [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 
 
 
@@ -2137,5 +2138,21 @@ public int firstMissingPositive(int[] nums) {
         }
     }
     return count + 1; 
+}
+```
+
+# 58. Length of Last Word(简单)
+    Given a string s consists of some words separated by spaces, return the length of the last word in the string. If the last word does not exist, return 0.
+
+    A word is a maximal substring consisting of non-space characters only.
+
+* 约束
+  * `1 <= s.length <= 10^4`
+```java
+public int lengthOfLastWord(String s) {
+    int end = s.length()-1;
+    while (end >= 0 && s.charAt(end) == ' ') end--;
+    if (end < 0) return 0;
+    return end - s.lastIndexOf(' ', end);
 }
 ```
