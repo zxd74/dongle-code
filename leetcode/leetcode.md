@@ -209,24 +209,23 @@ class Solution {
 * int整数数字对称
 * 负数非回环
 ```java
-// 初版 10ms
+// 初版：通过字符串索引前后对比实现
 class Solution {
     public boolean isPalindrome(int x) {
         if (x == 0) return true;
-        if (x<0) return false;
+        if (x < 0 || x%10==0) return false;
         
         String str = String.valueOf(x);
-
-        for (int i = 0; i < str.length() / 2; i++) {
-            if (str.charAt(i) != str.charAt(str.length() - 1 - i)){
+        int lo = 0, hi = str.length()-1;
+        while (lo < hi) {
+            if (str.charAt(lo++) != str.charAt(hi--))
                 return false;
-            }
         }
         return true;
     }
 }
 
-// 学习版
+// 学习版：通过余数反转对比实现
 class Solution {
     public boolean isPalindrome(int x) {
         if (x<0 || (x!=0 && x%10==0)) return false;
