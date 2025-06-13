@@ -251,6 +251,51 @@ class Director{
         proxy.method1();
     }
 ```
+## 适配器
+* 适配者理论与适配目标是**等同**的，但相同操作方法不同，需要适配器对是适配者进行转换
+* 和解释器有点像
+  * 适配器将适配者包装成适配者，然后执行相同方法
+  * 解释器都是仅仅是执行相同方法
+```java
+static abstract class Target{ // 需要适配的目标
+    public abstract void request();
+}
+static class Adaptee{
+    public void specificRequest(){
+        // 适配类动作
+    }
+}
+static class Target1 extends Target{
+    @Override
+    public void request() {
+        // 适配目标动作
+    }
+}
+static class Target2 extends Target{
+    @Override
+    public void request() {
+        // 适配目标动作
+    }
+}
+static class Adapter extends Target{
+    private Adaptee adaptee = new Adaptee();
+    @Override
+    public void request() {
+        adaptee.specificRequest(); // 通知适配类执行适配动作
+    }
+}
+
+public static void main(String[] args){
+    Target target = new Target1();
+    target.request(); // 适配目标1
+
+    target = new Target2(); // 适配目标2
+    target.request();
+
+    target = new Adapter(); // 适配目标3，内部相当代表适配者
+    target.request();
+}
+```
 
 # 行为型
 | 设计模式              | 主要用途                              | 关键特点                                      | 适用场景                              |
@@ -487,7 +532,7 @@ public static void main(String[] args){
 }
 ```
 
-## 访问者模式
+## 访问者
 * 定义
   * **访问者 Visitor**，定义访问行为
   * **元素 Element**，定义接受访问者
@@ -556,6 +601,31 @@ public static void main(String[] args){
     objectStructure.addElement(new ConcreteElementB());
     objectStructure.accept(new ConcreteVisitorA());
     objectStructure.accept(new ConcreteVisitorB());
+}
+```
+
+## 解释器
+* 不同解释器对同一内容进行解读(**强调行为**)
+```java
+static abstract class Interpreter{
+    public abstract void interpretor(Context context);
+}
+static class ConcreteInterpreter extends Interpreter{
+    @Override
+    public void interpretor(Context context) {
+        // TODO Auto-generated method stub
+    }
+}
+static class Context{
+    // 内容
+}
+static class Client{
+    public static void main(String[] args) {
+        // TODO Auto-generated method stub
+        Interpreter interpreter = new ConcreteInterpreter();
+        Context context = new Context();
+        interpreter.interpretor(context);
+    }
 }
 ```
 
