@@ -35,6 +35,7 @@
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
+- [67. Add Binary(简单)](#67-add-binary简单)
 
 
 
@@ -2206,5 +2207,72 @@ public int[] plusOne(int[] digits) {
     int[] ans = new int[digits.length+1]; 
     ans[0] = 1;
     return ans;
+}
+```
+# 67. Add Binary(简单)
+    Given two binary strings a and b, return their sum as a binary string.
+
+* 约束
+  * `1 <= a.length, b.length <= 10^4`
+  * `a` and `b` consist only of '0' or '1' characters.
+  * Each string does not contain leading zeros except for the zero itself.
+
+* **思路**
+  * **从后向前遍历**
+  * **结果大于2，前进1位，当前位取余**
+  * **若遍历完仍需进1，则新增首位为1**
+  * `char`和`int`计算会被提权至`int`
+  * 由于`char`中`0`转`int`非`0(48)`，故两个`char`相加相当于多加一次，需要减去一个
+* **改进**
+  * 以`char[]`接收结果，并定义最大可能长度的数组
+  * 将各位运算都转为`int`类型计算
+  * 通过**位并运算**计算当前位结果`(char)((sum & 1) + '0') or sum % 2`
+
+```java
+// 初版，通过StringBuilder.insert(offset, char)方法，从后向前插入
+public static String addBinary(String a, String b) {
+    StringBuilder sb = new StringBuilder();
+    int i = a.length()-1,j= b.length()-1;
+    char cur;int tmp = 0; // tmp 最大是1
+    while(i>=0 || j>=0) {
+        if(i<0) cur = b.charAt(j--); 
+        else if(j<0) cur = a.charAt(i--);
+        // 在ascii中，'0'的值为48, 双位相加相当于多加一次'0'，故需要减去一个
+        else cur = (char)(a.charAt(i--) + b.charAt(j--) - '0');
+        cur = (char)(cur + tmp);
+        if (cur == '3') { // cur临时最大为3，即双位都为1，并且低位上进1
+            cur = '1';
+            tmp = 1;
+        }else if(cur == '2') {
+            cur = '0';
+            tmp = 1;
+        }else { //不足2时，cur不变，并且不足进1，tmp重置为0
+            tmp = 0;
+        }
+        sb.insert(0,cur);
+
+    }
+    if (tmp == 1) sb.insert(0,'1');
+    String result = sb.toString();
+    return result;
+}
+
+// 改进版
+public String addBinary(String a, String b) {
+    if(a.length()<b.length()) return addBinary(b, a); // 统一 a为最长的字符串
+    int i = a.length()-1, j = b.length()-1,carry = 0;
+    char[] res = new char[a.length() + 1]; // 结果最大可能比最长长1位
+    int k = res.length-1;
+    while(i>=0){
+        int digist = a.charAt(i--) - '0';
+        int digistB = j>=0 ? b.charAt(j--) - '0' : 0;
+        int sum = digist + digistB + carry;
+        carry = sum>>1;
+        res[k--] = (char)((sum & 1) + '0'); // == sum % 2
+    }
+    if (carry == 1) {
+        res[k--] = '1';
+    }
+    return new String(res,k+1,res.length-k-1);
 }
 ```
