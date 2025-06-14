@@ -628,6 +628,119 @@ static class Client{
     }
 }
 ```
+## 迭代器
+* 对一种数据结构提供集合操作，而不暴露其内部表示
+```java
+static interface Iterator{
+    public Object first();
+    // 其它方法：last,next等等
+}
+static abstract class Aggregate{
+    public abstract Iterator createIterator();
+}
+static class IteratorOne implements Iterator{
+    private AggregateOne  one;
+    public IteratorOne (AggregateOne  one){this.one = one;}
+    public Object first(){
+        return one.get(0);
+    }
+}
+static class AggregateOne extends Aggregate{
+    private List<Object> list= new ArrayList<>();
+    public Iterator createIterator(){
+        return new IteratorOne(this);
+    }
+    public Object get(int index){
+        return list.get(index);
+    }
+}
+```
+## 备忘录
+* **将对象内部属性存到另外一个对象中**，恢复时，直接从另外对象中将属性赋值给对象
+* 需要一个管理备忘录的对象(**没有也算是备忘录模式**)
+```java
+static class Memento{
+    private String state;
+    public Memento(String state){this.state=state;}
+}
+static class Originator{
+    private String state;
+    public void setState(String state){this.state = state;}
+    public String getState(){return state;}
+    public Memento createMemento(){
+        return new Memento(state);
+    }
+    public void setMemento(Memento memento){
+        state = memento.state;
+    }
+    public void show(){
+        System.out.println(state);
+    }
+}
+static class Caretaker{
+    private Memento memento;
+    public void setMemento(Memento memento){
+        this.memento = memento;
+    }
+    public Memento getMemento(){
+        return memento;
+    }
+}
+
+public static void main(String[] args){
+    Originator o = new Originator();
+    o.setState("Dongle");
+    o.show();
+    Caretaker c = new Caretaker();
+    Memento m = new Memento(o.getState());
+    c.setMemento(m);
+
+    o.setState("Kevin"); // 改变了Originator 的state
+    o.show();
+
+    o.setMemento(c.getMemento()); // 恢复Originator  的state 为"Dongle"
+    o.show();
+}
+```
+
+## 中介者
+* 在中介对象中根据传入参数对象不同，将消息转发给不同的对象
+```java
+static abstract class Mediator{
+    public abstract void send(String msg,Colleague c);
+}
+static class MediatorOne extends Mediator{
+    private ColleagueOne c1;
+    private ColleagueTwo c2;
+
+    public void send(String msg,Colleague c){
+        if(c == c1) c2.recv(msg);
+        if(c==c2) c1.recv(msg);
+    }
+}
+static abstract class Colleague{
+    protected Mediator m;
+    public Colleague(Mediator m ){this.m =m ;}
+}
+static class ColleagueOne extends Colleague{
+    public ColleagueOne(Mediator m ){super(m);}
+    public void send(String msg){
+        m.send(msg,this);
+    }
+    public void recv(String msg){
+        System.out.println("ColleagueOne recive msg:" + msg);
+    }
+}
+static class ColleagueTwo extends Colleague{
+    public ColleagueTwo (Mediator m ){super(m);}
+    public void send(String msg){
+        m.send(msg,this);
+    }
+    public void recv(String msg){
+        System.out.println("ColleagueTwo recive msg:" + msg);
+    }
+}
+```
 
 # 实践
 ## 集合创建型模式
