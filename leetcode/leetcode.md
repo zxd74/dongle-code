@@ -34,6 +34,7 @@
 - [40 组合总和 II(中)](#40-组合总和-ii中)
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
+- [66. Plus One(简单)](#66-plus-one简单)
 
 
 
@@ -2154,5 +2155,56 @@ public int lengthOfLastWord(String s) {
     while (end >= 0 && s.charAt(end) == ' ') end--;
     if (end < 0) return 0;
     return end - s.lastIndexOf(' ', end);
+}
+```
+# 66. Plus One(简单)
+    You are given a large integer represented as an integer array digits, where each digits[i] is the ith digit of the integer. The digits are ordered from most significant to least significant in left-to-right order. The large integer does not contain any leading 0's.
+
+    Increment the large integer by one and return the resulting array of digits.
+
+* 约束
+  * `1 <= digits.length <= 100`
+  * `0 <= digits[i] <= 9`
+  * `digits does not contain any leading 0's`
+* **思路**
+  * 从后向前遍历，结果大于10，前进1位，当前位取余，
+  * 若首位结果大于10，扩展新数组
+* **改进**
+  * 由于值为`0-9`，只有为`9`时才需要进位，故可简化为非9时直接+1退出
+  * 等于9时，+1最终当前为结果为0
+  * 由于**int默认值为0**，故**新数组扩展只需首位为1**即可
+```java
+// 初版
+public int[] plusOne(int[] digits) {
+    int tmp,n=digits.length,i=n-1;
+    int[] result = digits;
+    do {
+        tmp = digits[i] + 1;
+        digits[i--] = tmp % 10;
+    } while (tmp / 10 == 1 && i >=0);
+    if (i < 0 && tmp / 10 == 1) {
+        // 扩展新数组
+        result = new int[n + 1];
+        result[0] = 1;
+        for (int j = 0; j < n; j++)
+            result[j + 1] = digits[j];
+    }
+    return result;
+}
+
+// 参考官方改进
+public int[] plusOne(int[] digits) {
+    int n = digits.length,i=n-1;
+    do{
+        if(digits[i]<9){
+            digits[i]++;
+            return digits; 
+        }
+        digits[i--] = 0;
+    }while(i>=0);
+    // 代表第一位结果=10，后续位置都为0，由于int默认0，故只需新增int[]首位1即可
+    int[] ans = new int[digits.length+1]; 
+    ans[0] = 1;
+    return ans;
 }
 ```
