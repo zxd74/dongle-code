@@ -417,10 +417,10 @@ static class FlyweightFactory{
 static abstract class Flyweight{
     public abstract void operation(int key); // 可以定义任意方法，这个内容与模式无关
 }
-static class FlyweightOne extends {
+static class FlyweightOne extends Flyweight{
     public void operation(int key){}
 }
-static class FlyweightTwo extends {
+static class FlyweightTwo extends Flyweight{
     public void operation(int key){}
 }
 ```
