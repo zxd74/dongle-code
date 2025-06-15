@@ -10,21 +10,21 @@
 * CARP: 合成复用原则，Composite And Reuse Principle
 
 # 分类
-* **创建型**：抽象了对象实例化的过程，用来帮助创建对象的实例(**5种**)
+* [**创建型**](#创建型)：抽象了对象实例化的过程，用来帮助创建对象的实例(**5种**)
   * 单例、工厂、抽象工厂、建造者、原型。
-* **结构型**：描述如何组合类和对象，以获得更大的结构(**7种**)
+* [**结构型**](#结构型)：描述如何组合类和对象，以获得更大的结构(**7种**)
   * 适配器、桥接、装饰、组合、外观、享元、代理。
-* **行为**：描述算法和对象间职责的分配(**11种**)
+* [**行为型**](#行为型)：描述算法和对象间职责的分配(**11种**)
   * 模板方法、命令、迭代器、观察者、中介、备忘录、解释器、状态、策略、职责、访问者。
 
-# 创建型
+# 创建型(**5种**)
 | 设计模式          | 主要用途                              | 关键特点                                      | 适用场景                              |
 |------------------|-------------------------------------|--------------------------------------------|-------------------------------------|
-| **单例模式**      | 确保一个类只有一个实例                | 全局访问点，私有构造函数，延迟初始化           | 配置管理、日志系统、线程池等            |
-| **工厂方法模式**  | 由子类决定创建的对象类型              | 定义接口，子类实现具体创建逻辑                 | 需要扩展产品类型时（如不同数据库连接）     |
-| **抽象工厂模式**  | 创建相关或依赖的对象家族              | 提供一组接口，隐藏具体实现类                   | 跨平台UI组件、不同风格的产品族（如家具）  |
-| **建造者模式**    | 分步构建复杂对象                     | 分离构造过程与表示，支持链式调用                | 构造多参数对象（如SQL查询、HTML生成器）   |
-| **原型模式**      | 通过克隆现有对象创建新对象            | 实现 `Cloneable` 接口，避免重复初始化开销       | 创建成本高的对象（如游戏角色复制）        |
+| [**单例模式**](#单例)      | 确保一个类只有一个实例                | 全局访问点，私有构造函数，延迟初始化           | 配置管理、日志系统、线程池等            |
+| [**工厂方法模式**](#工厂方法-factory-method)  | 由子类决定创建的对象类型              | 定义接口，子类实现具体创建逻辑                 | 需要扩展产品类型时（如不同数据库连接）     |
+| [**抽象工厂模式**](#抽象工厂-abstract-factory)  | 创建相关或依赖的对象家族              | 提供一组接口，隐藏具体实现类                   | 跨平台UI组件、不同风格的产品族（如家具）  |
+| [**建造者模式**](#建造者-builder)    | 分步构建复杂对象                     | 分离构造过程与表示，支持链式调用                | 构造多参数对象（如SQL查询、HTML生成器）   |
+| [**原型模式**](#原型-prototype)      | 通过克隆现有对象创建新对象            | 实现 `Cloneable` 接口，避免重复初始化开销       | 创建成本高的对象（如游戏角色复制）        |
 ## 单例
 * 隐藏构造函数，通过静态方法获取实例
 * 实现：饿汉式和懒汉式
@@ -90,8 +90,7 @@ public class Singleton {
 }
 ```
 
-
-## 工厂方法
+## 工厂方法 Factory Method
 * 适用于提供**不同类型**产品
 * **一个工厂生产一种产品,不同产品不同工厂**
   * 工厂负责具体的产品
@@ -114,7 +113,7 @@ public class Singleton {
 
 ```
 
-### 简单工厂
+### 简单工厂 Sample Factory
 * **不属于GOF范式**，不符合**开放封闭原则**，会**修改工厂代码**
 ```java
     static class SampleProductFactory{
@@ -132,7 +131,7 @@ public class Singleton {
     }
 ```
 
-## 抽象工厂
+## 抽象工厂 Abstract Factory
 * 适用于提供**同系列不同类型**产品
 * **系列工厂创建不同类型产品**
   * 系列工厂创建系列产品
@@ -162,7 +161,7 @@ public class Singleton {
         public ProductB getProductB() {return new JdProductB();}
     }
 ```
-## 原型
+## 原型 Prototype
 即克隆复制操作，关于深浅克隆不在这里多叙述，转至各语言的克隆实现
 * 自定义提供克隆方法
 * 或由语言内在提供，如java提供`Cloneable`接口，实现` Object.clone()`方法(**默认浅克隆**)
@@ -179,7 +178,7 @@ class OnePrototype extends Prototype{
 // class OnePrototype extends Prototype implements Cloneable // 或实现Cloneable接口，重写clone方法
 ```
 
-## 建造者
+## 建造者 Builder
 * 适用于**复杂对象**，将对象的创建过程与对象本身分离，通过**链式调用**创建对象
   * 优点：创建过程与对象本身分离，可以复用
   * 缺点：代码冗余，需要创建Builder类
@@ -204,17 +203,18 @@ class Director{
 }
 ```
 
-# 结构型
+# 结构型(**7种**)
 | 设计模式              | 主要用途                              | 关键特点                                      | 适用场景                              |
 |----------------------|-------------------------------------|--------------------------------------------|-------------------------------------|
-| **适配器模式**       | 接口转换                            | 包装不兼容接口，使其协同工作                    | 整合旧系统、第三方库兼容                |
-| **桥接模式**         | 分离抽象与实现                      | 用组合代替继承，独立变化维度                     | 跨平台应用、多维度扩展系统               |
-| **组合模式**         | 统一处理树形结构                    | 以一致方式处理单个对象和组合对象                 | 文件系统、UI组件树、组织结构管理          |
-| **装饰器模式**       | 动态添加职责                        | 透明扩展功能，避免子类爆炸                      | I/O流增强、权限校验链                  |
-| **外观模式**         | 简化复杂系统接口                    | 提供统一高层接口，隐藏子系统细节                  | 框架封装、API网关设计                  |
-| **享元模式**         | 共享细粒度对象                      | 缓存可复用对象，减少内存消耗                     | 文字编辑器字符对象、游戏粒子系统           |
-| **代理模式**         | 控制对象访问                        | 添加间接层，实现延迟加载/访问控制                 | 远程调用、图片懒加载、AOP拦截            |
-## 代理
+| [**适配器模式**](#适配器-adapter)       | 接口转换                            | 包装不兼容接口，使其协同工作                    | 整合旧系统、第三方库兼容                |
+| [**桥接模式** ](#桥接-bridge)        | 分离抽象与实现                      | 用组合代替继承，独立变化维度                     | 跨平台应用、多维度扩展系统               |
+| [**组合模式**](#组合-composite)        | 统一处理树形结构                    | 以一致方式处理单个对象和组合对象                 | 文件系统、UI组件树、组织结构管理          |
+| [**装饰器模式**](#装饰器-decorator)       | 动态添加职责                        | 透明扩展功能，避免子类爆炸                      | I/O流增强、权限校验链                  |
+| [**外观模式**](#外观-facade)         | 简化复杂系统接口                    | 提供统一高层接口，隐藏子系统细节                  | 框架封装、API网关设计                  |
+| [**享元模式**](#享元-flyweight)         | 共享细粒度对象                      | 缓存可复用对象，减少内存消耗                     | 文字编辑器字符对象、游戏粒子系统           |
+| [**代理模式**](#代理-proxy)         | 控制对象访问                        | 添加间接层，实现延迟加载/访问控制                 | 远程调用、图片懒加载、AOP拦截            |
+
+## 代理 Proxy
 * 代理模式核心：代理者实际控制被代理者
   * 持有被代理者(**必需**)
   * 继承相同类和实现相同接口(**显式**)
@@ -251,7 +251,7 @@ class Director{
         proxy.method1();
     }
 ```
-## 适配器
+## 适配器 Adapter
 * 适配者理论与适配目标是**等同**的，但相同操作方法不同，需要适配器对是适配者进行转换
 * 和解释器有点像
   * 适配器将适配者包装成适配者，然后执行相同方法
@@ -296,22 +296,152 @@ public static void main(String[] args){
     target.request();
 }
 ```
+## 桥接 Bridge
+* 两边的方法是一样的，只不过一边是抽象方法，一边是实现方法
+  * 抽象对象中关联实现对象
+  * 抽象对象中访问实现对象的方法进行实际实现
+  * 好像**外包**工作
+* 适用于不同产品不同厂家做兼容(例如，**不同手机品牌上的不同软件**)
+```java
+static abstract class Abstraction{
+    protected Implementor im;
+    public void setImplementor (Implementor im){this.im = im;} 
+    public abstract void operation();
+}
+static class AbstractionA extends Abstraction{
+    public void operation(){im.operation();}
+}
+static class AbstractionB extends Abstraction{
+    public void operation(){im.operation();}
+}
+static abstract class Implementor{
+    public abstract void operation();
+}
+static class ImplementorA extends Implementor{
+    public void operation(){}
+}
+static class ImplementorB extends Implementor{
+    public void operation(){}
+}
+```
+## 组合 Composite
+* 组合模式：将对象组合成树形结构以表示“部分-整体”的层次结构
+* **即单体和集合体都属于同一种类型**
+```java
+static abstract class Component{
+    void add(Component c);
+    void remove(Component c);
+}
+static class Leaf extends Component{
+    private String name;
+    public Leaf(String name){this.name =name;}
+    public void add(Component c){}
+    public void remove(Component c){}
+}
+static class Composite extends Component{
+    private List<Component> children = new ArrayList<>();
+    public void add(Component c){}
+    public void remove(Component c){}
+}
+```
+## 装饰 Decorator
+* 抽象和实现都源于同一个顶层
+* 抽象类内部关联的是顶层类(实际就是**包装同类**)，只不过抽象类的子类内部由扩展属性
+```java
+static abstract class Component{
+	public abstract void operation();
+}
+static class ConcreteComponent extends Component{
+	public void operation(){
+		// 来自顶层Compnent的具体实现类的实现方法
+	}
+}
+static abstract class Decorator extends Component{ // 来自顶层Compnent的实现抽象类
+	protected Component component;
+	public void setComponent(Component component){
+		this.component = component;
+	}
+	public void operation(){
+		if(component != null) component.operation();
+	}
+} 
+static class OneDecorator extends Decorator{ // 非自顶层Compnent的抽象实现类
+	private String addedState; // 扩展非父类Decorator 的属性
+	public void operation(){
+		super.operation(); // 调用父类Decorator 的实现
+		// 扩展内容的处理
+		addedState ="new State";
+	}
+}
+static class TwoDecorator extends Decorator{ // 非自顶层Compnent的抽象实现类
+	public void operation(){
+		super.operation(); // 调用父类Decorator 的实现
+		// 扩展内容的处理
+		addedBehavior();
+	}
 
-# 行为型
+	private void addedBehavior(){} // 扩展非父类Decorator的方法
+}
+```
+## 外观 Facade
+* **一个对象关联多个对象，并通过不同方法调用不同对象的不同方法**
+```java
+class One(){}
+class Two(){}
+class Facade{
+	private One one  = new One();
+	private Two two  = new Two();
+	public Facade(){}
+	public void methodA(){ // 每个方法都包含一套制定好的规则，方便外部直接调用
+		//one.method()
+	}
+	public void methodB(){ 
+		//one.method()
+		// two.method();
+	}
+}
+```
+## 享元 Flyweight
+* **一个工厂整合所有产品**，**并以独立指令和产品对应**
+```java
+static class FlyweightFactory{
+    private Map<String,Flyweight> flyweights = new HashMap<>();
+    public FlyweightFactory(){
+        flyweights.put("one", new FlyweightOne());
+        flyweights.put("two", new FlyweightTwo());
+    }
+    public Flyweight get(String key){
+        return  (Flyweight)flyweights.get(key);
+    }
+}
+static abstract class Flyweight{
+    public abstract void operation(int key); // 可以定义任意方法，这个内容与模式无关
+}
+static class FlyweightOne extends {
+    public void operation(int key){}
+}
+static class FlyweightTwo extends {
+    public void operation(int key){}
+}
+```
+
+
+# 行为型(**11种**)
 | 设计模式              | 主要用途                              | 关键特点                                      | 适用场景                              |
 |----------------------|-------------------------------------|--------------------------------------------|-------------------------------------|
-| **策略模式**         | 动态切换算法或行为                   | 定义算法族，封装每个算法，使它们可互换          | 支付方式选择、排序算法切换等            |
-| **观察者模式**       | 一对多的依赖关系                     | 主题通知所有观察者，解耦发布者和订阅者           | 事件处理系统、消息通知机制              |
-| **命令模式**         | 将请求封装为对象                     | 解耦请求发送者和接收者，支持撤销/重做            | 菜单操作、事务管理、任务队列             |
-| **状态模式**         | 根据状态改变行为                     | 将状态转移逻辑分散到不同状态类中                | 订单状态流转、游戏角色状态切换           |
-| **职责链模式**       | 链式处理请求                         | 多个处理器按顺序尝试处理请求                    | 审批流程、异常处理链、过滤器链           |
-| **模板方法模式**     | 定义算法骨架                         | 父类定义步骤，子类实现具体细节                   | 框架设计、标准化流程（如饮料制作）        |
-| **访问者模式**       | 分离数据结构与操作                   | 在不修改类的前提下添加新操作                    | 编译器AST处理、复杂对象结构操作          |
-| **中介者模式**       | 集中控制对象交互                     | 通过中介者减少对象间直接耦合                    | 聊天室、GUI组件协调                   |
-| **备忘录模式**       | 保存和恢复对象状态                   | 外部化对象状态，支持撤销功能                    | 游戏存档、事务回滚                     |
-| **迭代器模式**       | 统一遍历集合元素                     | 提供一致的遍历接口，隐藏集合内部结构              | 集合类遍历（如List、Tree等）           |
-| **解释器模式**       | 解释特定语法或表达式                 | 定义语法规则，构建语法树解释执行                 | 正则表达式、SQL解析、数学公式计算        |
-## 策略
+| [**策略模式**](#策略-strategy)         | 动态切换算法或行为                   | 定义算法族，封装每个算法，使它们可互换          | 支付方式选择、排序算法切换等            |
+| [**观察者模式** ](#观察者-observer)      | 一对多的依赖关系                     | 主题通知所有观察者，解耦发布者和订阅者           | 事件处理系统、消息通知机制              |
+| [**命令模式**](#命令-command)         | 将请求封装为对象                     | 解耦请求发送者和接收者，支持撤销/重做            | 菜单操作、事务管理、任务队列             |
+| [**状态模式** ](#状态-state)         | 根据状态改变行为                     | 将状态转移逻辑分散到不同状态类中                | 订单状态流转、游戏角色状态切换           |
+| [**职责链模式** ](#职责链-chain-of-responsibility)      | 链式处理请求                         | 多个处理器按顺序尝试处理请求                    | 审批流程、异常处理链、过滤器链           |
+| [**模板方法模式**](#模板方法-template-method)     | 定义算法骨架                         | 父类定义步骤，子类实现具体细节                   | 框架设计、标准化流程（如饮料制作）        |
+| [**访问者模式**](#访问者-visitor)       | 分离数据结构与操作                   | 在不修改类的前提下添加新操作                    | 编译器AST处理、复杂对象结构操作          |
+| [**中介者模式**](#中介者-mediator)       | 集中控制对象交互                     | 通过中介者减少对象间直接耦合                    | 聊天室、GUI组件协调                   |
+| [**备忘录模式** ](#备忘录-memento)      | 保存和恢复对象状态                   | 外部化对象状态，支持撤销功能                    | 游戏存档、事务回滚                     |
+| [**迭代器模式**](#迭代器-iterator)       | 统一遍历集合元素                     | 提供一致的遍历接口，隐藏集合内部结构              | 集合类遍历（如List、Tree等）           |
+| [**解释器模式** ](#解释器-interpreter)      | 解释特定语法或表达式                 | 定义语法规则，构建语法树解释执行                 | 正则表达式、SQL解析、数学公式计算        |
+
+## 策略 Strategy
 * 定义一个**抽象公共类**
 * 定义具体实现类
 * 与职责链区别：所有实现类都是同等级的，没有链式职责
@@ -329,7 +459,7 @@ class Context {
     }
 }
 ```
-## 职责链
+## 职责链 Chain of Responsibility
 * 定义一个**抽象公共类**
   * 定义下一个**公共类属性**
   * 定义下一个函数，用于**绑定**下一个公共类
@@ -365,7 +495,7 @@ public static void main(String[] args) {
     first.handler(); // 执行自身职责,当First职责处理完会继续Second职责
 }
 ```
-## 观察者
+## 观察者 Observer
 * 被观察者绑定**观察者列表**
   * 并定义一个用于**通知**观察者更新的方法
 * 观察者定义**更新方法**
@@ -393,7 +523,7 @@ public static void main(String[] args) {
 }
 ```
 
-## 命令
+## 命令 Command
 * 逻辑
   * 有命令调用方, 用于通知命令执行
   * 有具体执行逻辑，但具体执行人不确定
@@ -445,7 +575,7 @@ public static void main(String[] args) {
 }
 ```
 
-## 模板方法
+## 模板方法 Template Method
 * 由父类定义**一系列抽象方法**，由子类具体实现
 * 由父类**决定**抽象方法**处理流程**(及调用抽象方法的流程)
 * 适用于**流程一致，细节不一致**的场景
@@ -484,7 +614,7 @@ public static class TemplateB extends Template{
 }
 ```
 
-## 状态
+## 状态 State
 * 定义**上下文**(任意有状态的都可以)，**关联状态对象**
   * 定义一个方法，用于执行状态处理
 * 抽象状态，定义状态处理(绑定上下文)
@@ -532,7 +662,7 @@ public static void main(String[] args){
 }
 ```
 
-## 访问者
+## 访问者 Visitor
 * 定义
   * **访问者 Visitor**，定义访问行为
   * **元素 Element**，定义接受访问者
@@ -604,7 +734,7 @@ public static void main(String[] args){
 }
 ```
 
-## 解释器
+## 解释器 Interpreter
 * 不同解释器对同一内容进行解读(**强调行为**)
 ```java
 static abstract class Interpreter{
@@ -628,7 +758,7 @@ static class Client{
     }
 }
 ```
-## 迭代器
+## 迭代器 Iterator
 * 对一种数据结构提供集合操作，而不暴露其内部表示
 ```java
 static interface Iterator{
@@ -655,7 +785,7 @@ static class AggregateOne extends Aggregate{
     }
 }
 ```
-## 备忘录
+## 备忘录 Memento
 * **将对象内部属性存到另外一个对象中**，恢复时，直接从另外对象中将属性赋值给对象
 * 需要一个管理备忘录的对象(**没有也算是备忘录模式**)
 ```java
@@ -703,7 +833,7 @@ public static void main(String[] args){
 }
 ```
 
-## 中介者
+## 中介者 Mediator
 * 在中介对象中根据传入参数对象不同，将消息转发给不同的对象
 ```java
 static abstract class Mediator{
