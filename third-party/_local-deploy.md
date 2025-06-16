@@ -245,7 +245,7 @@ DONGLE_WEBPACK_PORT=1319
     RUN make 
 
     FROM nginx:alpine
-    COPY --from=build /src/public usr/share/nginx/html
+    COPY --from=build /src/public /usr/share/nginx/html
     ```
 * **注意**：认真阅读`redis-docs/README`，了解构建准备工作（如hugo必需是`v0.111.2`版本）
 
@@ -572,3 +572,40 @@ FROM nginx:alpine
 COPY --from=build /src/ /usr/share/nginx/html
 ```
 **注意**: 由于本项目依赖过多github.com资源,建议在可访问外网环境下构建
+
+# MDN Web
+* 克隆项目
+  * `git clone git@github.com:mdn/content.git`
+  * `git clone git@github.com:mdn/yari.git`
+* 构建项目
+  * 构建环境Dockerfile
+    ```Dockerfile
+    FROM dongle/node:20 AS build
+    RUN apk add git
+    # COPY hosts /etc/hosts # 根据个人需要调整,解决构建过程中的网络问题
+    WORKDIR /src
+    COPY content ./content
+    COPY yari ./yari
+    WORKDIR yari
+    RUN yarn install --ignore-scripts
+    # RUN yarn remove  @mdn/rari --ignore-scripts
+    RUN yarn add @mdn/rari
+    RUN yarn build:prepare
+    RUN yarn build
+    RUN yarn render:html
+
+    FROM dongle/openresty:alpine
+    COPY --from=build /src/yari/client/build /usr/local/openresty/nginx/html
+    ```
+    ```shell
+    docker build --no-cache -t dongle/mdn -f Dockerfile .
+    docker run -d --name mdn -p 8080:8080 -v ./default.conf:/etc/nginx/conf.d/default.conf dongle/mdn
+    ```
+**注意**: 
+  * 由于本项目依赖过多github.com资源,建议在可访问外网环境下构建
+  * 另外编译翻译文档时可能存储异常(估计翻译问题导致)
+```txt
+ERROR page{locale="zh-CN" slug="Web/SVG/Reference/Attribute/display" file="/src/translated-content/files/zh-cn/web/svg/reference/attribute/display/index.md"}:templ{templ="csssyntax" line=60 col=18}: rari_doc::templ::templs::csssyntax: No Css Page: Web/SVG/Reference/Attribute/display
+
+# 修改对应位置内容保持与en-us一致即可
+```
