@@ -301,7 +301,7 @@ public static void main(String[] args){
   * 抽象对象中关联实现对象
   * 抽象对象中访问实现对象的方法进行实际实现
   * 好像**外包**工作
-* 适用于不同产品不同厂家做兼容(例如，**不同手机品牌上的不同软件**)
+* 适用于不同厂家有多种不同产品类型的产品情况(**顶层抽象，顶层关联**)(例如，**不同手机品牌上的多种同类型软件**)
 ```java
 static abstract class Abstraction{
     protected Implementor im;
@@ -385,6 +385,7 @@ static class TwoDecorator extends Decorator{ // 非自顶层Compnent的抽象实
 ```
 ## 外观 Facade
 * **一个对象关联多个对象，并通过不同方法调用不同对象的不同方法**
+* **提供访问子系统的接口**
 ```java
 class One(){}
 class Two(){}
@@ -402,7 +403,8 @@ class Facade{
 }
 ```
 ## 享元 Flyweight
-* **一个工厂整合所有产品**，**并以独立指令和产品对应**
+* **通过管理相似对象，实现共享**
+* 一个工厂整合相似产品，并以独立指令和产品对应
 ```java
 static class FlyweightFactory{
     private Map<String,Flyweight> flyweights = new HashMap<>();
