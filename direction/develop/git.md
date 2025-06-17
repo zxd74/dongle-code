@@ -1,62 +1,102 @@
-# Git管理
-## 全局配置
+# 基础
+## 安装
+在[Git](https://git-scm.com/)官网下载指定系统的版本安装包，安装完成后，在命令行输入`git --version`查看是否安装成功。
 ```shell
-$ git config --global user.name “Your name” //配置用户名
-$ git config --global user.email “Your Email address”  //配置用户邮箱地址
-$ git config user.name   //查看用户名
-$ git config user.email  //查看用户邮箱地址
-$ git config -l          //查看所有配置
-```
-## 创建密钥
-```shell
-ssh-keygen -t rsa -C "your email address"
-# 将结果的.pub内容作为公钥直接使用
+# 系统源安装
+yum install -y git
+
+# 源码安装
+yum -y remove git
+wget https://github.com/git/git/archive/refs/tags/v2.25.4.tar.gz
+tar -zxvf v2.25.4.tar.gz
 ```
 
-## 多账号处理
+# 常用命令
 ```shell
-# 在~/.ssh/下创建config文件，按一下格式配置
-host github.com  #别名，随便定 后面配置地址有用
-    Hostname github.com #要连接的服务器
-    User ontheroadtomine #用户名
-    IdentityFile ~/.ssh/id_rsa  #密钥文件的地址，注意是私钥
-    PubkeyAcceptedKeyTypes +ssh-rsa # 新版配置，否则不再使用rsa算法
+git clone <repository_url> # 克隆远程仓库
+git pull <remote_name> <branch_name> # 拉去远程分支
+git push <remote_name> <branch_name> # 推送本地分支
+git branch <branch_name> # 创建本地分支
+git checkout <branch_name> # 切换分支
+git checkout -b <branch_name> # 创建并切换分支
+git log # 查看提交记录
+git reset --hard HEAD # 撤销本地提交修改
+git reset --hard <commit_id> # 撤销到指定版本
+git revert <commit_id> # 撤销到指定版本，并生成新的提交
+git status # 查看当前状态
+git diff # 查看文件差异
+git add . # 添加所有文件到暂存区
+git commit -m "commit message" # 提交暂存区文件
+git remote -v # 查看远程地址
+git remote add <remote_name> <remote_url> # 添加远程地址
 ```
 
-## 忽略文件
-* 单项目配置：根项目下创建`.gitignore`文件，并添加需要忽略的文件或目录
-* 全局配置：`~/.gitignore_global`文件，并添加需要忽略的文件或目录
-
-# 源码管理
-## 撤销
-处理在`commit`之前的`add`失误操作
+# 全局配置
 ```shell
-git add HEAD # 撤销上一次add提交的所有文件
-git add HEAD filepath # 撤销上一次add提交的某文件
+git config --global user.name "xxx"
+git config --global user.email "xxx@xxx.com"
+
+git config --list
+
+git config --global --unset user.name ## 删除配置
 ```
 
-## 项目回滚
-* `reset`模式：旨在删除原来commit，重新提交commit（一般的master分支是受保护的，不允许删除提交）
-* `revert`模式：旨在回滚某一个版本的提交（推荐，安全回滚）
-
-### `reset`模式
-适用于本地commited但未推送至远程仓库的情况
-`git reset --hard <commit id>`
-
-### `revert`模式
-* 普通回滚：`git revert -n <commit id>`
-* 合并回滚：`git revert -n <commit id> -m 2 (m参数1是合并后的，2为合并前的)`
-* **注意**：当前版本与需要回滚的版本之间如果存在代码合并，需要加上回滚合并，否则只能回滚之前版本提交的文件
-  
-注意：重新提交代码后，需要强制覆盖远程:`git push -f orgin master`
-
-
-## 克隆指定分支
+## 多用户登陆
+主要用于同一台电脑，处理不同GIT仓库的登陆问题。(如，GitHub，GitLab，Gitee，GitCode等)
+1. 清除原用户信息
 ```shell
-git clone -b branchA url
+git config --global --unset user.name
+git config --global --unset user.email
+```
+2. 添加单用户信息
+```shell
+git config --global user.name "yourusername"
+git config --global user.email "youremail@email.com"
+```
+3. 生成多个密钥
+```shell
+ssh-keygen -t rsa -C "youremail@email.com" # 根据提示，默认为id_rsa，位于~/.ssh/目录下
+```
+4.  ssh-agent 信任 ssh-key (默认可省略)
+```shell
+ssh-agent bash
+ssh-add ~/.ssh/id_rsa
+```
+5. 添加公钥到远程仓库(各平台大致相似，设置-安全设置-SSH公钥-添加)
+```shell
+cat ~/.ssh/id_rsa.pub # 复制公钥内容
+```
+6. 在 config 文件配置多个 ssh-key
+```ini
+#Default gitHub user Self
+Host github.com
+    HostName github.com
+    User git #用户名
+    IdentityFile ~/.ssh/github_rsa
+    #PubkeyAcceptedKeyTypes +ssh-rsa # 指定密钥类型
+	
+# gitee的配置
+host gitee.com  # 别名,最好别改
+	Hostname gitee.com #要连接的服务器
+	User yourusername #用户名
+	#密钥文件的地址，注意是私钥
+	IdentityFile ~/.ssh/gitee_rsa
+    #PubkeyAcceptedKeyTypes +ssh-rsa # 指定密钥类型
+```
+* **注意**：
+  * 以上配置方式，使用于 `ssh:` 协议连接
+  * 该方式**同样适用于单用户单机单公钥**，但是**不推荐**
 
-git checkout 版本号
-## 后在该版本新建分支即可
+# 克隆管理
+## 浅克隆
+* 限定深度：`git clone --depth 1`
+* 全局限定深度：`git config --global clone.depth 1`
+```shell
+git clone --depth 1 https://github.com/xxx/xxx.git
+```
+## 导出指定文件
+```shell
+git archive --format=zip --output=xxx.zip HEAD:xxx
 ```
 
 ## 管理指定目录或文件
@@ -64,30 +104,25 @@ git checkout 版本号
 * `Sparse Checkout`模式：可拉取任意目录
 * `Submodule`模式: 只适用于添加新目录到主项目，不适合拉取已有项目
 
-### `Sparse Checkout`模式
-1. 初始化本地项目仓库 
-    ```shell
-    git init
-    ```
-2. 关联远程仓库
-    ```shell
-    git remote add origin [远程仓库地址]
-    ```
-3. 配置`Sparse Checkout`模式 
-    ```shell
-    git config core.sparsecheckout true
-    ```
-4. 编辑`.git/info/sparse-checkout`文件，指定需要管理的目录
-    ```shell
-    vi .git/info/sparse-checkout
-    # 如只管理`src`目录
-    /src 
-    # echo project-file-path >> .git/info/sparse-checkout
-    ```
-5. 拉取远程仓库代码
-    ```shell
-    git pull origin [分支名]
-    ```
+### `Sparse Checkout`模式(检出指定文件或目录)
+```shell
+# 创建仓库本地目录，并初始化
+git init
+
+# 设置浅克隆
+git config core.sparseCheckout true
+
+# 创建.git/info/sparse-checkout
+touch .git/info/sparse-checkout
+
+# 将指定文件添加到 .git/info/sparse-checkout
+echo "path/to/file" >> .git/info/sparse-checkout
+echo "path/to/directory/" >> .git/info/sparse-checkout
+
+# 后续git pull或git fetch只会下载.git/info/sparse-checkout配置的内容
+git remote add origin <repository_url> # 关联远程地址
+git pull origin master
+```
 ### `Submodule`模式
 允许将一个仓库作为另一个仓库的子项目。
 1. 将子项目仓库添加到主项目
@@ -101,6 +136,17 @@ git submodule init
 3. 使用子模块命令更新子项目代码
 ```shell
 git submodule update
+```
+
+## 关联多个远程地址
+```shell
+git remote add <remote_name> <remote_url> # 区分好remote_name即可
+git remote -v # 查看远程地址
+git remote rm <remote_name> # 删除远程地址
+
+#  当然拉去/随送时也需要指定remote_name
+git pull <remote_name> <branch_name>
+git push <remote_name> <branch_name>
 ```
 
 ## SVN同步
@@ -158,34 +204,97 @@ git svn dcommit
 ## 上面存在异常，待处理
 ```
 
-## 多源项目
-1. 关联多个远程地址
-```shell
-## git remote add github git@gitee.com:code/demo.git # 源仓库
-git remote add gitee git@gitee.com:repos/code/demo.git # 新仓库,指定仓库名为gitee
-```
- * 可观察`.git/config`配置
-    ```shell
-    [core]
-        repositoryformatversion = 0
-        filemode = false
-        bare = false
-        logallrefupdates = true
-        symlinks = false
-        ignorecase = true
-    [remote "origin"]
-        url = git@github.com:repos/code/demo.git
-        fetch = +refs/heads/*:refs/remotes/origin/*
-    [branch "main"]  # github这里是main分支，gitee这里是master分支
-        remote = origin
-        merge = refs/heads/main
-    [remote "gitee"] # 一般情况可以根据git remote时指定名称
-        url = git@gitee.com:repos/code/demo.git
-        fetch = +refs/heads/*:refs/remotes/gitee/*
-    ```
-2. 管理源码： 除默认源外，其它源同步需要明确源名称
-```shell
-git push  # 推送到默认origin仓库
+## 忽略文件
+* 单项目配置：根项目下创建`.gitignore`文件，并添加需要忽略的文件或目录
+* 全局配置：`~/.gitignore_global`文件，并添加需要忽略的文件或目录
 
-git push gitee # 推送到指定仓库gitee,
+## 差异对比
+* `git diff`
+* 文件差异：
+  * 工作区与暂存区(默认)
+  * 工作区和版本库
+  * 暂存区和版本库
+  * 不同版本之间
+  * 比较非git的两个文件差异
+```shell
+git diff a.txt # 工作区与暂存区文件差异
+git diff --cached a.txt # 暂存区与版本库文件差异
+git diff HEAD|versionid # 工作区与版本库所有文件差异
+git diff HEAD|versionid a.txt # 工作区与版本库单个文件差异
+git diff V1 V2 # 不同版本之间差异
+git diff a.txt b.txt # 两个文件之间差异(可以是非git文件)
+``` 
+
+## 撤销&回滚
+### 撤销添加
+处理在`commit`之前的`add`失误操作
+```shell
+git add HEAD # 撤销上一次add提交的所有文件
+git add HEAD filepath # 撤销上一次add提交的某文件
+```
+
+### 项目回滚
+* `git reset`: 回滚到指定版本,**适用于本地提交未推送时**
+```shell
+git log # 查看提交记录
+git reset --hard HEAD^ # 回滚到上一个版本
+git reset --hard HEAD~1 # 回滚到上一个版本
+git reset --hard <commit_id> # 回滚到指定版本
+```
+* `git revert`: 回滚到指定版本，并生成新的提交，需要强行推送至远程(**慎重**)
+  * **适用于本地提交已推送时**
+  * 适用于线上紧急修复处理，否则还是不要用到
+```shell
+git log # 查看提交记录
+git revert <commit_id> # 回滚到指定版本
+git push origin <branch_name> --force # 强行推送至远程
+```
+
+# 命令
+```shell
+usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
+
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system.
 ```
