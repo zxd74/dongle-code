@@ -792,18 +792,19 @@ static class AggregateOne extends Aggregate{
 * 需要一个管理备忘录的对象(**没有也算是备忘录模式**)
 ```java
 static class Memento{
-    private String state;
+    private final String state; // 将状态锁定，防止被修改
     public Memento(String state){this.state=state;}
+    public String getState(){return state;}
 }
 static class Originator{
-    private String state;
+    private  String state; 
     public void setState(String state){this.state = state;}
     public String getState(){return state;}
     public Memento createMemento(){
         return new Memento(state);
     }
     public void setMemento(Memento memento){
-        state = memento.state;
+        state = memento.getState();
     }
     public void show(){
         System.out.println(state);
@@ -842,12 +843,17 @@ static abstract class Mediator{
     public abstract void send(String msg,Colleague c);
 }
 static class MediatorOne extends Mediator{
-    private ColleagueOne c1;
-    private ColleagueTwo c2;
+    private List<Colleague> colleagues = new ArrayList();
+    public void addColleague(Colleague c){
+        colleagues.add(c);
+    }
 
     public void send(String msg,Colleague c){
-        if(c == c1) c2.recv(msg);
-        if(c==c2) c1.recv(msg);
+        for (Colleague colleague : colleagues){
+            if (colleague != c){
+                colleague.recv(msg);
+            }
+        }
     }
 }
 static abstract class Colleague{
