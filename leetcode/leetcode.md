@@ -36,6 +36,8 @@
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
+- [69. Sqrt(x)(简单)](#69-sqrtx简单)
+- [70. Climbing Stairs(简单)](#70-climbing-stairs简单)
 
 
 
@@ -2274,5 +2276,67 @@ public String addBinary(String a, String b) {
         res[k--] = '1';
     }
     return new String(res,k+1,res.length-k-1);
+}
+```
+# 69. Sqrt(x)(简单)
+    Given a non-negative integer x, return the square root of x rounded down to the nearest integer. The returned integer should be non-negative as well.
+
+    You must not use any built-in exponent function or operator.
+
+* 约束
+  * `0 <= x <= 2^31 - 1`
+* **思路**
+  * 4之前的数字，直接返回
+  * 从中间值向下匹配：超过4的值，一般不会有比中间值大的开方值
+  * **注意数据长度限制**，若为最大值Integer，则中间值会溢出
+* 改进： 减少循环次数
+  * **二分查找**
+```java
+// 思路： N*2 == num；最次一半内，一半后肯定没有符合条件的，开放要从2开始
+public static int sqrt2(int num){
+    if(num==0) return 0;
+    if(num<4) return 1;
+    int hk = num/2;
+    long tmp=0;
+    while(hk>=2){ // 如何跳步 缩短步骤
+        tmp =(long) hk * hk;
+        if(tmp == num){return hk;}
+        if(tmp<num){break;}
+        hk--;
+    }
+    return hk; // 向下取整
+}
+
+// 改进版
+public static int sqrt(int num){
+    if(num == 0) return 0;
+    if(num < 4) return 1;
+    return sqrt(num,2,num/2);
+}
+
+public static int sqrt(int num,int lo,int hi){
+    if(hi<=lo || hi-1==lo) return lo;
+    int mid =lo + ( hi -lo) /2;
+    long tmp = (long)mid *mid ;
+    if(tmp<num) return sqrt(num,mid,hi); 
+    if(tmp>num) return sqrt(num,lo,mid);
+    return mid;
+}
+```
+
+# 70. Climbing Stairs(简单)
+    You are climbing a staircase. It takes n steps to reach the top.
+
+    Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?
+
+* 约束
+  * `1 <= n <= 45`
+* **思路**
+  * **动态规划**: 剩余步数大于1，则每步可分两种，小于等于1的则只有一种
+* **改进**
+```java
+public int climbStairs(int n ){ // 递归，容易超时
+    if(n == 0 || n == 1) return 1;
+    return climbStairs(n-1) + climbStairs(n-2);
 }
 ```
