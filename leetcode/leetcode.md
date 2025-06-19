@@ -38,6 +38,10 @@
 - [67. Add Binary(简单)](#67-add-binary简单)
 - [69. Sqrt(x)(简单)](#69-sqrtx简单)
 - [70. Climbing Stairs(简单)](#70-climbing-stairs简单)
+- [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
+- [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
+- [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
+- [100. Same Tree(简单)](#100-same-tree简单)
 
 
 
@@ -2307,7 +2311,7 @@ public static int sqrt2(int num){
     return hk; // 向下取整
 }
 
-// 改进版
+// 改进版(二分查找)
 public static int sqrt(int num){
     if(num == 0) return 0;
     if(num < 4) return 1;
@@ -2322,6 +2326,20 @@ public static int sqrt(int num,int lo,int hi){
     if(tmp>num) return sqrt(num,lo,mid);
     return mid;
 }
+
+// 官方改进版(二分查找)，不使用递归，从两侧向中间查找
+public int mySqrt(int x) {
+	if(x==0||x==1) return x;
+	int start = 1,end=x,mid=-1;
+	while(start<=end){
+		mid = start + (end-start)/2;
+		if((long)mid*mid>(long)x) end=mid-1;
+		else if(mid*mid==x) return mid;
+		else start = mid+1;
+	}
+
+	return end;
+}
 ```
 
 # 70. Climbing Stairs(简单)
@@ -2331,12 +2349,174 @@ public static int sqrt(int num,int lo,int hi){
 
 * 约束
   * `1 <= n <= 45`
-* **思路**
-  * **动态规划**: 剩余步数大于1，则每步可分两种，小于等于1的则只有一种
+* **思路**： 从第三步开始，每一步都是前两步之和，即[**斐波那契数列**](/common/algorithm/algorithm.md#斐波那契数列)
+  * **动态规划**: 大于2的使用**递归**方式，2之前的使用固定值
 * **改进**
+  * **保存前两个值**，每次计算后更新
 ```java
-public int climbStairs(int n ){ // 递归，容易超时
+public static int climbStairs(int n ){
     if(n == 0 || n == 1) return 1;
-    return climbStairs(n-1) + climbStairs(n-2);
+    return climbStairs(n-1) + climbStairs(n-2); // 递归超时了
+}
+
+public static int climbStairs2(int n ){
+    if(n <4) return n;
+    int p1 = 2;
+    int p2 = 3;
+    int cur =0;
+    for (int i = 4; i < n +1; i++) { //=> for (=> int i = 3; i < n; i++)
+        cur = p1 + p2;
+        p1 = p2;
+        p2 = cur;
+    }
+    return cur;
+}
+```
+
+# 83. Remove Duplicates from Sorted List(简单)
+    Given the head of a sorted linked list, delete all duplicates such that each element appears only once. Return the linked list sorted as well.
+
+* 约束
+  * The number of nodes in the list is in the range [0, 300].
+  * -100 <= Node.val <= 100
+  * The list is guaranteed to be **sorted** in ascending order.
+* **思路**
+  * 通过当前和next对比，
+    * 等值，则将`next.next`指向`next.next.next`
+    * 否则将`next`设置为`next.next`
+* **反思**
+  * 开始的以为给的是随意的链表，需要对去重加排序呢
+```java
+public static  ListNode deleteDuplicates(ListNode head){
+    if(head == null) return head;
+    ListNode next = head;
+    while(next!=null && next.next!=null){
+        if(next.val == next.next.val){
+            next.next = next.next.next;
+        }else{
+            next = next.next;
+        }
+    }
+    return head;
+}
+
+// 以下是随机链表：去重+排序
+public static  LineNode deleteDuplicates(LineNode head){
+    if(head == null) return head; // 头节点为空，则直接返回
+    // 定义first头节点，tail已排序的尾节点，next已排序尾节点的下一个节点
+    LineNode first = new LineNode(-101,head),tail = first.next,next;
+    
+    while((next=tail.next)!=null){
+        LineNode pre = first,cur = pre .next; // 定义前一个节点pre初始为first，当前比较节点，初始为first的下一个
+        tail.next = next.next; // 无论next定位与否，都先将next.next交给tail.next
+
+        while(true){  // pre<cur<tail !=null,next!=null
+            if(cur.val <next.val){ //  cur.val<next.val	
+                if (cur != tail) { // cur != tail，则pre绑定cur，cur转cur.next 继续
+                    pre = cur;
+                    cur = cur.next;
+                    continue;
+                }
+                tail.next = next; // 还原，将next还原会tail.next 并将next设置为tail，最后退出
+                tail = next;
+                // break;
+            }
+            else if(cur.val>next.val){ // cur.val>next.val，cur大，则由pre绑定next，next绑定cur，退出
+                next.next = cur;
+                pre.next = next;
+                // break;
+            }
+            // else (cur.val == next.val) break; // 等值忽略退出内循环
+            break;
+        }
+    }
+    return first.next;
+}
+
+// 将双层循环变为两个外层循环，利用map存储每个值对应的节点
+public static ListNode deleteDuplicates2(ListNode head){
+    if(head == null) return head;
+    Map<Integer,ListNode> maps = new HashMap<>();
+    ListNode first = new ListNode(-101,head),cur = first;
+    while ((cur=cur.next)!=null) maps.put(cur.val,cur);
+    first.next = null;cur = first;
+    for(Integer key:maps.keySet().stream().sorted().toArray(Integer[]::new)){
+        cur.next = maps.get(key);
+        cur = cur.next;
+    }
+    cur.next = null; // 避免最大值有next
+    return first.next;
+}
+```
+
+# 88. Merge Sorted Array(简单)
+    You are given two integer arrays nums1 and nums2, sorted in **non-decreasing order**, and two integers m and n, representing the number of elements in nums1 and nums2 respectively.
+
+    Merge nums1 and nums2 into a single array sorted in **non-decreasing order**.
+    The final sorted array should not be returned by the function, but instead be **stored inside the array nums1**. To accommodate this, nums1 has a length of m + n, where the first m elements denote the elements that should be merged, and the last n elements are set to 0 and should be ignored. nums2 has a length of n.
+
+* **约束**
+  * `nums1.length == m + n`
+  * `nums2.length == n`
+  * `0 <= m, n <= 200`
+  * `1 <= m + n <= 200`
+  * `-10^9 <= nums1[i], nums2[j] <= 10^9`
+* **思路**：归并排序的归并函数
+```java
+public void merge(int[] nums1, int m, int[] nums2, int n) { // 归并排序的合并方法
+    if(n == 0) return;
+    int[] tmp = new int[m]; 
+    for(int i = 0;i<m;i++){
+        tmp[i] = nums1[i];
+    }
+    int i = 0,j=0;
+    for(int k = 0;k<nums1.length;k++){
+        if(i==m) nums1[k] = nums2[j++];
+        else if(j==n) nums1[k] = tmp[i++];
+        else if(nums2[j]-tmp[i]<0) nums1[k] = nums2[j++];
+        else nums1[k] = tmp[i++];
+    }
+}
+```
+
+# 94. Binary Tree Inorder Traversal(简单)
+    Given the root of a binary tree, return the **inorder** traversal of its nodes' values.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 100]`.
+  * `-100 <= Node.val <= 100`
+* **思路**: 深度优先(左中右)
+  * **递归**
+```java
+public List<Integer> inorderTraversal(TreeNode root) {
+    List<Integer> list = new ArrayList<>();
+    if(root == null ) return list;
+    if(root.left !=null){
+        list.addAll(inorderTraversal(root.left));
+    }
+    list.add(root.val);
+    if(root.right !=null){
+        list.addAll(inorderTraversal(root.right));
+    }
+    return list;
+}
+```
+
+# 100. Same Tree(简单)
+    Given the roots of two binary trees `p` and `q`, write a function to check if they are the same or not.
+
+    Two binary trees are considered the same if they are structurally identical, and the nodes have the same value.
+
+* **约束**
+  * The number of nodes in both trees is in the range `[0, 100]`.
+  * `-104 <= Node.val <= 104`
+  * `p` and `q` are both binary trees.
+* **思路**: 递归
+```java
+public boolean isSameTree(TreeNode p, TreeNode q) {
+    if(p == null && q == null) return true;
+    if ((p==null && q !=null)||(p!=null && q ==null)) return false;
+    if(p.val != q.val) return false;
+    return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
 }
 ```

@@ -228,8 +228,10 @@ def merge(left, right):
     return result
 ```
 ### 动态规划法（Dynamic Programming）
-动态规划是一种通过将问题分解为子问题并存储子问题的解来解决更复杂问题的算法。动态规划通常用于优化问题，如最短路径问题、背包问题等。
+**自底向上**或**自顶向下**（记忆化）的递推方法，通过将问题分解为重叠子问题，存储子问题的解（避免重复计算），最终合并得到全局最优解。
 * 原理：通过存储子问题的解避免重复计算。
+  * **最优子结构**：全局最优解依赖于子问题的最优解。
+  * **重叠子问题**：子问题被多次重复计算，通过表格或数组存储结果。
 * 适用场景：最短路径、背包问题等。
 * 步骤：
   * 定义状态：定义子问题的状态。
@@ -247,6 +249,7 @@ public int fibonacci(int n) {
     return dp[n];
 }
 ```
+
 ### 贪心算法（Greedy Algorithm）
 * 原理：每一步选择局部最优解，希望达到全局最优。
 * 适用场景：霍夫曼编码、最小生成树等。
@@ -345,3 +348,31 @@ def knapsack(items, capacity):
 3. ip_hash
 4. fair（第三方）
 5. url_hash
+
+# 实践
+## 斐波那契数列
+* 简单实现：动态规划，通过递归方式实现
+  * 递归版：时间复杂度O(2^n)，由于前面第二个会被前面第一个计算一次，导致重复计算前面第二个，所以时间复杂度是指数级的
+* 改进版：
+  * 通过**保存前两个数**，避免重复计算
+```java
+// 递归版
+public static int climbStairs(int n ){
+    if(n == 0 || n == 1) return 1;
+    return climbStairs(n-1) + climbStairs(n-2); // 递归超时了
+}
+
+// 循环版
+public static int climbStairs2(int n ){
+    if(n < 4) return n;
+    int p1 = 2;
+    int p2 = 3;
+    int cur =0;
+    for (int i = 4; i < n +1; i++) { // for (=> int i = 3; i < n; i++)
+        cur = p1 + p2;
+        p1 = p2;
+        p2 = cur;
+    }
+    return cur;
+}
+```
