@@ -299,13 +299,13 @@ http{
 }
 ```
 * 请求头代理
-```txt
+```shell
 http{
     # ...
     server{
         location / {
             proxy_redirect off;
-            proxy_set_header Host $host;
+            proxy_set_header Host $host; # 此处代表，将Host设置本server的server_name，次现象只适用于localhost，其它慎重
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             client_max_body_size 10m;
@@ -318,6 +318,59 @@ http{
     }
 }
 ```
+### 反向代理(转发实践)
+作用：整合多个服务向外提供一个地址
+
+**场景**：三个nginx服务，一台对外，两台对内
+* 内uinginx配置
+```shell
+server{
+	listen 80;
+	server_name d2.dongle.com; # 注意 server_name和listen都相同代表一个server
+
+	location /{
+		root /usr/local/openresty/nginx/html;
+		index index.html;
+	}
+}
+server{
+	listen 80;
+	server_name d3.dongle.com;
+
+	location /{
+		root /usr/local/openresty/nginx/html;
+		index index.html;
+	}
+}
+```
+* 对外主nginx配置
+```shell
+server{
+	listen 80;
+	server_name localhost;
+	
+	location /{
+		rewrite ^$ /html last;
+	}
+	
+	location /api{
+		proxy_pass http://d2.dongle.com:80/;
+        # proxy_set_header Host $host; # 此处要与d2.dongle.com配置server_name保持一致，否则请求转发失败
+	}
+	location /dongle{
+		proxy_pass http://d3.dongle.com:80/;
+	}
+    #...可以如此扩展更多反向代理
+}
+```
+**注意**：* 对于**转发请求头**`proxy_set_header Host`的设置要**慎重**
+```txt
+假设在主nginx中配置了proxy_set_header Host $host;，但对内两个nginx的server_name配置为d2.dongle.com和d3.dongle.com，那么当请求d2.dongle.com时，host配置与本配置的server_name一致，即localhost，但d2.dongle.com实际配置的时`d2.dongle.com`，就会导致最后转发不出去
+```
+* **扩展**：一台nginx代理多个web时，配置与上方一样，只不过需要将对应域名加入到本机`127.0.0.1`中
+  * 另外万不可配置`proxy_set_header Host $host;`,否则会导致请求陷入死循环,无法连接
+    * 如`localhost->d2.dongle.com->localhost->d2.dongle.com->...`
+
 
 ## 跨域处理
 * `add_header Access-Control-Allow-Origin` : # 允许的来源
