@@ -282,147 +282,177 @@ static void quick3waySort(int[] arr,int lo,int hi){
 ```
 
 # 堆排序
-```python
-# 位置值交换
-def swap(arr,i,j):
-    arr[i],arr[j] = arr[j],arr[i]
+堆排序实质是一个二叉树形式，分为最大堆和最小堆，即顶部节点是最大或最小值，
+* 堆实质是一个二叉树形式
+* 堆排序实质是不断调整堆结构，将最大值或最小值放到顶部，然后调整堆结构，将最大值或最小值放到末尾
+* 重复此过程，直到堆结构为空，即排序完成
+```java
+// 堆排序（升序，原地排序）
+public static void heapSort(int[] arr) {
+    int n = arr.length;
 
-# 堆调整(平衡)
-def heapify(arr,i):
-    left,right,largest = 2 * i+1,2 * i+2,i
-    #
-    if left < size and arr[left] > arr[largest]:
-        largest = left
-    if right < size and arr[right] > arr[largest]:
-        largest = right
-    # 若最大值索引变更，则交换值，并重新处理堆平衡
-    if largest != i:
-        swap(arr,i,largest)
-        mid = int(size/2)
-        # 过半索引对比无效，浪费循环
-        if largest > mid:
-            largest = mid
-        heapify(arr, largest)
+    // 1. 构建大根堆（从最后一个非叶子节点开始调整）
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(arr, n, i);
+    }
 
-# 构建初始堆
-def build_heap(arr):
-    for i in range(int(size / 2), -1, -1):
-        heapify(arr, i)
-def sort(arr):
-    global size  # 定义全局变量
-    size = len(arr)
-    build_heap(arr)
-    for i in range(int(len(arr)-1),-1,-1):
-        swap(arr, 0, i)
-        size -= 1
-        heapify(arr, 0)
+    // 2. 依次取出堆顶元素（最大值），放到数组末尾
+    for (int i = n - 1; i > 0; i--) {
+        // 交换堆顶和当前末尾元素
+        swap(arr, 0, i);
+
+        // 调整剩余部分，使其重新满足大根堆性质
+        heapify(arr, i, 0);
+    }
+}
+
+// 堆化调整（大根堆）
+private static void heapify(int[] arr, int n, int i) {
+    int largest = i;      // 当前最大值索引
+    int left = 2 * i + 1; // 左孩子
+    int right = 2 * i + 2; // 右孩子
+
+    // 找出当前节点、左孩子、右孩子中的最大值
+    if (left < n && arr[left] > arr[largest]) {
+        largest = left;
+    }
+    if (right < n && arr[right] > arr[largest]) {
+        largest = right;
+    }
+
+    // 如果最大值不是当前节点，交换并继续调整
+    if (largest != i) {
+        swap(arr, i, largest);
+        heapify(arr, n, largest);
+    }
+}
+
+private static void swap(int[] arr, int i, int j) {
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
 ```
+
+
 # 计数排序
-```python
-def count_sort(arr,max):
-    bucket_len = max + 1
-    bucket = [0] * bucket_len
-    print(bucket)
-    sorted_index = 0
-    arr_len = len(arr)
-    for i in range(arr_len):
-        if not bucket[arr[i]]:
-            bucket[arr[i]] = 0
-        bucket[arr[i]] += 1
-    for i in range(bucket_len):
-        while bucket[i] > 0:
-            arr[sorted_index] = i
-            sorted_index += 1
-            bucket[i] -= 1
+创建以最大值+1为长度的辅助数组，将数组元素以索引方式堆辅助索引计数(+1)，最后遍历辅助数组，将元素按顺序放入原数组
+
+**需要三次遍历+一次小内循环**
+* 一次找出最大值
+* 一次遍历数组，将元素以索引方式堆辅助索引计数(+1)
+* 一次遍历辅助数组，将元素按顺序放入原数组
+  * 因对计数值进行遍历
+
+**提示**：
+* 不适用于有负数的数组
+* 不适用于元素间差值过大的数组
+  * 如`{1,100,1000,99999}`，因为需要创建长度为`100000`的辅助数组
+```java
+public static void countSort(int[] arr){
+    int index=0;
+    for(int i=1;i<arr.length-1;i++){
+        if(less(arr[index],arr[i])) index = i;
+    }
+    int max = arr[index]; // 获取最大值
+    int[] aux = new int[max+1]; // 创建辅助数组，以最大值+1为长度
+    for(int i = 0;i<arr.length;i++){
+        aux[arr[i]]++; // 对数值计数+1
+    }
+    int sorted_index=0; // 已排序索引
+    for(int i=0;i<aux.length;i++){
+        while(aux[i]>0){ // 当计数大于0时，将数值放入原数组
+            arr[sorted_index++] = aux[i]; // 按顺序放入原数组
+            aux[i]--; // 将计数-1
+        }
+    }
+}
 ```
 # 桶排序
-```python
-def max_min_num(arr):
-    max,min = arr[0],arr[0]
-    for i in range(len(arr)):
-        if arr[i] < min:
-            min = arr[i]
-        if arr[i] > max:
-            max = arr[i]
-    return max,min
+桶是一个二维数组，每个桶内放最多指定个数的元素(**桶大小**)，
+* 找出最大最小值
+* 根据最大最小值差异和指定桶大小，确定桶的个数
+* 根据元素于最小值差和桶大小的比值，确定元素位于具体桶：**同等比值的代表元素位于同一个桶(不好过该桶的最大和最小值)**
+* 对每个桶内元素进行排序：**桶内元素只是确定最值范围，仍需排序**
+* 遍历每个桶，将桶内元素按顺序放入原数组
+```java
+public static void bucketSort(int[] arr,int bucketSize){
+    // 找最值
+    int max = arr[0],min=arr[0];
+    for(int num:arr){
+        if(num>max) max = num;
+        if(num<min) min = num;
+    }
 
-def insert_sort(arr):
-    for i in range(len(arr)):
-        j = i -1
-        tmp = arr[i]
-        while j>0 and arr[j] > tmp:
-            arr[j + 1] = arr[j]
-            j -= 1
-        arr[j] = tmp
-
-# 桶排序，bucket_size为理想状态桶内元素数量，非实际数量
-def bucket_sort(arr:list,bucket_size):
-    if len(arr) == 0 :
-        return
-    # 获取最大最小值
-    max,min = max_min_num(arr)
-    # 根据最大最小值和桶大小确定桶数量
-    bucket_count = int((max-min)/bucket_size) + 1
-    # 定义指定数量的桶并赋初值
-    bucket = [[]]*bucket_count
-    for i in range(bucket_count):
-        bucket[i] = []
-    # 将数组元素根据比例填充到桶中
-    for i in range(len(arr)):
-        index = int((arr[i]-min)/bucket_size)
-        bucket[index].append(arr[i])
-
-    # 清空原数组
-    arr.clear()
-    # 将每个桶桶排序并补充给空数组
-    for i in range(bucket_count):
-        insert_sort(bucket[i])
-        for j in range(len(bucket[i])):
-            arr.append(bucket[i][j])
+    // 确定桶个数:由桶内能存储的数量决定
+    int bucket_count = (max-min)/bucketSize+1;
+    List<List<Integer>> buckets = new ArrayList<>(bucket_count);
+    // 初始化桶
+    for(int i = 0;i<bucket_count;i++){
+        buckets.add(new ArrayList<>());
+    }
+    // 将元素放入桶中
+    for(int i= 0;i<arr.length;i++){
+        int index = (arr[i]-min)/bucketSize;
+        buckets.get(index).add(arr[i]);
+    }
+    // 桶内排序
+    for(List<Integer> bucket:buckets){
+        Collections.sort(bucket);
+    }
+    // 将桶内元素放回原数组
+    int sortIndex = 0;
+    for(List<Integer> bucket:buckets){
+        for(int num:bucket){
+            arr[sortIndex++]=num;
+        }
+    }
+}
 ```
 # 基数排序
-```python
-# 取最大数
-def max_num(arr):
-    # 取绝对值 math.fabs(arr[i])
-    max = arr[0]
-    for i in range(len(arr)):
-        if max < arr[i]:
-            max = arr[i]
-    return max
-# 取数值位数
-def num_digit(num):
-    digit = 0
-    while num != 0:
-        digit += 1
-        num /= 10
-    return digit
-
-def radix_sort(arr):
-    mod,dev,i=10,1,0
-    # 取最大数的位数，暂不考虑位数，否则需要取绝对值 math.fabs(val)
-    max_digit = num_digit(max_num(arr))
-
-    # 若考虑负数情况是，counter请扩充至20，0-9代表负数，10-19代表正数 counter_count = 20
-    counter_count = 10
-    for i in range(max_digit):
-        counter = [[]]*counter_count
-        # 需要给counter赋初值
-        for j in range(counter_count):
-            counter[j] = []
-        for j in range(len(arr)):
-            # 若考虑负数情况时， bucket = int((arr[j] % mod) / dev) + mod;
-            bucket = int((arr[j] % mod) / dev)
-            if not counter[bucket]:
-                counter[bucket] = []
-            counter[bucket].append(arr[j])
-        pos = 0
-        for j in range(len(counter)):
-            if counter[j]:
-                for k in range(len(counter[j])):
-                    arr[pos] = counter[j][k]
-                    pos += 1
-        # 继续比较十位，百位，等等
-        dev *= 10
-        mod *= 10
+基数排序是根据每个元素的尾部进行排序，依次从尾到首进行排序，直到最大首位数排序完成
+* 是对计数排序的改进
+* 不仅仅适用于整数，也可以用于字符串
+* 关键步骤
+  * 根据最大值取最大位数
+  * 根据每个元素每一位上的内容，定义指定桶个数，如`整数0-9就是10个桶`，`字符串a-z就是26个桶`
+  * 需要多次遍历，具体由最大位数决定
+  * 每次遍历，将内容除模取余，与桶序列绑定
+  * 每次遍历完，模和余都要向前进一位，如`整数是10进制，则模10，余10`
+```java
+public static void radixSort(int[] arr){
+    // 取最大值，并根据最大值获取最大位数
+    int max = arr[0];
+    for(int num:arr){
+        if(max<num) max = num;
+    }
+    // 取最大位数
+    int maxDigit = 0;
+    while(max!=0){
+        maxDigit++;
+        max /=10;
+    }
+    
+    int couterCount = 10; // 若考虑负数，则couterCount = 20
+    List<List<Integer>> counter = new ArrayList<>(couterCount);
+    int mod = 10,dev=1;
+    for(int i = 0;i<maxDigit;i++){
+        for(int j = 0;j<couterCount;j++){ // 必需，重置
+            counter.add(new ArrayList<>());
+        }
+        for(int j = 0;j<arr.length;j++){
+            // 若考虑负数情况时， int bucket = int((arr[j] % mod) / dev) + mod;
+            int bucket = (arr[j] % mod)/dev;
+            counter.get(bucket).add(arr[j]);
+        }
+        int pos = 0;
+        for(int j =0;j<counter.size();j++){
+            if(counter.get(j).size()==0) continue;
+            for(int k = 0;k<counter.get(j).size();k++){
+                arr[pos++] = counter.get(j).get(k);
+            }
+        }
+        dev *=10;mod *=10;
+    }
+}
 ```
