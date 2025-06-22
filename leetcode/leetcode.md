@@ -2645,6 +2645,7 @@ private int checkHeight(TreeNode node) {
 * **思路**：递归，分治法
   * 若节点一支为空，则以另一支结果为结果
 * **改进**
+  * 记忆最小值，用于叶子节点高度对比
   * 增加叶子节点判断，细化左右子树为空的情况
 ```java
 // 叶子节点：没有左右子节点
@@ -2669,7 +2670,7 @@ public void dfs(TreeNode node,int height){
         return;
     
     if(isLeaf(node)){
-        minHeight = Math.min(minHeight,height);
+        minHeight = Math.min(minHeight,height); // 更新最小值
         return;
     }
     if (node.left != null && (node.right==null || !isLeaf(node.right))) // 确定另一支非叶子节点
