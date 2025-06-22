@@ -42,6 +42,11 @@
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
 - [100. Same Tree(简单)](#100-same-tree简单)
+- [101. Symmetric Tree(简单)](#101-symmetric-tree简单)
+- [104. Maximum Depth of Binary Tree(简单)](#104-maximum-depth-of-binary-tree简单)
+- [108. Convert Sorted Array to Binary Search Tree(简单)](#108-convert-sorted-array-to-binary-search-tree简单)
+- [110. Balanced Binary Tree(简单)](#110-balanced-binary-tree简单)
+- [111. Minimum Depth of Binary Tree(简单)](#111-minimum-depth-of-binary-tree简单)
 
 
 
@@ -2518,5 +2523,162 @@ public boolean isSameTree(TreeNode p, TreeNode q) {
     if ((p==null && q !=null)||(p!=null && q ==null)) return false;
     if(p.val != q.val) return false;
     return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+}
+```
+
+# 101. Symmetric Tree(简单)
+    Given the `root` of a binary tree, check whether it is a mirror of itself (i.e., symmetric around its center).
+
+* **约束**
+  * The number of nodes in the tree is in the range `[1, 1000]`.
+  * `-100 <= Node.val <= 100`
+* **思路**: 递归,分治法
+```java
+public boolean isSymmetric(TreeNode root) {
+    if(root==null) return true;
+    return isSymmetric(root.left,root.right);
+}
+public boolean isSymmetric(TreeNode left,TreeNode right) {
+    if(left==null && right==null) return true;
+    if(left==null || right==null) return false;
+    if(left.val!=right.val) return false;
+    return isSymmetric(left.left,right.right) && isSymmetric(left.right,right.left);
+}
+```
+
+# 104. Maximum Depth of Binary Tree(简单)
+    Given the root of a binary tree, return its maximum depth.
+
+    A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 104]`.
+  * `-100 <= Node.val <= 100`
+```java
+public int maxDepth(TreeNode root) {
+    if(root == null) return 0;
+    if(root.left == null && root.right == null) return 1;
+    return Math.max(maxDepth(root.left), maxDepth(root.right)) +1;
+}
+```
+
+# 108. Convert Sorted Array to Binary Search Tree(简单)
+    Given an integer array `nums` where the elements are sorted in **non-decreasing order**, convert `it` into a **height-balanced** binary search tree.
+
+    A **height-balanced** binary tree is a binary tree in which the depth of the two subtrees of every node **never differs by more than one**.
+
+* **约束**
+  * `1 <= nums.length <= 10^4`
+  * `-10^4 <= nums[i] <= 10^4`
+* **思路**: 递归,分治
+  * 对半分,左半部分为左子树,右半部分为右子树
+  * 即中间节点为父节点`lo+(hi-lo)/2`
+  * **注意**：要判断`lo,hi`是否越界和有效
+```java
+public TreeNode sortedArrayToBST(int[] nums) {
+    if(nums.length==0) return null;
+    if(nums.length==1) return new TreeNode(nums[0]);
+    return buildTree(nums,0,nums.length-1);
+}
+
+public TreeNode buildTree(int[] nums,int lo,int hi) {
+    if(hi<lo) return null;
+    int mid = lo+(hi-lo)/2;
+    TreeNode root = new TreeNode(nums[mid]);
+    root.left = buildTree(nums,lo,mid-1);
+    root.right = buildTree(nums,mid+1,hi);
+    return root;
+}
+```
+
+# 110. Balanced Binary Tree(简单)
+    Given a binary tree, determine if it is height-balanced.
+
+    A binary tree is **height-balanced** if the depth of the two subtrees of every node never differs by more than one.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 5000]`.
+  * `-10^4 <= Node.val <= 10^4`
+* **思路**：递归，分治法
+  * 平衡二叉树：左右子树高度差不超过1
+  * 既判断当前节点是否平衡，也要判断左右子树是否平衡
+* **改进**：由于存在height重复计算问题，可以使用动态规划
+  * 在计算左右子树高度时，判断左右子树是否平衡
+```java
+// 平衡二叉树：左右子树高度差不超过1
+public boolean isBalanced(TreeNode root) {
+    if(root == null) return true;
+    return Math.abs(height(root.left) - height(root.right)) <= 1 && isBalanced(root.left) && isBalanced(root.right);
+}
+public int height(TreeNode node){
+    if(node == null) return 0;
+    return Math.max(height(node.left),height(node.right))+1;
+}
+
+
+// 改进版：使用动态规划，在计算左右子树高度时，判断左右子树是否平衡
+public boolean isBalanced(TreeNode root) {
+    return checkHeight(root) != -1; // -1表示不平衡
+}
+private int checkHeight(TreeNode node) {
+    if (node == null) return 0;
+    
+    int leftHeight = checkHeight(node.left);
+    if (leftHeight == -1) return -1; // 左子树不平衡
+    
+    int rightHeight = checkHeight(node.right);
+    if (rightHeight == -1) return -1; // 右子树不平衡
+    
+    if (Math.abs(leftHeight - rightHeight) > 1) return -1; // 当前节点不平衡
+    
+    return Math.max(leftHeight, rightHeight) + 1; // 返回当前节点高度
+}
+```
+# 111. Minimum Depth of Binary Tree(简单)
+    Given a binary tree, find its minimum depth.
+
+    The minimum depth is the number of nodes along the shortest path from the root node down to the nearest leaf node.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 10^5]`.
+  * `-1000 <= Node.val <= 1000`
+* **思路**：递归，分治法
+  * 若节点一支为空，则以另一支结果为结果
+* **改进**
+  * 增加叶子节点判断，细化左右子树为空的情况
+```java
+// 叶子节点：没有左右子节点
+public int minDepth(TreeNode root) {
+    if(root == null) return 0;
+    if(root.left == null && root.right == null) return 1;
+    if(root.left == null) return minDepth(root.right)+1;
+    if(root.right == null) return minDepth(root.left)+1;
+    return Math.min(minDepth(root.left),minDepth(root.right))+1;
+}
+
+// 改进版：增加叶子节点判断，细化左右子树为空的情况
+private int minHeight = Integer.MAX_VALUE;
+public int minDepth(TreeNode root) {
+    if(root == null) return 0;
+    dfs(root,0);
+    return minHeight;
+}
+public void dfs(TreeNode node,int height){
+    height++;
+    if (height == minHeight) 
+        return;
+    
+    if(isLeaf(node)){
+        minHeight = Math.min(minHeight,height);
+        return;
+    }
+    if (node.left != null && (node.right==null || !isLeaf(node.right))) // 确定另一支非叶子节点
+        dfs(node.left,height);
+    
+    if(node.right!=null)
+        dfs(node.right,height);
+}
+public boolean isLeaf(TreeNode node){
+    return node.left == null && node.right == null;
 }
 ```
