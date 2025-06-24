@@ -47,6 +47,8 @@
 - [108. Convert Sorted Array to Binary Search Tree(简单)](#108-convert-sorted-array-to-binary-search-tree简单)
 - [110. Balanced Binary Tree(简单)](#110-balanced-binary-tree简单)
 - [111. Minimum Depth of Binary Tree(简单)](#111-minimum-depth-of-binary-tree简单)
+- [112. Path Sum(简单)](#112-path-sum简单)
+- [118. Pascal's Triangle(简单,帕斯卡三角形)](#118-pascals-triangle简单帕斯卡三角形)
 
 
 
@@ -2681,5 +2683,110 @@ public void dfs(TreeNode node,int height){
 }
 public boolean isLeaf(TreeNode node){
     return node.left == null && node.right == null;
+}
+```
+
+# 112. Path Sum(简单)
+    Given the `root` of a binary tree and an integer `targetSum`, return `true` if the tree has a root-to-leaf path such that adding up all the values along the path equals `targetSum`.
+
+    A **leaf** is a node with no children.
+
+* **约束**
+* The number of nodes in the tree is in the range `[0, 5000]`.
+  * `-1000 <= Node.val <= 1000`
+  * `-1000 <= targetSum <= 1000`
+* **思路**：递归,回溯法
+  * **注意**：`targetSum,val`可能为负数，不要直接判断`sum>targetSum`就返回false
+```java
+/**
+ * 1. root == null return false
+ * 2. sum == targetSum and root is leaf return true
+ * 3. targetSum may be negative
+ * 4. val may be negative
+ */
+public boolean hasPathSum(TreeNode root, int targetSum) {
+    return hasPathSum(root, targetSum,0);
+}
+
+public boolean hasPathSum(TreeNode root, int targetSum, int sum) {
+    if(root == null) return false;
+    sum += root.val;
+
+    if(isLeaf(root)) return sum == targetSum;
+
+    // sum <=targetSum and root is not leaf
+    if(hasPathSum(root.left,targetSum,sum)) return true;
+    else if(hasPathSum(root.right,targetSum,sum)) return true;
+
+    // (root.left!=null || root.right!=null) and hashPathSum = false
+    return false;
+}
+public boolean isLeaf(TreeNode root){
+    return root.left==null && root.right==null;
+}
+```
+
+# 118. Pascal's Triangle(简单,帕斯卡三角形)
+    Given an integer `numRows`, return the first numRows of Pascal's triangle.
+
+    In Pascal's triangle, each number is the sum of the two numbers directly above it as shown:
+
+    ![image](https://assets.leetcode.com/uploads/2020/11/05/pascaltrianlcio.png)
+
+* **约束**
+  * `1 <= numRows <= 30`
+* **思路**：动态规划
+  * 了解帕斯卡三角形规律
+    * 每行元素数等于行数
+    * 每一行的首尾数字都是1
+    * 每一行中间的数字等于上一行中相邻两个数字的和
+      * 上一行同索引和前一个索引对应值和，除1，2外
+      * 每行元素从中间开始对称
+* **改进**：优化空间复杂度
+```java
+public List<List<Integer>> generate(int numRows) {
+    if(numRows==0) return null;
+    List<List<Integer>> res = new ArrayList<>();
+    List<Integer> pre=null;
+    int cur = 0;
+    while (cur<numRows) {
+        List<Integer> curList = new ArrayList<>(cur+1);
+        if(cur < 2){
+            for(int i = 0;i<= cur;i++){
+                curList.add(1);
+            }
+        }
+        else {
+            curList.add(1);
+            for(int j = 1;j<cur;j++){
+                curList.add(pre.get(j-1)+pre.get(j));
+            }
+            
+            curList.add(1);
+        }
+        pre = curList;
+        cur++;
+        res.add(curList);
+    }
+    return res;
+}
+
+// 改进版：优化空间复杂度
+public List<List<Integer>> generate(int numRows) {
+    List<List<Integer>> res = new ArrayList<>();
+    for (int i = 0; i < numRows; i++) {
+        List<Integer> curList = new ArrayList<>();
+        int num = 1;
+        for (int j = 0; j <= i; j++) {
+            if (j == 0 || j == i) {
+                curList.add(1);
+            } else {
+                num = num*(i-j+1)/j;
+                curList.add(num);
+            }
+        }
+        res.add(curList);
+    }
+    return res;
 }
 ```
