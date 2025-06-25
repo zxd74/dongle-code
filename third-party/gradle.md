@@ -35,16 +35,19 @@ tasks.test { // 任务
     useJUnitPlatform()
 }
 ```
-1. 项目管理：项目单独关联独立`gradle`时，使用`./gradlew`命令
+4. 项目管理：项目单独关联独立`gradle`时，使用`./gradlew`命令
    - `gradle clean`：清理项目
    - `gradle build`：构建项目
    - `gradle run`：运行项目
    - `gradle test`：运行测试
    - `gradle dependencies`：查看依赖树
    - `gradle tasks`：查看所有任务
+5. 项目构建路径：`build`目录,`jar`包(**结果文件**)生成在`build/libs`目录下
 
 **注意**：
 * 子module除不需要创建`settings.gradle`文件外，其他文件与父module类似
+* 不同配置文件类型有不同语法
+  * 如`build.gradle`和`build.gradle.kts`语法是有些区别的，`kts`适用于`kotlin`语法
 
 ## 插件管理
 * `plugins`：插件管理

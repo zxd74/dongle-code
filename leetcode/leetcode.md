@@ -49,6 +49,10 @@
 - [111. Minimum Depth of Binary Tree(简单)](#111-minimum-depth-of-binary-tree简单)
 - [112. Path Sum(简单)](#112-path-sum简单)
 - [118. Pascal's Triangle(简单,帕斯卡三角形)](#118-pascals-triangle简单帕斯卡三角形)
+- [119. Pascal's Triangle II(简单,帕斯卡三角形)](#119-pascals-triangle-ii简单帕斯卡三角形)
+- [121. Best Time to Buy and Sell Stock(简单)](#121-best-time-to-buy-and-sell-stock简单)
+- [125. Valid Palindrome(简单)](#125-valid-palindrome简单)
+- [136. Single Number(简单)](#136-single-number简单)
 
 
 
@@ -2731,7 +2735,14 @@ public boolean isLeaf(TreeNode root){
 
     In Pascal's triangle, each number is the sum of the two numbers directly above it as shown:
 
-    ![image](https://assets.leetcode.com/uploads/2020/11/05/pascaltrianlcio.png)
+```txt
+    1
+   1 1
+  1 2 1
+ 1 3 3 1
+1 4 6 4 1
+..........
+```
 
 * **约束**
   * `1 <= numRows <= 30`
@@ -2742,7 +2753,9 @@ public boolean isLeaf(TreeNode root){
     * 每一行中间的数字等于上一行中相邻两个数字的和
       * 上一行同索引和前一个索引对应值和，除1，2外
       * 每行元素从中间开始对称
-* **改进**：优化空间复杂度
+* **改进**：**优化空间复杂度**
+  * 当前行中，初始数为1
+  * 同一行中，每一个索引数值是前一个数值的倍数(`行数-行内索引值`)，除以`行内索引`
 ```java
 public List<List<Integer>> generate(int numRows) {
     if(numRows==0) return null;
@@ -2788,5 +2801,148 @@ public List<List<Integer>> generate(int numRows) {
         res.add(curList);
     }
     return res;
+}
+```
+
+# 119. Pascal's Triangle II(简单,帕斯卡三角形)
+    Given an integer `rowIndex`, return the `rowIndex`-th row of the Pascal's triangle.
+
+    In Pascal's triangle, each number is the sum of the two numbers directly above it as shown:
+
+* **约束**
+  * `0<= rowIndex <= 33`
+* **思路**：[参考118题的当前行生成方法](#118-pascals-triangle简单帕斯卡三角形))
+  * 注意：
+    * `rowIndex`从`0`开始
+    * `num`可能会超出`int`范围
+```java
+public List<Integer> getRow(int rowIndex) {
+    List<Integer> res = new ArrayList<>();
+    long num = 1;
+    for (int j = 0; j <= rowIndex; j++) {
+        if (j == 0 || j == rowIndex) {
+            res.add(1);
+        } else {
+            num = (int)(num*(rowIndex-j+1)/j);
+            res.add(num);
+        }
+    }
+    return res;
+}
+```
+
+# 121. Best Time to Buy and Sell Stock(简单)
+    You are given an array prices where prices[i] is the price of a given stock on the ith day.
+
+    You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.
+    Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.
+
+* **约束**
+  * `1 <= prices.length <= 10^5`
+  * `0 <= prices[i] <= 10^4`
+* **思路**：**暴力枚举**
+  * 规则
+    * 先买后卖，不能是同一天
+    * 负收入则不买卖
+  * 算法逻辑：
+    * 前一天买价，与后边所有天卖价差值取最大
+    * 将前一天后移一天，重复取差值最大
+    * 知道最后一天，无法取差值，终止
+    * 返回最大差值
+  * **循环过多，容易超时**
+* **改进**: **双指针法**
+  * 分别记录，前一天买价和后一天卖价
+  * 若卖价高于买价，则计算最大差值
+  * 否则，更新买价为当前卖价，卖价后移一天
+```java
+// 普通版
+public int maxProfit(int[] prices) {
+    int max = 0;
+    for(int i = 0;i<prices.length-1;i++){
+        for (int j = i+1; j < prices.length; j++) {
+            max = Math.max(max,prices[j]-prices[i]);
+        }
+    }
+    return max<0?0:max;
+}
+
+// 改进版
+public int maxProfit(int[] prices) {
+    int min = prices[0],max = 0;
+    for(int i = 1;i<prices.length;i++){
+        if(prices[i]>min) max = Math.max(max,prices[i]-min);
+        else  min = prices[i];
+    } 
+    return max<0?0:max;
+}
+```
+
+# 125. Valid Palindrome(简单)
+    A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers.
+
+    Given a string s, return true if it is a palindrome, or false otherwise.
+
+* **约束**
+  * `1 <= s.length <= 2*10^5`
+  * `s` consists only of printable `ASCII` characters.
+* **思路**：**双指针法**
+  * 字符统一大小写
+  * 前后指针过滤**非字母/数字**字符
+  * 比较前后指针指向的字符是否相等，不等直接返回false
+  * 最后返回true
+```java
+public boolean isPalindrome(String s) {
+    s = s.toUpperCase();
+    int lo=0,hi = s.length()-1;
+    char lc,hc;
+    while(lo<hi){
+        for(lc = s.charAt(lo);!isVaild(lc);lo++,lc = s.charAt(lo)) if(lo == hi) break;
+        for(hc = s.charAt(hi);!isVaild(hc);hi--,hc = s.charAt(hi)) if(hi == lo) break;
+        if (lc != hc) return false;
+        lo++;hi--;
+    }
+    return true;
+}
+public boolean isVaild(char c){
+    return (c>=65 && c<=90) || (c>=48 && c<=57);
+}
+```
+
+# 136. Single Number(简单)
+    Given a non-empty array of integers nums, every element appears twice except for one. Find that single one.
+
+    You must implement a solution with a linear runtime complexity and use only constant extra space.
+
+* **约束**
+  * `1 <= nums.length <= 3 * 10^4`
+  * `-3 * 10^4 <= nums[i] <= 3 * 10^4`
+  * Each element in the array appears twice except for one element which appears only once.
+* **思路**：
+  * 只有一个数字是单独的，其它的都是成双的
+  * 可以将所有非记录的数字记录，已记录的移除，剩余的就是单独的数字
+  * 选用利于查询的数据结构，如`HashSet`
+* **改进**
+  * 通过**异或**运算，相同的数字异或结果为`0`，`0`与任何数字异或结果为该数字
+```java
+public int singleNumber(int[] nums) {
+    List<Integer> list = new ArrayList<>();
+    for(int i:nums){
+        if(list.contains(i)){
+            list.remove(Integer.valueOf(i));
+        }else{
+            list.add(i);
+        }
+    }
+    return list.get(0);
+}
+
+// 改进版
+public int singleNumber(int[] nums) {
+    int index=0;
+    for(int i=0;i<nums.length;i++){
+        index=index^nums[i];
+    }
+    
+    return index;
 }
 ```
