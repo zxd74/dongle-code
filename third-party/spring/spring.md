@@ -274,10 +274,10 @@ public class AdmExceptionHandler{
 ```
 
 ## 自定义Starter模块
-1. 引入springboot的configuration模块processor和autoconfigure
+1. 引入`springboot`的`configuration`模块`processor`和`autoconfigure`
 2. 创建功能模块
-3. 配置Configuration自动配置类，关联功能模块类
-4. 创建Spring.factories文件，配置EnableAutoConfiguration，添加功能模块自动配置类信息
+3. 配置`Configuration`自动配置类，关联功能模块类
+4. 创建`Spring.factories`文件，配置`EnableAutoConfiguration`，添加功能模块自动配置类信息
 ```java
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -322,6 +322,42 @@ com.dongle.spring.boot.configuration.HelloWorldAutoConfiguration
 
 
 # 模块
+## Web
+* Spring MVC
+  * `@Controller/@RestController`: 控制器
+  * `@RequestMapping`: 请求映射
+  * `@RequestBody`: 请求体
+  * `@PathVariable`: 路径变量
+  * `@RequestParam`: 请求参数
+  * `@RequestHeader`: 请求头
+  * `@CookieValue`: cookie值
+  * `@ModelAttribute`: 模型属性
+* Spring Boot Web: Servlet Web，同步阻塞
+* Spring Boot WebFlux: Reactive Web,响应式
+
+### Servlet Web
+* 默认使用`Tomcat Servlet`作为服务器
+* 每个线程对应一个请求，IO阻塞型
+* 默认配置属性`org.springframework.boot.autoconfigure.web.ServerProperties`,针对不同容器，有额外配置
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <version>2.6.15</version>
+</dependency>
+```
+### Reactive Web(WebFlux)
+* **与业务代码无关**，只需将`spring-boot-starter-web`替换为`spring-boot-starter-webflux`即可。
+* 默认使用`Netty`作为服务器，其它的需要手动添加依赖。
+* 少量线程处理多个请求，不阻塞
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+    <version>2.6.15</version>
+</dependency>
+```
+
 ## AOP
 1. 添加aop启动块依赖(aspectj)
 ```xml

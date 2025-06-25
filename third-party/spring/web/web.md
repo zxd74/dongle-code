@@ -1,7 +1,6 @@
 # Spring Framework Web MVC
 
 ## Web MVC组件配置
-
 ![组件配置](Configure-Web-MVC.png)
 
 ## 部署DispatcherServlet
@@ -17,6 +16,7 @@
 
 ## Thymeleaf 模板引擎
 ![Thymeleaf-API](./Thymeleaf-API.png)
+
 
 # 功能
 ## 跨域处理
