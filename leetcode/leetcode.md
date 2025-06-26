@@ -53,6 +53,14 @@
 - [121. Best Time to Buy and Sell Stock(简单)](#121-best-time-to-buy-and-sell-stock简单)
 - [125. Valid Palindrome(简单)](#125-valid-palindrome简单)
 - [136. Single Number(简单)](#136-single-number简单)
+- [141. Linked List Cycle(简单)](#141-linked-list-cycle简单)
+- [144. Binary Tree Preorder Traversal(简单)](#144-binary-tree-preorder-traversal简单)
+- [145. Binary Tree Postorder Traversal(简单)](#145-binary-tree-postorder-traversal简单)
+- [157. Read N Characters Given Read4(中等)](#157-read-n-characters-given-read4中等)
+- [160. Intersection of Two Linked Lists(简单)](#160-intersection-of-two-linked-lists简单)
+- [163. Missing Ranges(中等)](#163-missing-ranges中等)
+- [168. Excel Sheet Column Title(简单)](#168-excel-sheet-column-title简单)
+- [](#)
 
 
 
@@ -2946,3 +2954,230 @@ public int singleNumber(int[] nums) {
     return index;
 }
 ```
+
+# 141. Linked List Cycle(简单)
+    Given head, the head of a linked list, determine if the linked list has a cycle in it.
+
+* **约束**
+  * The number of the nodes in the list is in the range [0, 10^4].
+  * `-10^5 <= Node.val <= 10^5`
+  * pos is `-1` or a **valid index** in the linked-list.
+* **思路**：记忆法，通过额外数据结构(如`Set`)存储已筛选过的节点，若后面(`next`)包含，则说明有环
+* **改进**: **快慢指针法**
+```java
+public boolean hasCycle(ListNode head) {
+    Set<ListNode> set = new HashSet<>();
+    while(head!=null){
+        if(set.contains(head)) return true;
+        set.add(head);
+        head = head.next;
+    }
+    return false;
+}
+
+// 改进版
+public boolean hasCycle(ListNode head) {
+    ListNode slow = head,fast = head;
+    while(fast!=null && fast.next!=null){
+        slow = slow.next;
+        fast = fast.next.next;
+        if(slow == fast) return true;
+    }
+    return false;
+}
+```
+# 144. Binary Tree Preorder Traversal(简单)
+    Given the root of a binary tree, return the preorder traversal of its nodes' values.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 100]`.
+  * `-100 <= Node.val <= 100`
+* **思路**：**深度优先算法，先处理根节点，后递归遍历左右子树**
+```java
+public List<Integer> preorderTraversal(TreeNode root) {
+    List<Integer> list = new ArrayList<>();
+    dfs(root,list);
+    return list;
+}
+
+public void dfs(TreeNode root,List<Integer> list) {
+    if(root == null) return;
+    list.add(root.val);
+    dfs(root.left,list);
+    dfs(root.right,list);
+}
+```
+
+# 145. Binary Tree Postorder Traversal(简单)
+    Given the root of a binary tree, return the postorder traversal of its nodes' values.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 100]`.
+  * `-100 <= Node.val <= 100`
+* **思路**：**深度优先算法，先递归遍历左右子树,后处理根节点**(与144题的区别)
+```java
+public List<Integer> postorderTraversal(TreeNode root) {
+    List<Integer> list = new ArrayList<>();
+    dfs(root,list);
+    return list;
+}
+
+
+public void dfs(TreeNode root,List<Integer> list) {
+    if(root == null) return;
+    dfs(root.left,list);
+    dfs(root.right,list);
+    list.add(root.val);
+}
+```
+
+# 157. Read N Characters Given Read4(中等)
+    Given a file and assume that you can only read the file using a given method `read4`, implement a method to read n characters.
+
+    Method `read4`: The API read4 reads 4 consecutive characters from the file, then returns the number of actual characters read. The return value is equal to the number of characters read.
+
+    By using the read4 API, implement the function read:
+
+    The function `read` should return the next `n` characters read from the file. The return value is the actual number of characters read. If the number is less than `n`, an end-of-file marker, represented by `EOF`, is returned instead. If the end of the file is reached, return `EOF`.
+
+    The read function may be called multiple times.
+
+* **约束**
+  * `1 <= read4(char[]) <= 4`
+  * `0 <= n <= 100`
+  * `Position for next read is kept by the system`
+  * You may assume that the destination buffer array, `buf`, is guaranteed to have enough space for storing `n` characters.
+  * It is guaranteed that in a given test case the size of the output will always be at least `n`.
+* **思路**
+```java
+
+```
+
+# 160. Intersection of Two Linked Lists(简单)
+Given the heads of two singly linked-lists headA and headB, return the node at which the two lists intersect. If the two linked lists have no intersection at all, return null.
+
+For example, the following two linked lists begin to intersect at node c1:
+
+![image](https://assets.leetcode.com/uploads/2021/03/05/160_statement.png)
+    
+The test cases are generated such that there are no cycles anywhere in the entire linked structure.
+
+Note that the linked lists must retain their original structure after the function returns. You must not modify the lists.
+
+* **约束**
+  * The number of nodes of `listA` is in the `m`.
+  * The number of nodes of `listB` is in the `n`.
+  * `1 <= m, n <= 3 * 10^4`
+  * `1 <= Node.val <= 10^5`
+  * `0 <= skipA <= m`
+  * `0 <= skipB <= n`
+  * `intersectVal` is `0` if `listA` and `listB` do not intersect.
+  * `intersectVal == listA[skipA] == listB[skipB]` if `listA` and `listB` intersect.
+* **思路**: 
+  * 先分别获取链表长度
+  * 长链表跳过多余节点，使两链表长度一致
+  * 循环对比节点是否等同(**注意：是节点相等，不是节点值**)
+```java
+public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+    int m=0,n=0;
+    ListNode nodeA = headA,nodeB = headB;
+    // 获取链表长度
+    while (nodeA!=null) {
+        nodeA = nodeA.next;
+        m++;
+    }
+    while (nodeB!=null) {
+        nodeB = nodeB.next;
+        n++;
+    }
+    // 处理为同等长度链表
+    if(m>n){
+        for(int skipa = m-n;skipa>0;skipa--){
+            headA = headA.next;
+        }
+    }else if(n>m){
+        for(int skipb = n-m;skipb>0;skipb--){
+            headB = headB.next;
+        }
+    }
+    // 循环对比节点值是否等同
+    boolean flag = false;
+    ListNode next = null;
+    while (headA!=null && headB!=null) {
+        if (headA == headB) {
+            if (!flag){ // 第一次找到，则记录
+                flag = true;
+                next = headA;
+            }
+        }else{ // 不等重新置为空
+            next = null;
+        }
+        headA = headA.next;
+        headB = headB.next;
+    }
+    return next;
+}
+```
+
+# 163. Missing Ranges(中等)
+    You are given an inclusive range [lower, upper] and a sorted unique integer array `nums` (0-indexed) where `nums` is the subset of the range `[lower, upper]`.
+    Return the smallest sorted list of ranges that cover every number in the range `[lower, upper]` that is not present in `nums`.
+
+    A valid range will be represented as a string in the form `"lower->upper"`, where `lower <= upper`. If there is only one number in the range, it will be represented as `"lower"` without the double hyphen. Also, two adjacent ranges `num1->num2` and `num3->num4` should be combined into one range `"num1->num4"` if they overlap.
+
+* **约束**
+  * `0 <= nums.length <= 100`
+  * `nums` is a sorted unique integer array from `0` to `100`.
+  * `nums[i]` is in the range `[0, 100]`.
+  * `lower` and `upper` are integers in the range `[0, 100]`.
+  * `lower <= upper`
+  * `nums` contains no duplicate elements.
+  * `nums` is sorted in ascending order.
+  * `nums[0] == lower` and `nums[nums.length - 1] == upper`.
+  * `nums` is a subset of the range `[lower, upper]`.
+* **思路**
+```java
+
+```
+
+# 168. Excel Sheet Column Title(简单)
+Given an integer `columnNumber`, return its corresponding column title as it appears in an Excel sheet.
+
+```txt
+For example:
+    A -> 1
+    B -> 2
+    C -> 3
+    ...
+    Z -> 26
+    AA -> 27
+    AB -> 28 
+    ...
+```
+
+* **约束**
+  * `1 <= columnNumber <= 2^31 - 1`
+* **思路**: 
+  * 实质为26进制数
+  * 先计算余数，倍数`余数=倍数%26，倍数=倍数/26`
+  * 余数为0，则追加`Z`，倍数减1
+  * 余数不为0，则追加`余数+64`
+  * 倍数不为0，则继续循环
+  * 使用`StringBuilder`追加字符，最后反转
+  * **注意**：`do...while,while,for`的执行逻辑区别
+```java
+public String convertToTitle(int columnNumber) {
+    StringBuilder sb = new StringBuilder();
+    int m =columnNumber,n=0;
+    do{
+        n = m%26;
+        m = m/26;
+        if (n == 0) m--;
+        sb.append(n>0? (char)(n+64):'Z');
+    }while(m>0);
+    sb.reverse();
+    return sb.toString();
+}
+```
+
+# 
