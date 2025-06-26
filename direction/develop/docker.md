@@ -63,3 +63,18 @@ import docker
 client = docker.from_env()
 containers = client.containers.list()
 ```
+
+# 实践
+## 容器通信
+* 方式一：通过ip/域名绑定`/etc/hosts`
+* 方式二：通过`--add-host`添加host映射
+```shell
+docker run --add-host="<ip/host>" <image>
+```
+* 方式三：通过docker network，可以根据容器名作为域名访问
+  * 默认bridge网络是不会进行DNS解析的
+```shell
+docker network create <network_name>
+docker run --network=<network_name> --name <container_name> <image>
+# 只要是同一个network，就可以通过容器名访问
+```

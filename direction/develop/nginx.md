@@ -370,7 +370,7 @@ server{
 * **扩展**：一台nginx代理多个web时，配置与上方一样，只不过需要将对应域名加入到本机`127.0.0.1`中
   * 另外万不可配置`proxy_set_header Host $host;`,否则会导致请求陷入死循环,无法连接
     * 如`localhost->d2.dongle.com->localhost->d2.dongle.com->...`
-
+  * 当需要代理多个web时，需要频繁更改`default.conf`，如果域名解析满足，建议通过域名监听方式实现自适应配置。
 
 ## 跨域处理
 * `add_header Access-Control-Allow-Origin` : # 允许的来源
