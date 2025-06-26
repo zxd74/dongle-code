@@ -358,7 +358,121 @@ com.dongle.spring.boot.configuration.HelloWorldAutoConfiguration
 </dependency>
 ```
 
+### MVC
+```xml
+<!-- 当使用spring boot starter web/webflux 自动引入-->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-webmvc</artifactId>
+</dependency>
+```
+#### 过滤器 Filter
+    过滤器是对数据进行过滤，预处理过程
+
+**实现方式**
+* 通过`Componenent`注册
+* 通过`@Configuration+@Bean`注册
+* 通过`@WebFilter`注册(**独特的**)
+```java
+@Component
+public class WebFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        // 根据请求链路进行预处理
+    }
+}
+```
+* 通过`@WebFilter`设置过滤器的匹配规则
+```java
+@WebFilter(filterName = "filter1",urlPatterns = {"/hello/*"})
+public class WebFilter implements Filter {
+    ...
+}
+```
+* 通过`@Configuration+@Bean`注册
+```java
+@Configuration
+public class WebFilterConfig {
+
+    @Bean
+    public FilterRegistrationBean<WebFilter> webFilter(){
+        FilterRegistrationBean<WebFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new WebFilter());
+        registrationBean.addUrlPatterns("/hello/*");
+        return registrationBean;
+    }
+}
+```
+
+#### 拦截器 Interceptor
+特性	|拦截器(Interceptor)	|AOP
+----|:--:|:--:
+作用范围	|主要针对HTTP请求，作用于Controller层	|可以作用于任何Spring管理的Bean
+实现原理	|基于Servlet过滤器链	|基于动态代理
+粒度	|方法级别(Controller方法)	|更细粒度(方法、构造器、字段等)
+依赖	|依赖于Spring MVC框架	|不依赖特定框架
+执行时机	|主要在请求处理前后	|可以在方法调用前后、异常时、返回后等
+配置方式	|实现HandlerInterceptor接口并注册	|使用注解或XML配置切面
+
+* **拦截器属于AOP的一种实现**
+* 拦截器是**Spring MVC框架的一部分**，专门用于拦截HTTP请求，作用于Controller层
+* 粒度是方法级别，依赖于Spring MVC框架
+* 执行时机主要在请求处理前后，配置方式是实现`HandlerInterceptor`接口并注册。
+
+```java
+public class MyInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 在Controller方法执行前调用
+        return true; // 返回false则中断请求
+    }
+    
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
+        // 在Controller方法执行后，视图渲染前调用
+    }
+    
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        // 在整个请求完成后调用
+    }
+}
+```
+#### Listener
+  监听器对一些特定事件的监听，当事件发生时，执行相应的操作,不仅仅是web mvc，其它业务也是有各自的监听器，只不过不过多关注。
+
+* `javax.servlet.ServletContextListener`、
+* `javax.servlet.ServletRequestListener`、
+* `javax.servlet.ServletRequestAttributeListener`、
+* `javax.servlet.http.HttpSessionListener`、
+* `javax.servlet.http.HttpSessionAttributeListener`
+
+支持三种方法注册Bean：`@Componenet，@Configuration+@Bean,@WebListener`
+```java
+@WebListener
+public class DemoListener implements ServletContextListener{
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        System.out.println("ServletContextListener 初始化上下文");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        System.out.println("ServletContextListener 销毁");
+    }
+}
+```
+
+
 ## AOP
+    适用于任意Bean任意粒度的切面编程
+
 1. 添加aop启动块依赖(aspectj)
 ```xml
 <dependency>
@@ -367,9 +481,9 @@ com.dongle.spring.boot.configuration.HelloWorldAutoConfiguration
 </dependency>
 ```
 2. 开启AOP代理
-   * 通过注解@EnableAspectJAutoProxy开启
-   * 通过配置spring.aop.auto=true开启
-3. 创建AOP类，并使用@Aspect注解
+   * 通过注解`@EnableAspectJAutoProxy`开启，**默认开启**
+   * 通过配置`spring.aop.auto=true`开启
+3. 创建AOP类，并使用`@Aspect`注解
 ```java
 @Aspect
 @Component
@@ -388,9 +502,8 @@ public class WebAop {
     @Pointcut("readPointcut() && readPointcut1()")
     public void readPointcut2(){}
 ```
-1. 配置通知类型：前置，后置，环绕，异常，返回
+5. 配置通知类型：前置，后置，环绕，异常，返回
 ```java
-
     // 除环绕通知外，所有方法都可以使用JoinPoint作为切入点参数
     @Before("readPointcut2()")
     public void read(JoinPoint joinPoint){
@@ -414,6 +527,74 @@ public class WebAop {
         return joinPoint.proceed();
     }
 ```
+
+**原理**
+* 实际使用了`org.aspectj:aspectjweaver`包，
+* 通过`@EnableAspectJAutoProxy`注解开启AOP功能，
+* `@Aspect`注解定义切面
+* `@Pointcut`注解定义切入点：可以是注解`@Annotation`，也可以是类`within`，也可以是方法`execution`
+  * **增强**：`@Before,@After,@Around,@AfterReturning,@AfterThrowing`注解定义通知,对应通知分类
+
+**Advice分类**
+* `MethodBeforeAdvice` 方法前通知
+* `AfterReturningAdvice` 方法后通知
+* `MethodInterceptor` 方法环绕通知
+* `ThrowsAdvice` 异常通知
+* `IntroductionInterceptor` 引入通知
+
+### 实现方式
+* **Spring API实现**
+  * 所有通知分类都继承自`Advice`接口
+  * `Interceptor`是拦截器，属于AOP的一种实现
+```java
+public class Log implements MethodBeforeAdvice {
+    @Override
+    public void before(Method method, Object[] args, Object target) throws Throwable {
+        System.out.println(target.getClass().getName()+"执行了"+method.getName()+"方法");
+    }
+}
+/**  <aop:config></aop:config>
+<!--切入点：expression:表达式，execution(要执行的位置！ * * * * *) -->
+<aop:pointcut id="pointcut" expression="execution(* com.lili.service.UserServiceImpl.*(..))"/>
+<!--执行环绕增加！-->
+<aop:advisor advice-ref="log" pointcut-ref="pointcut"/>
+<aop:advisor advice-ref="afterLog" pointcut-ref="pointcut"/>
+ */
+```
+* **自定义类实现**
+```java
+public class OneSelfPointcut {
+    public void before() {
+        System.out.println("使用前");
+    }
+    public void after() {
+        System.out.println("使用后");
+    }
+}
+/** <aop:config></aop:config>
+<!--自定义切面， ref 要引用的类-->
+<aop:aspect ref="oneSelfPointcut">
+<!--切入点-->
+<aop:pointcut id="point" expression="execution(* com.lili.service.UserServiceImpl.*(..))"/>
+<!--通知-->
+<aop:before method="before" pointcut-ref="point"/>
+<aop:after method="after" pointcut-ref="point"/>
+*/
+```
+* **注解实现**
+```java
+@Aspect// 标注此类是一个切面
+public class AnnotationPointCut {
+    @Before("execution(* com.lili.service.UserServiceImpl.*(..))")
+    public void before(){
+        System.out.println("方法执行前");
+    }
+    @After("execution(* com.lili.service.UserServiceImpl.*(..))")
+    public void after(){
+        System.out.println("方法执行后");
+    }
+}
+```
 ### 注解驱动
 ```java
 @Documented
@@ -426,78 +607,6 @@ public @interface LogRecode {
 ```
 @Pointcut("@annotation(com.dongle.spring.demo.springmodel.aop.LogRecode)")
 public void logRecode(){}
-```
-
-## Config
-### 服务端
-1. 添加cloud config server依赖
-```xml
-<!-- 版本请匹配cloud依赖 -->
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-config-server</artifactId>
-</dependency>
-```
-2. 添加配置spring.cloud.config
-```yml
-# 本地目录
-spring:
-  profiles:
-    active: native
-  cloud:
-    config:
-      server:
-        # native 代表本地目录
-        native:
-          search-locations: file://${configpath} # 如/Data/Temp/config
-        # git仓库
-        git:
-          uri: https://github.com/config-repo
-```
-3. 开启服务作为ConfigServer
-```java
-@SpringBootApplication
-@EnableConfigServer
-public class CloudConfigApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(CloudConfigApplication.class, args);
-    }
-}
-```
-### 客户端
-1. 添加cloud config client依赖(不关联web，需额外依赖)
-```xml
-
-```
-2. 配置配置中心地址，即config server
-```yml
-# /{application}/{profile}[/{label}]
-# /{application}-{profile}.yml
-# /{label}/{application}-{profile}.yml
-# /{application}-{profile}.properties
-# /{label}/{application}-{profile}.properties
-# label 是仓库分支，如git的master分支
-spring:
-  profiles:
-    active: dev
-  application:
-    name: client
-  config:
-    # spring 2.4 提供新方式spring.config.import 取代spring.cloud.config#uri的方式
-    import: optional:configserver:http://localhost:8080
-```
-3. 正常读写配置即可，可以利用@Value加载配置
-```java
-@Component
-public class PropertyReader {
-
-    @Value("${name}")
-    private String name;
-
-    public String getName() {
-        return name;
-    }
-}
 ```
 
 ## Cloud
@@ -587,6 +696,77 @@ spring:
         defaultContext: apps
         profileSeparator: '::'
         format: YAML  # or PROPERTIES，FILES
+```
+### Config
+#### 服务端
+1. 添加cloud config server依赖
+```xml
+<!-- 版本请匹配cloud依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-config-server</artifactId>
+</dependency>
+```
+2. 添加配置spring.cloud.config
+```yml
+# 本地目录
+spring:
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        # native 代表本地目录
+        native:
+          search-locations: file://${configpath} # 如/Data/Temp/config
+        # git仓库
+        git:
+          uri: https://github.com/config-repo
+```
+3. 开启服务作为ConfigServer
+```java
+@SpringBootApplication
+@EnableConfigServer
+public class CloudConfigApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CloudConfigApplication.class, args);
+    }
+}
+```
+#### 客户端
+1. 添加cloud config client依赖(不关联web，需额外依赖)
+```xml
+
+```
+2. 配置配置中心地址，即config server
+```yml
+# /{application}/{profile}[/{label}]
+# /{application}-{profile}.yml
+# /{label}/{application}-{profile}.yml
+# /{application}-{profile}.properties
+# /{label}/{application}-{profile}.properties
+# label 是仓库分支，如git的master分支
+spring:
+  profiles:
+    active: dev
+  application:
+    name: client
+  config:
+    # spring 2.4 提供新方式spring.config.import 取代spring.cloud.config#uri的方式
+    import: optional:configserver:http://localhost:8080
+```
+3. 正常读写配置即可，可以利用@Value加载配置
+```java
+@Component
+public class PropertyReader {
+
+    @Value("${name}")
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+}
 ```
 
 ### Gateway
