@@ -609,6 +609,105 @@ public @interface LogRecode {
 public void logRecode(){}
 ```
 
+## Test
+* 单元测试：功能测试
+* 切片测试：链路测试，如controller+Service
+* 集成测试：spring启动，完整spring应用测试
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+**测试相关API**
+* 单元测试：`@Mock`,`@InjectMocks`,`@BeforeEach`,`@Test`
+* 切片测试：`@WebMvcTest`,`MockMvc`,`MockMvcRequestBuilders`,`MockMvcResultMatchers`
+* 集成相关：`@SpringBootTest`,`@LocalServerPort`,`TestRestTemplate`,`ResponseEntity`,`HttpStatus`
+
+### 单元测试
+* `@Mock` 用于对指定对象进行模拟
+* `@InjectMocks` 用于对指定对象进行注入
+* `@BeforeEach` 用于在测试方法执行前执行
+* `@Test` 用于标记测试方法
+* `MockitoAnnotations.openMocks(this)` 用于初始化mock对象
+* `Mockito.when().thenReturn()` 用于模拟方法返回值
+* `Mockito.verify().xxxmethod()` 用于验证方法是否被调用
+* `Assertions.assertThat()` 用于断言结果
+
+```java
+public class ServiceTest {
+
+    @Mock
+    private UserDao userDao;
+
+    @InjectMocks
+    private UserService userService;
+
+    @BeforeEach
+    void setup(){
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void shouldReturnUserWhenExists(){
+        // 1. 准备mock数据
+        List<User> list = new ArrayList<>(); 
+        // ...
+        Mockito.when(userDao.all()).thenReturn(list);
+
+        // 2. 执行测试
+        list = userService.info();
+
+        // 3. 验证结果
+        assertThat(list.size()).isEqualTo(5);
+        Mockito.verify(userDao).all();
+    }
+}
+```
+
+### 切片测试
+* `@WebMvcTest` 专用于特定功能的测试，如**WebMvc**
+* `MockMvc` 用于模拟HTTP请求的对象
+* `MockMvcRequestBuilders#get/post/xxx` 构建HTTP请求
+* `MockMvcResultMatchers#status,content,jsonPath` 用于断言HTTP响应
+```java
+@WebMvcTest(IndexController.class)
+public class IndexControllerTest {
+    @Autowired
+    private MockMvc mvc;
+
+    @Test
+    void shouldReturn200() throws Exception {
+        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(content().string("OK"));
+    }
+}
+```
+### 集成测试
+* `@SpringBootTest` 用于启动整个Spring应用
+* `@LocalServerPort` 用于获取启动的端口号
+* `TestRestTemplate` 用于发送HTTP请求
+* `ResponseEntity` 用于接收HTTP响应
+* `HttpStatus` 用于断言HTTP响应状态码
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class SpringApplicationTest {
+
+    @LocalServerPort
+    private int port;
+    @Autowired
+    private TestRestTemplate template;
+    @Test
+    void shouldReturnUser(){
+        ResponseEntity<String> response = template.getForEntity("http://localhost:" + port + "/",String.class);
+
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+}
+```
+
+
 ## Cloud
 ### Bus
     集成RabbitMQ和Kafka用轻量级消息代理连接分布式系统的节点
