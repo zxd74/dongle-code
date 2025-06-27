@@ -60,7 +60,13 @@
 - [160. Intersection of Two Linked Lists(简单)](#160-intersection-of-two-linked-lists简单)
 - [163. Missing Ranges(中等)](#163-missing-ranges中等)
 - [168. Excel Sheet Column Title(简单)](#168-excel-sheet-column-title简单)
-- [](#)
+- [169. Majority Element(简单)](#169-majority-element简单)
+- [170. Two Sum III - Data Structure Design(简单)](#170-two-sum-iii---data-structure-design简单)
+- [171. Excel Sheet Column Number(简单)](#171-excel-sheet-column-number简单)
+- [175. Combine Two Tables(简单)](#175-combine-two-tables简单)
+- [181. Employees Earning More Than Their Managers(简单)](#181-employees-earning-more-than-their-managers简单)
+- [182. Duplicate Emails(简单)](#182-duplicate-emails简单)
+- [183. Customers Who Never Order(简单)](#183-customers-who-never-order简单)
 
 
 
@@ -3049,8 +3055,23 @@ public void dfs(TreeNode root,List<Integer> list) {
   * You may assume that the destination buffer array, `buf`, is guaranteed to have enough space for storing `n` characters.
   * It is guaranteed that in a given test case the size of the output will always be at least `n`.
 * **思路**
+  * 从`read4`中读取数据(每次最多4个字符)，数据存入临时`char[] tmp`
+  * 有数据并且实际读取长度`len`不足`n`时，继续读取，否则直接退出
+  * 若没有数据，则退出循环
 ```java
-
+public int read(char[] buf, int n) {
+    int len = 0;
+    int count = 0;
+    char[] temp = new char[4];
+    while((count = read4(temp))!=0){
+        for(int i = 0;i<count;i++){
+            if (len<n) buf[len++] = temp[i];
+            // else return len; // 存在 n%4=0，当数据读取后 len=n 还会继续读取一次
+            if(len==n) return len; // 满了立即退出
+        } 
+    }
+    return len;
+}
 ```
 
 # 160. Intersection of Two Linked Lists(简单)
@@ -3120,24 +3141,36 @@ public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
 ```
 
 # 163. Missing Ranges(中等)
-    You are given an inclusive range [lower, upper] and a sorted unique integer array `nums` (0-indexed) where `nums` is the subset of the range `[lower, upper]`.
-    Return the smallest sorted list of ranges that cover every number in the range `[lower, upper]` that is not present in `nums`.
+You are given an inclusive range [lower, upper] and a sorted unique integer array `nums` (0-indexed) where `nums` is the subset of the range `[lower, upper]`.
 
-    A valid range will be represented as a string in the form `"lower->upper"`, where `lower <= upper`. If there is only one number in the range, it will be represented as `"lower"` without the double hyphen. Also, two adjacent ranges `num1->num2` and `num3->num4` should be combined into one range `"num1->num4"` if they overlap.
+Return the smallest sorted list of ranges that cover every number in the range `[lower, upper]` that is not present in `nums`.
+
+A valid range will be represented as a string in the form `"lower->upper"`, where `lower <= upper`. If there is only one number in the range, it will be represented as `"lower"` without the double hyphen. Also, two adjacent ranges `num1->num2` and `num3->num4` should be combined into one range `"num1->num4"` if they overlap.
 
 * **约束**
+  * `-10^9 <= lower <= upper <= 10^9`
   * `0 <= nums.length <= 100`
-  * `nums` is a sorted unique integer array from `0` to `100`.
-  * `nums[i]` is in the range `[0, 100]`.
-  * `lower` and `upper` are integers in the range `[0, 100]`.
-  * `lower <= upper`
+  * `lower <= nums[i] <= upper`.
   * `nums` contains no duplicate elements.
   * `nums` is sorted in ascending order.
-  * `nums[0] == lower` and `nums[nums.length - 1] == upper`.
-  * `nums` is a subset of the range `[lower, upper]`.
 * **思路**
 ```java
-
+public List<String> FindMissingRanges(int[] nums, int lower, int upper) {
+    List<String> res = new ArrayList<>();
+    int pre = lower;
+    for(int num:nums){
+        if(num>pre) { // 不等，则判断是否在区间内，只可能时num>pre，不存在num<pre
+            format(res,pre,num-1);
+        }
+        pre= num+1;// 无论上面如何处理，pre都前移至num+1
+    }
+    format(res,pre,upper); // nums[length-1] < upper
+    return res;
+}
+public void format(List<String> res,int start,int end){
+    if(start==end) res.add(String.valueOf(start)); // 单个元素
+    else res.add(start+"->"+end); // 区间
+}
 ```
 
 # 168. Excel Sheet Column Title(简单)
@@ -3180,4 +3213,230 @@ public String convertToTitle(int columnNumber) {
 }
 ```
 
-# 
+# 169. Majority Element(简单)
+Given an array `nums` of size `n`, return the majority element.
+
+The majority element is the element that appears more than `⌊n / 2⌋` times. You may assume that the majority element always exists in the array.
+
+* **约束**
+  * `n == nums.length`
+  * `1 <= n <= 5 * 10^4`
+  * `-10^9 <= nums[i] <= 10^9`
+  * The majority element is in `nums`.
+* **思路**
+  * 多数元素大于n/2
+  * 找一个数据结构(**Map结构**)存储元素+计数，当计数大于n/2时，返回该元素
+```java
+public int majorityElement(int[] nums) {
+    Map<Integer,Integer> map = new HashMap<>();
+    int mid = nums.length/2;
+    for(int num:nums){
+        map.put(num,map.getOrDefault(num,0)+1);
+        if(map.get(num)>mid) return num;
+    }
+    return -1;
+}
+```
+
+# 170. Two Sum III - Data Structure Design(简单)
+Design a data structure that accepts a stream of integers and checks if it has a pair of integers that sum up to a given value.
+
+Implement the `TwoSum` class:
+```markdown
+* `TwoSum()` Initializes the `TwoSum` object, with an empty array initially.
+* `void add(int number)` Adds the number to the data structure.
+* `boolean find(int value)` Returns `true` if there exists any pair of numbers which sum is equal to the value, otherwise, return `false`.
+```
+
+* **约束**
+  * `-10^5 <= number, value <= 10^5`
+  * At most `5000` calls will be made to `add` and `find`.
+* **思路**
+  * 找一个数据结构存储`add`添加的元素
+  * 从这个数据结构中双层循环，查找**两两之和**是否给定值
+* **改进**:
+  * 数据结构的选择改进：利于查询，如Map
+  * 可以先排序，二分查找法，差值法
+```java
+static class TwoSum {
+    private List<Integer> list = new ArrayList<>();
+    public TwoSum(){}
+    public void add(int number) {
+        list.add(number);
+    }
+    public boolean find(int value) {
+        for(int i = 0;i<list.size();i++){
+            for(int j = i+1;j<list.size();j++){
+                if(list.get(i)+list.get(j)==value) return true;
+            }
+        }
+        return false;
+    }
+}
+
+// 改进版：List+Sort+BinarySearch
+public boolean find(int value) {
+    Collections.sort(list);
+    int left = 0,right = list.size()-1;
+    while(left<right){
+        int twoSum = list.get(left)+list.get(right);
+        if(twoSum==value) return true;
+        if(twoSum<value) left++;
+        else right--;
+    }
+    return false;
+}
+
+// 改进版：Map + 差值法
+public boolean find(int value) {
+    for(int num:map.keySet()){
+        int target = value - num;
+        if(map.containsKey(target)){
+            if(num == target && map.get(num) > 1) return true;
+            if(num != target) return true;
+        }
+    }
+    return false;
+}
+```
+
+# 171. Excel Sheet Column Number(简单)
+Given a string columnTitle that represents the column title as appears in an Excel sheet, return its corresponding column number.
+
+```txt
+For example:
+    A -> 1
+    B -> 2
+    C -> 3
+    ...
+    Z -> 26
+    AA -> 27
+    AB -> 28 
+    ...
+```
+
+* **约束**
+  * `1 <= columnTitle.length <= 7`
+  * `columnTitle` consists only of uppercase English letters.
+  * `columnTitle` is in the range `["A", "FXSHRXW"]`.
+* **思路**: 与十进制转26进制逻辑相反，[参考168题](#168-excel-sheet-column-title简单)
+  * 从左向后循环，每循环依次，前一个和*26+当前数
+* **改进**
+  * 每个运算表达式，数据类型尽量保持一致，并且复杂运算独立成变量
+```java
+public int titleToNumber(String columnTitle) {
+    int sum = 0;
+    for(int i = 0;i<columnTitle.length();i++){
+        char c = columnTitle.charAt(i);
+        int val = c-'A'+1;
+        sum = sum*26 + val;
+        // sum = sum*26 + (columnTitle.charAt(i)-'A'+1);
+    }
+    return sum;
+}
+```
+
+# 175. Combine Two Tables(简单)
+```txt
+`Person` table:
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| PersonId    | int     |
+| FirstName   | varchar |
+| LastName    | varchar |
++-------------+---------+
+PersonId is the primary key column for this table.
+
+`Address` table:
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| addressId   | int     |
+| personId    | int     |
+| city        | varchar |
+| state       | varchar |
++-------------+---------+
+```
+
+**Write an SQL query to report the first name, last name, city, and state of each person in the `Person` table. If the address of a person is not present in the `Address` table, report null instead.**
+
+Return the result table in **any order**.
+
+* **思路** : 左连接`LEFT JOIN`
+```sql
+-- 不清楚为啥相同的逻辑，leetcode执行时间来回跳动
+-- select `FirstName`,`LastName`,`city`,`state` from Person p left join Address a on p.PersonId = a.personId;
+
+SELECT FirstName,LastName,city,state
+FROM Person
+LEFT JOIN Address
+ON Person.PersonId = Address.personId;
+```
+
+# 181. Employees Earning More Than Their Managers(简单)
+```txt
+`Employee` table:
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| name        | varchar |
+| salary      | int     |
+| managerId   | int     |
++-------------+---------+
+```
+
+**Write a solution to find the employees who earn more than their managers.**
+
+Return the result table in **any order**.
+
+* **思路** : `salary`超过经理的员工
+  * **注意**：`JOIN`方式适合扩展属性，`WHERE`适合筛选数据
+```sql
+select e1.`name` as `Employee` from Employee e1 ,Employee e2 where  e1.managerId = e2.id AND e1.salary > e2.salary
+```
+
+# 182. Duplicate Emails(简单)
+```txt
+`Person` table:
++----+---------+
+| id | email   |
++----+---------+
+| 1  | a@b.com |
+| 2  | c@d.com |
+| 3  | a@b.com |
++----+---------+
+```
+
+**Write an SQL query to report all the duplicate emails.** 
+Return the result table in **any order**.
+
+* **思路**: `GROUP BY ... HAVING`分组查询
+```sql
+select email as Email from person group by email having count(email) > 1;
+```
+
+# 183. Customers Who Never Order(简单)
+```txt
+Table: Customers
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| name        | varchar |
++-------------+---------+
+
+Table: Orders
++-------------+------+
+| Column Name | Type |
++-------------+------+
+| id          | int  |
+| customerId  | int  |
++-------------+------+
+```
+**Write a solution to find all customers who never order anything.**
+* **思路**: `NOT IN`
+```sql
+select name as Customers from Customers where id not in (select customerId from Orders)
+```
