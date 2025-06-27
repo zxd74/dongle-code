@@ -612,7 +612,7 @@ public void logRecode(){}
 ## Test
 * 单元测试：功能测试
 * 切片测试：链路测试，如controller+Service
-* 集成测试：spring启动，完整spring应用测试
+* 集成测试：完整Spring上下文测试
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -668,6 +668,7 @@ public class ServiceTest {
 ```
 
 ### 切片测试
+#### WebMVC测试
 * `@WebMvcTest` 专用于特定功能的测试，如**WebMvc**
 * `MockMvc` 用于模拟HTTP请求的对象
 * `MockMvcRequestBuilders#get/post/xxx` 构建HTTP请求
@@ -684,6 +685,27 @@ public class IndexControllerTest {
     }
 }
 ```
+#### JPA测试
+```java
+@DataJpaTest
+class UserRepositoryTest {
+    @Autowired
+    private TestEntityManager entityManager;
+    
+    @Autowired
+    private UserRepository repo;
+    
+    @Test
+    void shouldFindByEmail() {
+        entityManager.persist(new User("test@example.com"));
+        
+        User user = repo.findByEmail("test@example.com");
+        
+        assertThat(user).isNotNull();
+    }
+}
+```
+
 ### 集成测试
 * `@SpringBootTest` 用于启动整个Spring应用
 * `@LocalServerPort` 用于获取启动的端口号
@@ -707,6 +729,47 @@ public class SpringApplicationTest {
 }
 ```
 
+### 技巧
+1. 测试配置隔离
+```java
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "logging.level.root=ERROR"
+})
+```
+2. 数据库回滚
+```java
+@Transactional
+@Rollback
+@DataJpaTest
+class TransactionalTest {
+    // 测试后自动回滚
+}
+```
+1. 自定义Mock:`mock()`
+```java
+@Test
+void testWithCustomMock() {
+    UserService mockService = mock(UserService.class, 
+        withSettings().defaultAnswer(Answers.RETURNS_SMART_NULLS));
+    
+    // ...
+}
+```
+
+### 最佳实践
+* **命名规范**：
+  * 测试类：被测试类名+Test（如UserServiceTest）
+  * 测试方法：should_When_格式（如shouldReturnNullWhenUserNotExists）
+* **测试覆盖率**：
+```bash
+# 使用Jacoco生成报告
+mvn test jacoco:report
+```
+* **避免常见错误**：
+  * 不要在生产代码中写`System.out.println`
+  * 避免测试依赖执行顺序
+  * Mock时使用ArgumentMatchers而非固定值
 
 ## Cloud
 ### Bus
