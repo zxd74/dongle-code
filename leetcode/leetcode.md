@@ -67,6 +67,10 @@
 - [181. Employees Earning More Than Their Managers(简单)](#181-employees-earning-more-than-their-managers简单)
 - [182. Duplicate Emails(简单)](#182-duplicate-emails简单)
 - [183. Customers Who Never Order(简单)](#183-customers-who-never-order简单)
+- [190. Reverse Bits(简单)](#190-reverse-bits简单)
+- [191. Number of 1 Bits(简单)](#191-number-of-1-bits简单)
+- [193. Valid Phone Numbers(简单)](#193-valid-phone-numbers简单)
+- [195. Tenth Line(简单)](#195-tenth-line简单)
 
 
 
@@ -3439,4 +3443,130 @@ Table: Orders
 * **思路**: `NOT IN`
 ```sql
 select name as Customers from Customers where id not in (select customerId from Orders)
+```
+
+# 190. Reverse Bits(简单)
+Reverse bits of a given 32 bits unsigned integer.
+
+Note:
+```markdown
+* Note that in some languages, such as Java, there is no unsigned integer type. In this case, both input and output will be given as a signed integer type. They should not affect your implementation, as the integer's internal binary representation is the same, whether it is signed or unsigned.  
+* In Java, the compiler represents the signed integers using 2's complement notation. Therefore, in Example 2 above, the input represents the signed integer -3 and the output represents the signed integer -1073741825.
+```
+
+* **约束**：The input must be a binary string of length `32`
+* **思路**: 字符反转
+  * 通过`StringBuilder`将`int`类型转为二进制字符串，然后反转`reverse()`
+  * **根据高位符号位判断是否为负数**，若是负数，则去掉符号位，转为正数
+  * 将二进制字符串转为`int`类型，并根据符号位返回结果
+* **改进**
+  * 每次两次(**按位或**)通过与特定bits进行(**按位与**)，并右移指定位数
+    * 按位或：`|`，只要两个位有一个为1，结果就为1
+    * 按位与：`&`，两个位都为1，结果才为1
+  * 分别交换**16，8，4，2，1**位
+```java
+// you need treat n as an unsigned value
+public int reverseBits(int n) {
+    StringBuilder sb = new StringBuilder(32);
+    sb.append(n < 0 ? '1' : '0');
+    for (int i = 30; i >= 0; i--) {
+        sb.append((n & (1 << i)) != 0 ? '1' : '0');
+    }
+    sb.reverse();
+    String bitString = sb.toString();
+    boolean isNegative = false;
+    if (bitString.charAt(0) == '1') {
+        bitString = bitString.substring(1, bitString.length());
+        isNegative = true;
+    }
+    int num = Integer.valueOf(bitString,2);
+    return isNegative?-num:num;
+}
+
+public int reverseBits(int num) {
+    num = ((num & 0xffff0000) >>> 16) | ((num & 0x0000ffff) << 16);
+    num = ((num & 0xff00ff00) >>> 8) | ((num & 0x00ff00ff) << 8);
+    num = ((num & 0xf0f0f0f0) >>> 4) | ((num & 0x0f0f0f0f) << 4);
+    num = ((num & 0xcccccccc) >>> 2) | ((num & 0x33333333) << 2);
+    num = ((num & 0xaaaaaaaa) >>> 1) | ((num & 0x55555555) << 1);
+    return num;
+}
+```
+
+# 191. Number of 1 Bits(简单)
+Write a function that takes an unsigned integer and returns the number of '1' bits it has (also known as the Hamming weight).
+
+Note:
+* Note that in some languages, such as Java, there is no unsigned integer type. In this case, the input will be given as a signed integer type. It should not affect your implementation, as the integer's internal binary representation is the same, whether it is signed or unsigned.  
+* In Java, the compiler represents the signed integers using 2's complement notation. Therefore, in Example 3, the input represents the signed integer. -3.
+
+* **约束**：`1 <= n <= 2^31 - 1`
+* **思路**: **与位运算**
+  * 每位bit与`1`进行**按位与**运算，若结果为`1`，则计数器加一
+```java
+public int hammingWeight(int n) {
+    int count = 0;
+    for (int i = 31; i >= 0; i--) {
+        count += (n & (1 << i)) != 0 ? 1 : 0;
+    }
+    return count;
+}
+```
+# 193. Valid Phone Numbers(简单)
+
+    Given a text file file.txt that contains list of phone numbers (one per line), write a one liner bash script to print all valid phone numbers.
+
+    You may assume that a valid phone number must appear in one of the following two formats: (xxx) xxx-xxxx or xxx-xxx-xxxx. (x means a digit)
+
+    You may also assume each line in the text file must not contain leading or trailing white spaces.
+
+* **思路**: `grep`正则表达式
+  * 纯数字可使用`\d`表示(**注意**：`\d`代表所有Unicode的数字，`0-9`代表ASCII的数字,使用时要**注意编码环境**)
+  * `\s`匹配空白字符` ,\t,\n`(也需要注意编码环境，如果仅空格，推荐直接使用空格` `)
+  * `^`表示字符串开始，`$`表示字符串结束
+  * `()`表示分组，`|`表示或
+  * `[]`表示范围，`-`表示范围中的连接符
+  * `{n}`表示重复n次
+  * `\`进行转义
+* **改进**：只是为了更快
+  * 通过`shell`语法
+```bash
+grep -P '^(\(\d{3}\) |\d{3}-)\d{3}[-]\d{4}$' file.txt
+
+# 改进版
+p=\([0-9][0-9][0-9]\)\ [0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]
+p1=[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]
+
+while read -r line 
+ do
+  case "$line" in
+  $p)
+  echo $line
+  ;;
+  $p1)
+  echo $line
+  ;;
+  esac
+ done < file.txt
+```
+
+# 195. Tenth Line(简单)
+Given a text file file.txt, print just the 10th line of the file.
+
+* **思路**: 
+  * `sed`命令
+  * `shell`语法
+```bash
+sed -n '10p' file.txt
+
+# 改进版
+n=1
+while read -r line; do
+    if [ $n -eq 10 ]; then
+        echo "$line"
+        break
+    fi
+    ((n++))
+
+done < file.txt
 ```
