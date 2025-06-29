@@ -71,6 +71,14 @@
 - [191. Number of 1 Bits(简单)](#191-number-of-1-bits简单)
 - [193. Valid Phone Numbers(简单)](#193-valid-phone-numbers简单)
 - [195. Tenth Line(简单)](#195-tenth-line简单)
+- [196. Delete Duplicate Emails(简单)](#196-delete-duplicate-emails简单)
+- [197. Rising Temperature(简单)](#197-rising-temperature简单)
+- [202. Happy Number(简单)](#202-happy-number简单)
+- [203. Remove Linked List Elements(简单)](#203-remove-linked-list-elements简单)
+- [205. Isomorphic Strings(简单)](#205-isomorphic-strings简单)
+- [206. Reverse Linked List(简单)](#206-reverse-linked-list简单)
+- [217. Contains Duplicate(简单)](#217-contains-duplicate简单)
+- [219. Contains Duplicate II(简单)](#219-contains-duplicate-ii简单)
 
 
 
@@ -3569,4 +3577,298 @@ while read -r line; do
     ((n++))
 
 done < file.txt
+```
+# 196. Delete Duplicate Emails(简单)
+Write a solution to delete all duplicate emails, keeping only one unique email with the smallest id.
+
+For SQL users, please note that you are supposed to write a DELETE statement and not a SELECT one.
+
+For Pandas users, please note that you are supposed to modify Person in place.
+
+After running your script, the answer shown is the Person table. The driver will first compile and run your piece of code and then show the Person table. The final order of the Person table does not matter.
+```txt
+Table: Person
+
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| email       | varchar |
++-------------+---------+
+```
+
+* **思路**:
+  * 分组寻找最小id
+  * 删除非最小id的行数据
+* **注意**
+  * mysql5.7后，`group by`与`select`存在关联限制
+  * `delete`与`where`子查询不能是同一个表
+```sql
+-- 使用group by时，select的内容必需在group by中或使用聚合函数
+-- delete from和where子查询不能是同一个表，可以将子查询命令为临时表
+delete from Person where id not in(select a.id from (select MIN(p1.id) as id from Person p1 GROUP BY p1.email) as a)
+```
+
+# 197. Rising Temperature(简单)
+Given a Weather table, write a SQL query to find all dates' Ids with higher temperature compared to its previous (yesterday's) dates.
+
+```txt
+Table: Weather
+
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| id            | int     |
+| recordDate    | date    |
+| temperature   | int     |
++---------------+---------+
+```
+Write a solution to find all dates' id with higher temperatures compared to its previous dates (yesterday).
+
+* **思路**:
+  * 同一个表代表两个表数据，分别是当天和前一天
+  * 判断当天是前一天+1的日期(日期函数`date_add`)
+  * 判断当天温度大于前一天
+```sql
+-- 隐式连接，更符合SQL语法，支持主流SQL数据(兼容性好)
+select w1.id from Weather w1, Weather w2 where
+w1.recordDate = date_add(w2.recordDate, interval 1 day) and w1.temperature > w2.temperature
+
+-- JOIN + ON 可读性好，现代SQL，
+SELECT W1.id as Id
+FROM Weather W1
+INNER JOIN Weather W2
+    ON W1.recordDate = DATE_ADD(W2.recordDate, INTERVAL 1 DAY)
+WHERE W1.temperature > W2.temperature;
+```
+
+# 202. Happy Number(简单)
+Write an algorithm to determine if a number n is happy.
+
+```markdown
+A happy number is a number defined by the following process:
+* Starting with any positive integer, replace the number by the sum of the squares of its digits.
+* Repeat the process until the number equals 1 (where it will stay), or it loops endlessly in a cycle which does not include 1.
+* Those numbers for which this process ends in 1 are happy.
+
+Return True if n is a happy number, and False if not.
+```
+* **约束**
+  * `1 <= n <= 2^31 - 1`
+* **思路**:
+  * 数字转字符
+  * 字符对每一位进行平方求和
+  * 结果为1，退出返回true，
+  * 增加所有校验数字的集合，如果存在，代表陷入循环，则返回false
+* **改进**
+  * 求开方：以10为底，循环求余数平方和，数赋值为商，直至数等于0，返回结果
+  * 使用快慢双指针法，当快慢指针相遇时，代表陷入循环
+```java
+public boolean isHappy(int n) {
+    return isHappy(n,new HashSet<Integer>());
+}
+public boolean isHappy(int n,Set<Integer> set) {
+    if (set.contains(n)) return false; // 当数字重复的时候，代表进入循环，返回false
+    set.add(n);
+    String str = String.valueOf(n);
+    int sum = 0;
+    for(int i = 0;i<str.length();i++){
+        sum += Math.pow(str.charAt(i)-'0',2);
+    }
+    if(sum == 1) return true;
+    return isHappy(sum,set);
+}
+
+// 改进版：快慢指针
+public boolean isHappy(int n) {
+    int slow = n,fast = n;
+    do{
+        slow = findSqr(slow);
+        fast = findSqr(findSqr(fast));
+    }while(slow != fast);
+    return slow == 1;
+}
+private int findSqr (int number){ // 重点
+    int ans=0;
+    while(number>0){
+        int rem = number %10;
+        ans += rem *rem;
+        number/=10;
+    }
+    return ans;
+}
+```
+
+# 203. Remove Linked List Elements(简单)
+Given the head of a linked list and an integer `val`, remove all the nodes of the linked list that has `Node.val == val`, and return the new head.
+
+
+* **思路**: **双指针法或递归法**
+  * 增加辅助节点`first,pre,next`
+  * 循环遍历`next=next.next!=null`
+  * 判断`next.val == val`，删除节点`pre.next = next.next`
+  * 否则`pre=next`
+* **改进**
+```java
+// 双指针法
+public ListNode removeElements(ListNode head, int val) {
+    ListNode first = new ListNode(-1,head),next = first,pre = first;
+    while((next = next.next)!=null){
+        if(next.val == val) pre.next = next.next;
+        else  pre = next;
+    }
+    return first.next;
+}
+
+// 递归法
+public ListNode removeElements(ListNode head, int val) {
+    if(head == null) return null;
+    if (head.val == val) {
+        return removeElements(head.next, val);
+    }
+    head.next = removeElements(head.next, val);
+    return head;
+}
+```
+
+# 205. Isomorphic Strings(简单)
+Given two strings `s` and `t`, determine if they are isomorphic.
+
+Two strings `s` and `t` are isomorphic if the characters in `s` can be replaced to get `t`.
+
+All occurrences of a character must be replaced with another character while preserving the order of characters. No two characters may map to the same character, but a character may map to itself.
+
+* **约束**:
+  * `1 <= s.length <= 5 * 10^4`
+  * `s.length == t.length`
+  * `s` and `t` consist of any valid ascii character.
+* **思路**
+  * 使用两个map，分别存储两个字符串的映射关系
+  * 遍历字符串，判断两个map的映射关系是否与比较内容一致
+  * **注意**：需要`s,t`两边都是一一映射
+* **改进**：
+  * **由于ASCII只有256位**，可以考虑使用`int存储char`的映射关系，减少空间复杂度
+```java
+public boolean isIsomorphic(String s, String t) {
+    Map<Character,Character> map = new HashMap<>();
+    Map<Character,Character> map2 = new HashMap<>();
+    for (int i = 0; i < s.length(); i++) {
+        map.putIfAbsent(s.charAt(i),t.charAt(i));
+        map2.putIfAbsent(t.charAt(i), s.charAt(i));
+        if(map.get(s.charAt(i))!=t.charAt(i) || map2.get(t.charAt(i))!=s.charAt(i)) return false;
+    }
+    return true;
+}
+
+// 改进版
+public boolean isIsomorphic(String s, String t) {
+    int[] map1 = new int[256];
+    int[] map2 = new int[256];
+    for (int i = 0; i < s.length(); i++) {
+        char c1 = s.charAt(i);
+        char c2 = t.charAt(i);
+        if (map1[c1] != map2[c2]) return false;
+        map1[c1] = i + 1;
+        map2[c2] = i + 1;
+    }
+    return true;
+}
+```
+
+# 206. Reverse Linked List(简单)
+Given the head of a singly linked list, reverse the list, and return the reversed list.
+
+* **约束**
+  * The number of nodes in the list is the range [0, 5000].
+  * -5000 <= Node.val <= 5000
+* **思路**: **双指针法**
+  * 准备辅助节点`first,next`
+  * 循环遍历`head!=null`
+  * 处理节点置换
+    * 将`next=head`，并立即将`head=head.next`
+    * 将`next.next=first.next`
+    * 最后将`first.next=next`
+```java
+public ListNode reverseList(ListNode head) {
+    ListNode first = new ListNode(-1),next;
+    while(head!=null){
+        next = head;
+        head = head.next;
+        next.next = first.next;
+        first.next = next;
+    }
+    return first.next;
+}
+```
+# 217. Contains Duplicate(简单)
+Given an integer array `nums`, return `true` if any value appears at least twice in the array, and return `false` if every element is distinct.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `-10^9 <= nums[i] <= 10^9`
+* **思路**
+  * 使用`set`存储元素，判断`set.contains(num)`
+  * 只要存储过元素，即代表有重复元素
+* **改进**
+  * 不借助`set`，使用**插入排序**逻辑，在中间判断是否重复
+  * **注意**：考虑当前面所有数字都大于当前key情况时，要将key插入到最前面`nums[0]`
+```java
+public boolean containsDuplicate(int[] nums) {
+    Set<Integer> set = new HashSet<>();
+    for(int num:nums){
+        if(set.contains(num)) return true;
+        set.add(num);
+    }
+    return false;
+}
+
+// 改进
+public boolean containsDuplicate(int[] nums) {
+    for(int i = 1; i<nums.length; i++){
+        int key = nums[i];
+        int j = i - 1;
+        while(j>=0 && nums[j] > key){
+            nums[j+1] = nums[j];
+            j--;
+        }
+        if(j>=0 && nums[j] == key)
+            return true;
+        nums[j+1] = key;
+    }
+    return false;
+}
+```
+
+# 219. Contains Duplicate II(简单)
+Given an integer array `nums` and an integer `k`, return `true` if there are two distinct indices `i` and `j` in the array such that `nums[i] == nums[j]` and `abs(i - j) <= k`.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `-10^9 <= nums[i] <= 10^9`
+  * `0 <= k <= 10^5`
+* **思路**
+  * 当前位置与前面所有对比，存在相同并且差距为k返回true
+* **改进**
+  * 使用Map存储元素索引，通过快速查询，减少内循环次数
+```java
+public boolean containsNearbyDuplicate(int[] nums, int k) {
+    for(int i = 1; i<nums.length; i++){
+        for(int j = i-1;j>=j+1;j--){
+            if (nums[j] == nums[i] && i - j <= k) return true;
+        }
+    }
+    return false;
+}
+
+// 改进版
+public boolean containsNearbyDuplicate(int[] nums, int k) {
+    Map<Integer,Integer> map = new HashMap<>();
+    for(int i = 0;i<nums.length;i++){
+        if(map.containsKey(nums[i]) && i-map.get(nums[i])<=k){
+            return true;
+        }
+        map.put(nums[i],i);
+    }
+    return false;
+}
 ```
