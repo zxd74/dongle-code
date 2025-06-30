@@ -1,3 +1,4 @@
+- [总结](#总结)
 - [对一个整数m删除n位数后，顺序不变，输出最大值](#对一个整数m删除n位数后顺序不变输出最大值)
 - [8 字符串转整数](#8-字符串转整数)
 - [9 数字是回环数字](#9-数字是回环数字)
@@ -79,8 +80,31 @@
 - [206. Reverse Linked List(简单)](#206-reverse-linked-list简单)
 - [217. Contains Duplicate(简单)](#217-contains-duplicate简单)
 - [219. Contains Duplicate II(简单)](#219-contains-duplicate-ii简单)
+- [222. Count Complete Tree Nodes(中等)](#222-count-complete-tree-nodes中等)
+- [225. Implement Stack using Queues(简单)](#225-implement-stack-using-queues简单)
+- [226. Invert Binary Tree(简单)](#226-invert-binary-tree简单)
+- [228. Summary Ranges(简单)](#228-summary-ranges简单)
+- [231. Power of Two(简单)](#231-power-of-two简单)
+- [232. Implement Queue using Stacks(简单)](#232-implement-queue-using-stacks简单)
+- [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
+- [242. Valid Anagram(简单)](#242-valid-anagram简单)
 
 
+# 总结
+* 算法方法：二分法、双指针、滑动窗口、BFS、DFS、并查集、位运算、数学、字符串、数组、链表、树、图、堆、栈、队列、哈希表、排序、搜索
+* 算法思想：分治，贪心，回溯，动态规划，分支有界
+* 算法应用：排序、查找、字符串处理、数组处理、链表处理、树处理、图处理、堆处理、栈处理、队列处理、哈希表处理
+* 字符操作
+  * 使用char对比
+  * 将char转int对比
+* 数字操作
+  * 使用位运算
+  * 注意数据类型范围限制
+* 语言环境
+  * java语言，可以使用`static`调用方法：
+    * 热点代码，JIT编译器会将其编译为本地机器码，大幅提升执行速度，
+    * 使用`static`调用，制造**人为触发JIT编译**，一般需要一定次数(如500)
+    * 在**LeetCode的评测系统**中:每个测试用例可能运行在独立的JVM实例中（或运行时状态被重置）
 
 # 对一个整数m删除n位数后，顺序不变，输出最大值
 * 题目说明：给定任意一个数字 m，然后给出数字 n，则需在 m 中去掉 n 位数，保持各位顺序不变的情况下，得到最大数。
@@ -3870,5 +3894,322 @@ public boolean containsNearbyDuplicate(int[] nums, int k) {
         map.put(nums[i],i);
     }
     return false;
+}
+```
+
+# 222. Count Complete Tree Nodes(中等)
+Given the `root` of a complete binary tree, return the number of the nodes in the tree.
+
+According to Wikipedia, every level, except possibly the last, is completely filled in a complete binary tree, and all nodes in the last level are as far left as possible. It can have between 1 and 2h nodes inclusive at the last level h.
+Design an algorithm that runs in less than `O(n)` time complexity.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[1, 10^4]`.
+  * `0 <= Node.val <= 4000`
+  * The tree is guaranteed to be complete.
+* **思路**: 宽度优先搜索
+```java
+public int countNodes(TreeNode root) {
+    if (root == null) return 0;
+    return countNodes(root.left)+countNodes(root.right)+1;
+}
+```
+
+# 225. Implement Stack using Queues(简单)
+Implement a last-in-first-out (LIFO) stack using only two queues. The implemented stack should support all the functions of a normal stack (`push`, `top`, `pop`, and `empty`).
+
+```txt
+Implement the `MyStack` class:
+* `void push(int x)` Pushes element x to the top of the stack.
+* `int pop()` Removes the element on the top of the stack and returns it.
+* `int top()` Returns the element on the top of the stack.
+* `boolean empty()` Returns `true` if the stack is empty, `false` otherwise.
+
+Notes:
+* You must use only standard operations of a queue, which means that only push to back, peek/pop from front, size and is empty operations are valid.
+* Depending on your language, the queue may not be supported natively. You may simulate a queue using a list or deque (double-ended queue) as long as you use only a queue's standard operations.
+```
+
+* **约束**
+  * `1 <= x <= 9`
+  * At most `100` calls will be made to `push`, `pop`, `top`, and `empty`.
+  * All the calls `pop`, `top`, and `empty` are valid.
+* **思路**：双向队列
+  * **注意**：队列只能存储包装类，返回基本类型时需要验证
+```java
+class MyStack {
+    Deque<Integer> queue;
+    public MyStack() {
+        this.queue  = new LinkedList<>();
+    }
+    
+    public void push(int x) {
+        queue.addLast(x);
+    }
+    
+    public int pop() {
+        return empty()?0:queue.pollLast();
+    }
+    
+    public int top() {
+        return empty()?0:queue.peekLast();
+    }
+    
+    public boolean empty() {
+        return queue.isEmpty();
+    }
+}
+```
+# 226. Invert Binary Tree(简单)
+Given the `root` of a binary tree, invert the tree, and return its root.
+
+* **约束**
+  * The number of nodes in the tree is in the range `[0, 100]`.
+  * `-100 <= Node.val <= 100`
+* **思路**：递归,分治法
+```java
+public TreeNode invertTree(TreeNode root) {
+    if(root == null) return null;
+    TreeNode left = invertTree(root.left);
+    TreeNode right = invertTree(root.right);
+    root.left = right;
+    root.right = left;
+    return root;
+}
+```
+# 228. Summary Ranges(简单)
+You are given a sorted unique integer array `nums`.
+
+A range `[a,b]` is the set of all integers from `a` to `b` (inclusive).
+
+Return the smallest sorted list of ranges that cover all the numbers in the array exactly. That is, each element of nums is covered by exactly one of the ranges, and there is no integer x such that x is in one of the ranges but not in nums.
+```markdown
+Each range [a,b] in the list should be output as:
+* `"a->b"` if `a != b`
+* `"a"` if `a == b`
+```
+
+* **约束**
+  * `0 <= nums.length <= 20`
+  * `-2^31 <= nums[i] <= 2^31 - 1`
+  * All the values of nums are unique.
+  * `nums` is sorted in non-decreasing order.
+* **思路**：双指针
+  * 分别记录`start,end`
+  * 每次重置`start=end=nums[i]`
+* **改进**
+  * 改用一个辅助变量`a`递增,减少变量
+  * 用`StringBuilder`减少字符串拼接
+```java
+public List<String> summaryRanges(int[] nums) {
+    List<String> res = new ArrayList<>();
+    if(nums.length == 0) return res;
+    int start = nums[0],end = start;
+    for(int i = 1;i<nums.length;i++){
+        if (end + 1 == nums[i]) {
+            end = nums[i];
+            continue;
+        }else{
+            format(res,start,end);
+            // 重置
+            start = nums[i];
+            end = start;
+        }
+    }
+    format(res,start,end);// recode last one
+    return res;
+}
+public void format(List<String> list,int start,int end){
+    list.add(end == start? start+"":start + "->" + end);
+}
+
+// 改进版
+public List<String> summaryRanges(int[] nums) {
+    List<String> res = new ArrayList<>();
+    if(nums.length == 0) return res;
+    StringBuilder sb = new StringBuilder();
+    int a = 0,n = nums.length;
+    for(int i = 0;i<n-1;i++){
+        if (nums[i]+1== nums[i+1]) {
+            a++;
+        }else{
+            format(res,sb,nums[i]-a,nums[i]);
+            // 重置
+            a=0;
+        }
+    }
+    format(res,sb,nums[n-1]-a,nums[n-1]);// recode last one
+    return res;
+}
+public void format(List<String> list,StringBuilder sb,int start,int end){
+    if (end == start) {
+        sb.append(start);
+    }else{
+        sb.append(start).append("->").append(end);
+    }
+    list.add(sb.toString());
+    sb.delete(0, sb.length());
+}
+```
+# 231. Power of Two(简单)
+Given an integer `n`, return `true` if it is a power of two. Otherwise, return `false`.
+
+An integer `n` is a power of two, if there exists an integer `x` such that `n == 2x`.
+
+* **约束**
+  * `-2^31 <= n <= 2^31 - 1`
+* **思路**：**位运算**
+  * 小于等于0的都不是**2的次幂**结果
+  * `n & (n - 1)`为0的数是2的幂
+  * **注意**：**求是否是2的次幂**
+```java
+public boolean isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+        return (n & (n - 1)) == 0;
+}
+```
+
+# 232. Implement Queue using Stacks(简单)
+Implement a first in first out (FIFO) queue using only two stacks. The implemented queue should support all the functions of a normal queue (`push`, `peek`, `pop`, and `empty`).
+```markdown
+Implement the `MyQueue` class:
+* `void push(int x)` Pushes element x to the back of the queue.
+* `int pop()` Removes the element from the front of the queue and returns it.
+* `int peek()` Returns the element at the front of the queue.
+* `boolean empty()` Returns `true` if the queue is empty, `false` otherwise.
+```
+
+* **约束**
+  * `1 <= x <= 9`
+  * At most `100` calls will be made to `push`, `pop`, `peek`, and `empty`.
+  * All the calls to `pop` and `peek` are valid.
+* **思路**：**双栈**
+  * 一个用于入栈，一个用于出栈
+  * 出栈为空时，将入栈的元素全部压入出栈
+```java
+class MyQueue {
+
+    Stack<Integer> stack,tmp;
+    public MyQueue() {
+        stack = new Stack<>();
+        tmp = new Stack<>();
+    }
+    
+    public void push(int x) {
+        stack.push(x);
+    }
+    
+    public int pop() {
+        return getFirst(true);
+    }
+    
+    public int peek() {
+        return getFirst(false);
+    }
+    private int getFirst(boolean isDelete){
+        if (tmp.isEmpty()) {
+            while(!stack.isEmpty()){
+                tmp.push(stack.pop());
+            }
+        }
+        return isDelete?tmp.pop():tmp.peek();
+    }
+    
+    public boolean empty() {
+        return stack.isEmpty() && tmp.isEmpty();
+    }
+}
+```
+# 234. Palindrome Linked List(简单)
+Given the `head` of a singly linked list, return `true` if it is a palindrome.
+
+* **约束**
+  * The number of nodes in the list is in the range `[1, 10^5]`.
+  * `0 <= Node.val <= 9`
+* **思路**：
+  * 将`ListNode`转换为List
+  * 用双指针判断是否是回文
+* **改进**：**快慢指针**
+  * 慢走一步，快走两步，当快走完时，慢到中间
+  * 反转后半段链表
+  * 用反转前半段的链表与慢走后的链表(后半段)比较
+```java
+public boolean isPalindrome(ListNode head) {
+    List<Integer> list = new ArrayList<>();
+    while (head != null) {
+        list.add(head.val);
+        head = head.next;
+    }
+    int left = 0, right = list.size() - 1;
+    while (left < right) {
+        if (!list.get(left).equals(list.get(right))) {
+            return false;
+        }
+        left++;
+        right--;
+    }
+
+    return true;
+}
+
+// 改进版：快慢指针
+public boolean isPalindrome(ListNode head) {
+    ListNode slow = head,fast = head,reverse=null;
+    while(fast!=null && fast.next!=null){
+        ListNode tmp = slow;
+        slow = slow.next;
+        fast = fast.next.next;
+        tmp.next = reverse;
+        reverse = tmp;
+    }
+
+    if(fast!=null) slow = slow.next;
+    while(slow!=null && reverse.val==slow.val){
+        slow = slow.next;
+        reverse = reverse.next;
+    }
+    return slow == null;
+}
+```
+
+# 242. Valid Anagram(简单)
+Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise.
+
+* **约束**
+  * `1 <= s.length, t.length <= 5 * 10^4`
+  * `s` and `t` consist of lowercase English letters.
+* **思路**：
+  * 题意：两个字符串是否是字母异位词
+  * 由于明确时应为小写字母(26位)，定义两个长度为26的数组，分别记录两个字符串中每个字母出现的次数
+  * 比较两个数组值是否相等，若相等则返回true，否则返回false
+* **改进**
+  * 使用一个数组即可，一个`+1`，一个`-1`
+  * 当都为0，代表true，否则false
+```java
+public boolean isAnagram(String s, String t) {
+    if(s.length() != t.length()) return false;
+    int[] sa = new int[26],ta = new int[26];
+    for(int i = 0;i<s.length();i++){
+        sa[s.charAt(i)-97]++;
+        ta[t.charAt(i)-97]++;
+    }
+    for(int i = 0;i<26;i++){
+        if(sa[i]!=ta[i]) return false;
+    }
+    return true;
+}
+
+// 改进版
+public boolean isAnagram(String s, String t) {
+    if(s.length() != t.length()) return false;
+    int[] sa = new int[26];
+    for(int i = 0;i<s.length();i++){
+        sa[s.charAt(i)-97]++;
+        sa[t.charAt(i)-97]--;
+    }
+    for(int i = 0;i<26;i++){
+        if(sa[i]!=0) return false;
+    }
+    return true;
 }
 ```
