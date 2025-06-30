@@ -1,18 +1,19 @@
 # 注册中心
 ## 依赖
 ``` xml
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
-        </dependency>
+<!-- 添加web依赖，用于eureka控制后台 -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
 ```
-## 创建Eureka注册中心
-创建SpringBoot项目，对Application使用@EnableEurekaServer注解
+## Eureka注册中心
+创建SpringBoot项目，对Application使用`@EnableEurekaServer`注解,**所有服务都注册到该注册中心，都属于客户端**
 ``` java
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
-
 @SpringBootApplication
 @EnableEurekaServer
 public class DongleEurekaApplication {
@@ -20,10 +21,9 @@ public class DongleEurekaApplication {
     public static void main(String[] args) {
         SpringApplication.run(DongleEurekaApplication.class, args);
     }
-
 }
 ``` 
-### 配置eureka
+### 配置eureka注册中心
 ```properties
 spring.application.name=eureka-server
 
@@ -51,20 +51,16 @@ eureka.client.serviceUrl.defaultZone=http://${eureka.instance.hostname}:${server
 # 服务发现
 ## 依赖
 ``` xml
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
 ```
-## 创建客户端
+## 客户端
 创建springboot项目，使用@EnableEurekaClient注解
 ``` java
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
-
 @SpringBootApplication
-@EnableEurekaClient
+@EnableDiscoveryClient // 过时 @EnableEurekaClient
 public class DongleEurekaClientApplication {
 
     public static void main(String[] args) {
@@ -73,7 +69,7 @@ public class DongleEurekaClientApplication {
 
 }
 ```
-### 配置eureka
+## 配置eureka客户端
 ``` properties
 server.port=8080
 
@@ -85,13 +81,6 @@ eureka.client.register-with-eureka=false
 # 注意结尾必须有/，eureka客户端不会处理结尾，会自动拼接
 eureka.client.service-url.defaultZone=http://localhost:9000/eureka/
 ```
-### 启动客户端
-
-# 监听
-## eureka服务监听
-见文件EurekaListener.java
-## 获取eureka服务列表
-见文件EurekaDiscovery.java
 
 # 服务调用
 ## Restemplate + @LoadBalanced方式调用
@@ -118,34 +107,96 @@ public class RestTemplateConfigure {
     }
 ```
 ## Feign方式调用
-见feign目录
+见[feign](feign.md)
 
+# 服务监听
+## eureka服务监听
+* `@EventListener` 注解监听eureka服务事件
+* `EurekaInstanceCanceledEvent` 服务下线事件
+* `EurekaInstanceRegisteredEvent` 服务上线事件
+* `EurekaRegistryAvailableEvent` 注册中心启动事件
+* `EurekaServerStartedEvent` Eureka Server启动事件
+```java
+@Component
+public class EurekaListener {
+
+    @EventListener
+    //服务下线监听
+    public void listen(EurekaInstanceCanceledEvent event){
+        System.err.println(event.getServerId()+"\t"+event.getAppName()+"服务下线");
+    }
+
+    @EventListener
+    //服务上线监听
+    public void listen(EurekaInstanceRegisteredEvent event){
+        InstanceInfo instanceInfo = event.getInstanceInfo();
+        System.err.println(instanceInfo.getAppName()+instanceInfo.getHostName()+instanceInfo.getIPAddr()+"进行注册");
+    }
+
+    @EventListener
+    //注册中心启动
+    public void listen(EurekaRegistryAvailableEvent event){
+        System.err.println("注册中心 启动");
+    }
+
+    @EventListener
+    //Eureka Server启动
+    public void listen(EurekaServerStartedEvent event){
+        System.err.println("Eureka Server 启动");
+    }
+}
+```
+## 获取服务列表
+* `EurekaClient`：Eureka客户端
+* `Applications`：获取指定服务列表
+```java
+@Component
+public class EurekaDiscovery {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("EurekaJob");
+
+    @Autowired
+    private EurekaClient eurekaClient;  // 注意是EurekaClient不是DiscoveryClient，该类型未被初始化
+
+    @Scheduled(cron = "*/10 * * * * *")
+    public void checkEureka(){
+        // 发现所有服务列表 eurekaClient.getApplications();
+        // 发现指定服务列表
+        Applications applications = eurekaClient.getApplications("dongle-eureka-server");
+        for (Application application : applications.getRegisteredApplications()){
+            for (InstanceInfo info:application.getInstances()){
+                LOGGER.info("ip:{},host:{},home:{}" ,info.getIPAddr() ,info.getHostName(),info.getHomePageUrl());
+            }
+        }
+    }
+}
+```
 
 # 非Spring Boot支持
 使用原生eureka服务，spring cloud需要支持springboot
 ## 依赖
 ```xml
-        <dependency>
-			<groupId>com.netflix.eureka</groupId>
-			<artifactId>eureka-client</artifactId>
-			<version>1.10.17</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.servlet</groupId>
-					<artifactId>servlet-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.httpcomponents</groupId>
-					<artifactId>httpclient</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-        <!-- 可依赖Springframework框架 -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-            <version>5.0.8.RELEASE</version>
-		</dependency>
+<dependency>
+    <groupId>com.netflix.eureka</groupId>
+    <artifactId>eureka-client</artifactId>
+    <version>1.10.17</version>
+    <exclusions>
+        <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<!-- 可依赖Springframework框架 -->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-context</artifactId>
+    <version>5.0.8.RELEASE</version>
+</dependency>
 ```
 ## 配置
 ```properties
@@ -163,26 +214,15 @@ eureka.name=eureka-client-service
 # 若注册本服务，需将本服务端口告知
 eureka.port=9300
 ## 其他配置请参考官网
-````
+```
+
 ## 注册
+* `EurekaClient`：Eureka客户端
+* `EurekaInstanceConfig`：Eureka实例配置
+* `InstanceInfo`：Eureka实例信息
+* `ApplicationInfoManager`：应用信息管理
+* `DiscoveryClient`：Eureka客户端
 ```java
-
-import com.netflix.appinfo.ApplicationInfoManager;
-import com.netflix.appinfo.EurekaInstanceConfig;
-import com.netflix.appinfo.InstanceInfo;
-import com.netflix.appinfo.MyDataCenterInstanceConfig;
-import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
-import com.netflix.discovery.DefaultEurekaClientConfig;
-import com.netflix.discovery.DiscoveryClient;
-import com.netflix.discovery.EurekaClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-/**
- * 
- */
 @Configuration
 public class EurekaClientConfig {
 
@@ -217,4 +257,4 @@ public class EurekaClientConfig {
     }
 }
 ```
-## 整理
+

@@ -31,6 +31,15 @@
 	</dependencies>
 </dependencyManagement>
 ```
+## JDK版本对应
+JDK|Spring Framework|Spring Boot(Dependencies)|Spring Cloud|Spring Cloud Dependencies
+---|---|---|---|---
+17+|6.2.x|3.5.x|4.3.x|2025.0.x
+17+|6.2.x|3.4.x|4.2.x|2024.0.x
+17+|6.1.x|3.3.x|4.1.x|2023.0.x
+17+|6.0.x|3.0.x|4.0.x|2022.0.x
+8+|5.3.x|2.6.x|3.1.x|2021.0.x
+
 ## 基本依赖
 org.springframework：
 1. spring-beans
@@ -813,8 +822,11 @@ public class BusConfiguration {
 }
 ```
 
+### Eureka
+由Netflix提供支持，详情见[Eureka](./eureka.md)
+
 ### Consul
-    统一服务发现和配置管理
+**统一服务发现和配置管理**
 
 * 安装Consul
 * 依赖
