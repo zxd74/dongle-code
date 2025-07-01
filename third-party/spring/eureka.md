@@ -199,17 +199,19 @@ public class EurekaDiscovery {
 </dependency>
 ```
 ## 配置
+* `EurekaServerConfigBean`
+* `EurekaDashboardProperties`
+* `EurekaClientConfigBean`
+* `EurekaInstanceConfigBean`
 ```properties
 eureka.preferSameZone=true
-# 是否使用dns解析
 eureka.shouldUseDns=false
 # eureka注册中心地址
 eureka.serviceUrl.default=http://localhost:9000/eureka/
 # 解码方式
 eureka.decoderName=JacksonJson
-# 决定是否将本服务注册到eureka中，true注册，false不注册
-eureka.registration.enabled=true
-# 服务名
+eureka.registration.enabled=true # 决定是否将本服务注册到eureka中
+
 eureka.name=eureka-client-service
 # 若注册本服务，需将本服务端口告知
 eureka.port=9300
