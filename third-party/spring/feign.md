@@ -1,15 +1,44 @@
+原生`feign`是由`netflix`提供支持，但后来由于停止维护，由Spring团队开发了统一的`spring-cloud-openfeign`
+
+Feign只是相当于一个**接口代理包**(**统筹所有公共服务接口**，并整合相关实体Model)，没有实际处理逻辑，仅仅关联注册中心上的服务。
+
 # 依赖
 ```xml
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-openfeign</artifactId>
-    </dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
 ```
-# 使用
-1. Application类使用@EnableFeignClients注解
+## 定义Feign接口服务
 ```java
-import org.springframework.cloud.openfeign.EnableFeignClients;
+// @FeignClient 关联准备调用的分布式服务名
+@FeignClient("dongle-eureka-server")
+public interface FeignService {
 
+    @RequestMapping("/base/hello")
+    public String baseHello();
+}
+```
+
+## 其它服务调用
+1. 添加构建的自定义Feign服务
+```xml
+<!--自定义Feign服务依赖-->
+
+<!--额外需要：服务注册/发现，web服务-->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+2. 开启`Feign`代理：在`Application`类中使用`@EnableFeignClients`注解
+```java
+@SpringBootApplication
+@EnableDiscoveryClient // 需要服务注册/发现才能有效
 @EnableFeignClients
 public class DongleApplication {
 
@@ -19,18 +48,32 @@ public class DongleApplication {
 
 }
 ```
-## 定义Feign接口服务
+3. 使用`@Autowired`注入`FeignClient`
+4. 调用`FeignClient`接口方法
+   1. 直接在`Controller`中注入并调用
+   2. 或者在`Service`中注入并调用
 ```java
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.RequestMapping;
+@RestController
+public class FooController {
+    @Autowired
+    private FeignService client; // 使用Feign代理的服务
 
-// @FeignClient 关联准备调用的分布式服务名
-@FeignClient("dongle-eureka-server")
-public interface FeignService {
+    @RequestMapping("xxx")
+    public String foo() {
+        return client.xxx();
+    }
+}
 
-    @RequestMapping("/base/hello")
-    public String baseHello();
+@Service
+public class FooService {
+    @Autowired
+    private FeignService client; // 使用Feign代理的服务
+
+    public String getFoo() {
+        return client.xxx();
+    }
 }
 ```
+
 # 注意
-feign一般可做为负载均衡和熔断措施，作用域分布式服务，一般依赖于eureka服务发现与注册
+feign一般可做为**负载均衡**和**熔断措施**，作用于分布式服务，一般**依赖于类似eureka的服务发现与注册**
