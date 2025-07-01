@@ -34,6 +34,7 @@
 - [39 组合总和(中)](#39-组合总和中)
 - [40 组合总和 II(中)](#40-组合总和-ii中)
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
+- [43. Multiply Strings(中等)](#43-multiply-strings中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
@@ -2136,7 +2137,7 @@ public List<List<Integer>> combinationSum(int[] candidates, int target) {
             }
         }
     };
-    }
+}
 ```
 
 # 40 组合总和 II(中)
@@ -2146,14 +2147,88 @@ public List<List<Integer>> combinationSum(int[] candidates, int target) {
 
     Note: The solution set must not contain duplicate combinations.
 
-* 约束
+* **约束**
   * `1 <= candidates.length <= 100`
   * `1 <= candidates[i] <= 50`
   * `1 <= target <= 30`
 
-* 思路
+* **思路**
+  * 对[39题](#39-组合总和中)的改进，增加去重逻辑
+  * **先排序，后处理**
+  * 从左向右开始循环
+    * 若当前值等于结果，则代表找到一个结果，将结果加入结果集
+    * 若当前值和前一个值相同，则代表会重复，跳过(**重点**，`if (i > idx && cur == candidates[i - 1]) continue;`)
+    * 若大于结果，则结果减去当前值作为下一个递归的结果值
+* **改进**
+  * 返回自定义`AbstractList`实现类，并且只在获取数据时进行逻辑处理，避免耗时
 ```java
+public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+    List<List<Integer>> result = new ArrayList<>();
+    Arrays.sort(candidates); // 对candidates排序，便于递归逻辑中终止
+    combinationSum2(candidates,result,new ArrayList<>(),0,target);
+    return result;
+}
+public void combinationSum2(int[] candidates,List<List<Integer>> result,List<Integer> curr,int idx, int target) {
+    // if(target<0) return; // for循环中的if (cur>target) break;已经可以过滤小于0
+    if (target == 0) { // 当余数为0，代表可以被整除，返回上一层
+        result.add(new ArrayList<>(curr)); // 代表数组有效，可将数组加入结果集中
+        return;
+    }
+    for (int i = idx; i < candidates.length; i++) { // 当起始位置溢出时，代表已经遍历完，返回上一层
+        int cur = candidates[i];
+        if (cur>target) break; // 因以排序，所以后续的数肯定大于target
+        if (i > idx && cur == candidates[i - 1]) continue; // 去重，当当前值与上一个值相等时，跳过,
+        curr.add(cur); // 将当前值加入当前数组中
+        combinationSum2(candidates,result,curr,i+1,target-cur);// 递归余数
+        curr.remove(curr.size()-1); // 移除当前值,继续下一轮循环
+    }
+}
 
+// 改进版
+public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+    return new AbstractList<List<Integer>>() {
+        List<List<Integer>> ret;
+        ArrayList<Integer> curr;
+        Set<String> set = new HashSet<>();
+        void init() {
+            if (ret != null) {
+                return;
+            }
+            ret = new LinkedList<>();
+            curr = new ArrayList<>();
+            Arrays.sort(candidates);
+            rec(candidates, 0, target);
+        }
+        @Override
+        public List<Integer> get(int index) {
+            init();
+            return ret.get(index);
+        }
+        @Override
+        public int size() {
+            init();
+            return ret.size();
+        }
+        void rec(int[] candidates, int idx, int target) {
+            if (target == 0) {
+                String key = curr.stream().map(String::valueOf).collect(Collectors.joining("-"));
+                if (!set.contains(key)){
+                    ret.add(new ArrayList<>(curr));
+                    set.add(key);
+                }
+                return;
+            }
+            for (int i = idx; i < candidates.length; i++) {
+                int num = candidates[i];
+                if (num > target) break;
+                if (i > idx && num == candidates[i - 1]) continue; // 去重，当当前值与上一个值相等时，跳过,重点
+                curr.add(num);
+                rec(candidates, i+1, target - num);
+                curr.remove(curr.size() - 1);
+            }
+        }
+    };
+}
 ```
 # 41 缺失的第一个正数(难)
     Given an unsorted integer array nums. Return the smallest positive integer that is not present in nums.
@@ -2209,13 +2284,120 @@ public int firstMissingPositive(int[] nums) {
     return count + 1; 
 }
 ```
+# 43. Multiply Strings(中等)
+    Given two non-negative integers num1 and num2 represented as strings, return the product of num1 and num2, also represented as a string.
+
+    Note: You must not use any built-in BigInteger library or convert the inputs to integer directly.
+
+* **约束**
+  * `1 <= num1.length, num2.length <= 200`
+  * `num1` and `num2` consist of digits only.
+  * Both `num1` and `num2` do not contain any leading zero, except the number 0 itself.
+* **思路**
+  * 指定一个数字字符串为乘数
+  * 循环乘数，从右侧开始
+    * 将乘数与被乘数相乘，得到当前位的结果(需要以字符串为结果，**注意进位**)
+    * 将当前位的积与前一位的进位相加，得到当前位的最终结果
+    * 记录当前结果的余数，并重新计算进位
+  * 当循环完成，若进位仍存在，则记录
+  * 最终结果倒序
+  * 提示：
+    * 使用`StringBuilder`记录结果
+    * 在算术运算结果记录时默认以**倒序**方式处理，
+    * 最终结果使用`StringBuilder#reverse()`方法**倒序(变正序)**
+* **改进**
+  * 使用`int[]`**存储同位的积**，以两边长度和为总长度(**两数积最小长度为位数和-1，最大为位数和**)
+  * 分别**从右向左**开始计算，**同位积相加**(**`i+j`结果等同的代表同位积**)
+  * 同位积计算完后，遍历数组，从右向左`i=arr.length-1`
+    * 当前位取余
+    * 前一位`i-1`加当前位`i`的进位(取商)
+  * **将数组读取为字符串**
+    * 判断数组第一位是否为0，若为0，则从第二位开始(代表积为最小长度)
+```java
+private static String ZERO_STR = "0";
+private static char ZERO_CHAR = '0';
+public String multiply(String num1, String num2) {
+    if(ZERO_STR.equals(num1) || ZERO_STR.equals(num2)) return ZERO_STR;
+    StringBuilder sb = new StringBuilder();
+    StringBuilder tmp = new StringBuilder();
+    String carry = ZERO_STR; // 倒序
+    for (int i = num2.length()-1; i >=0; i--) {
+        String sum = sum(num1,num2.charAt(i)-ZERO_CHAR,tmp) ; //倒序
+        sum = sum(sum,carry,tmp); // 最终当前位的乘积
+        sb.append(sum.charAt(0)); // 取余
+        carry = sum.substring(1,sum.length()); // 取进位 (number)sum/10
+    }
+    if (!ZERO_STR.equals(carry)) sb.append(carry);
+    return sb.reverse().toString(); // 只在最后结果进行倒序转正序
+}
+
+public String sum(String num,String carryTmp,StringBuilder sb) { // 当前位的乘积 + 前一位的进位数
+    if (ZERO_STR.equals(carryTmp)) return num; // 代表无需进位
+    if (carryTmp.length()>num.length()) { // 置换，以最长的为加法循环次数
+        String tmp = num;
+        num = carryTmp;
+        carryTmp = tmp;
+    }
+    sb.delete(0, sb.length());
+    int carry = 0,j = 0;
+    for (int i = 0; i <num.length(); i++) {
+        int sum = num.charAt(i)-ZERO_CHAR + carry;
+        if(j<carryTmp.length()) sum +=carryTmp.charAt(j++)-ZERO_CHAR;
+        carry = sum/10;
+        sb.append(sum%10);
+    }
+    if (carry >0) sb.append(carry);
+    return sb.toString();
+}
+public String sum(String num1,int num2,StringBuilder sb) { // 当前位的乘积
+    sb.delete(0, sb.length());
+    int carry = 0;
+    for (int i = num1.length()-1; i >=0; i--) {
+        int sum = (num1.charAt(i)-ZERO_CHAR)*num2 + carry;
+        carry = sum/10;
+        sb.append(sum%10);
+    }
+    if (carry >0) sb.append(carry);
+    return sb.toString();
+}
+
+
+// 改进版
+private static String ZERO_STR = "0";
+private static char ZERO_CHAR = '0';
+public String multiply(String num1, String num2) {
+    if(ZERO_STR.equals(num1)||ZERO_STR.equals(num2)) return ZERO_STR;
+
+    int len1 = num1.length(),len2 = num2.length();
+    int[] res = new int[len1+len2];
+    for(int i = len1-1;i>=0;i--){
+        int n1 = num1.charAt(i)- ZERO_CHAR;
+        for(int j = len2-1;j>=0;j--){
+            int n2 = num2.charAt(j)- ZERO_CHAR;
+            res[i+j+1] += n1*n2;   // 同位计算结果，例如123，456 ，计算十位  2*6 + 3*5，计算百位 1*6 + 2*5 + 3*4
+        }
+    }
+
+    for(int i = res.length-1;i>0;i--){
+        res[i-1] += res[i]/10;
+        res[i] %= 10;
+    }
+    int startIndex = res[0]==0?1:0;
+
+    StringBuilder sb = new StringBuilder();
+    for(int i = startIndex;i<res.length;i++){
+        sb.append(res[i]);
+    }
+    return sb.toString();
+}
+```
 
 # 58. Length of Last Word(简单)
     Given a string s consists of some words separated by spaces, return the length of the last word in the string. If the last word does not exist, return 0.
 
     A word is a maximal substring consisting of non-space characters only.
 
-* 约束
+* **约束**
   * `1 <= s.length <= 10^4`
 ```java
 public int lengthOfLastWord(String s) {
