@@ -11,6 +11,9 @@
     - [方式三 自定义style元素组件](#方式三-自定义style元素组件)
     - [方式四 原生全局变量](#方式四-原生全局变量)
     - [方式五 原生局部变量](#方式五-原生局部变量)
+- [打包配置](#打包配置)
+  - [webpack](#webpack)
+  - [Vite](#vite)
 
 # 动态组件
 1. 动态添加组件
@@ -223,4 +226,130 @@ element{ /* 注意:当前页面的局部变量无效 */
   font-size:var(--size);
 }
 </style>
+```
+# 打包配置
+## webpack
+**Vue2.x官方推荐构建工具**。
+
+1. 安装`webpack`相关依赖
+```bash
+yarn add webpack webpack-cli webpack-dev-server webpack-merge -D # 依各自环境使用命令
+```
+2. 配置`webpack.config.js`
+   - `entry`: 入口文件
+   - `output`: 输出文件
+   - `module`: 模块配置
+     - `rules`: 规则配置,不同文件后缀的加载器，如:
+       - `vue`使用`vue-loader`
+       - `js`使用`babel-loader`
+       - `css`使用`style-loader`和`css-loader`
+   - `plugins`: 插件配置,需额外安装插件
+     - `HtmlWebpackPlugin` : 生成html文件的模板
+   - `resolve`: 解析配置
+     - `alias`: 别名配置,如`@`指向`src`目录
+```js
+const path = require('path')
+const { VueLoaderPlugin } = require('vue-loader')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  entry: './src/main.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    // filename: 'bundle.js',
+    clean: true,
+  },
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: 'babel-loader'
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }
+    ]
+  },
+  plugins: [
+    new VueLoaderPlugin(),
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    })
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    },
+    extensions: ['.js', '.vue']
+  }
+}
+
+```
+3. 配置`package.json`脚本
+   - 默认是`vue-cli-service`命令执行脚本
+   - 可以使用`webpack`命令执行脚本(需安装`webpack-cli`)
+```json
+"scripts": {
+    "dev:webpack": "webpack serve --mode development",
+    "build:webpack": "webpack --mode production",
+    "preview": "http-server ./dist -p 8888",
+    "help:webpack":"webpack --help",
+    ...
+},
+```
+
+## Vite
+**Vue3.x官方推荐构建工具**。
+
+1. 安装`vite`相关依赖
+```bash
+# vite安装对于nodejs环境要求，vite6+，nodejs版本要求v22+
+yarn add -D vite @vitejs/plugin-vue
+```
+2. 配置`vite.config.js`
+   - `publicDir` 静态资源目录，默认读取项目根目录下的`index.html`，配置之后，会读取`${publicDir}/index.html`
+```js
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
+
+export default defineConfig({
+  plugins: [vue()],
+  publicDir: 'public', // 静态资源目录,默认为`/`项目根目录
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  }
+})
+```
+3. 配置`index.html`(区别于Webpack，需要修改项目源码)
+   - 添加脚本元素`<script type="module" src="/src/main.js"></script>`
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vite + Vue</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- 重要脚本 -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+```
+4. 配置`package.json`脚本
+```json
+  "scripts": {
+    "dev:vite": "vite",
+    "build:vite": "vite build",
+    "preview": "vite preview",
+  },
 ```
