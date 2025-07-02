@@ -197,3 +197,52 @@ export default createRouter({
 ```
 
 ## 路由页面可以跳转，但地址栏无法访问
+原因：
+* SPA 的工作原理：Vue 应用是单页应用，所有路由跳转都由前端 `JavaScript` 处理
+* 服务器配置问题：当你直接访问`http://example.com/about`时，服务器会尝试寻找`/about`路径对应的物理文件
+* 默认行为：如果服务器没有特殊配置，会返回 `404` 错误，因为实际上只有一个`index.html`文件
+
+解决：
+* 修改 Vue Router 模式（**推荐**）:将 Vue Router 的模式从`history`改为`hash`
+  * hash模式，路径和URL会带有`#`，如`http://example.com/#/about`
+    ```js
+    // router/index.js
+    const router = new VueRouter({
+    mode: 'hash', // 将mode从history改为hash
+    routes: [...]
+    })
+    ```
+* **服务器配置**：希望保持history模式（更美观的 URL），则将所有路由请求都重定向到`index.html`
+  * `vite.config.js`配置`historyApiFallback: true`
+    ```js
+    export default defineConfig({
+    plugins: [vue()],
+    server: {
+        historyApiFallback: true, // 关键配置
+    }
+    })
+    ```
+  * **代理配置**
+     * Nginx配置
+        ```conf
+        server {
+        listen 80;
+        server_name example.com;
+        root /path/to/your/app;
+
+        location / {
+            try_files $uri $uri/ /index.html; # 关键配置
+        }
+        }
+        ```
+     * Apache配置`.htaccess`
+        ```conf
+        <IfModule mod_rewrite.c>
+        RewriteEngine On
+        RewriteBase /
+        RewriteRule ^index\.html$ - [L]
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule . /index.html [L]
+        </IfModule>
+        ```
