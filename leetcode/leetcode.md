@@ -35,6 +35,9 @@
 - [40 组合总和 II(中)](#40-组合总和-ii中)
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
 - [43. Multiply Strings(中等)](#43-multiply-strings中等)
+- [45. Jump Game II(中等)](#45-jump-game-ii中等)
+- [46. Permutations(中等)](#46-permutations中等)
+- [47. Permutations II(中等)](#47-permutations-ii中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
@@ -107,6 +110,10 @@
     * 热点代码，JIT编译器会将其编译为本地机器码，大幅提升执行速度，
     * 使用`static`调用，制造**人为触发JIT编译**，一般需要一定次数(如500)
     * 在**LeetCode的评测系统**中:每个测试用例可能运行在独立的JVM实例中（或运行时状态被重置）
+* Leetcode加速
+  * 数据类型尽可能选最小的
+  * (java)使用`static`调用方法，制造人为触发**JIT编译**
+  * 将数据处理放在读取时，例如自定义实现`AbstractList`
 
 # 对一个整数m删除n位数后，顺序不变，输出最大值
 * 题目说明：给定任意一个数字 m，然后给出数字 n，则需在 m 中去掉 n 位数，保持各位顺序不变的情况下，得到最大数。
@@ -2390,6 +2397,246 @@ public String multiply(String num1, String num2) {
         sb.append(res[i]);
     }
     return sb.toString();
+}
+```
+
+# 45. Jump Game II(中等)
+    Given an array of non-negative integers nums, you are initially positioned at the first index of the array.
+
+    Each element in the array represents your maximum jump length at that position.
+
+    Your goal is to reach the last index in the minimum number of jumps.
+
+    You can assume that you can always reach the last index.
+
+* **约束**
+  * `1 <= nums.length <= 3 * 10^4`
+  * `0 <= nums[i] <= 10^5`
+* **思路**
+  * 在当前位置到当前最大跳跃位置之间寻找超过下一个超过当前最大跳跃位置的位置
+  * 即，下一步都尽可能的跳超过当前最大跳跃位置
+```java
+public int jump(int[] nums) {
+    int n = nums.length;
+    if(n== 1 || nums[0] == 0) return 0; // 1个元素或0步
+    int minSteps = 0,curPos = 0;
+    while(curPos<n){
+        int maxPos = curPos+nums[curPos];
+        if(maxPos >= n-1) return minSteps+1; // over n ,return steps+1
+        int nextPos = 0,nextMaxPos = maxPos;
+        for(int i=curPos+1 ;i<=maxPos;i++){
+            if( nums[i] + i > nextMaxPos){
+                nextMaxPos = nums[i] + i;
+                nextPos = i;
+            }
+        }
+        if(nextPos>0){ // exsit next step jump max position more than current jump max position
+            curPos = nextPos;
+            minSteps++;
+        }
+    }
+    return minSteps;
+}
+```
+
+# 46. Permutations(中等)
+    Given an array nums of distinct integers, return all the possible permutations. You can return the answer in any order.
+
+* **约束**
+  * `1 <= nums.length <= 6`
+  * `-10 <= nums[i] <= 10`
+  * All the integers of nums are unique.
+* **思路**:**回溯法**，寻找所有可能
+  * 步骤：
+    * 使用`Set`记录当前已使用过的元素
+    * 每次递归循环都从`0`开始验证，若当前元素已使用过，跳过
+    * 若当前元素未使用过，则添加到当前`Set`中，递归下一个位置搜索
+    * 每次递归结束返回后，移除当前元素，继续匹配下一个元素为当前位置元素
+    * 当搜索位置与数量一致，代表遍历结束，保存当前结果，并推出
+  * **注意**：`Set`使用`LinkedHashSet`，保证结果顺序
+    * 不能使用`HashSet`，底层使用`HashMap`会对key进行hash排序
+* **改进**
+  * 不追加过多集合属性，直接使用原生数组+一个新的值长数组
+  * 将索引值进行交换(需判断是否交换过)，即可代表顺序变更
+* **加速**：纯为了Leetcode调用加速，自定义实现`AbstractList`，将逻辑放到数据读取时处理
+```java
+public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> res = new ArrayList<>();
+    Set<Integer> curr = new LinkedHashSet<>();
+    permute(nums, 0, res, curr);
+    return res;
+}
+public void permute(int[] nums, int index, List<List<Integer>> res,Set<Integer> curr) {
+    if (index == nums.length) {
+        res.add(new ArrayList<>(curr));
+        return;
+    }
+    for (int i = 0; i < nums.length; i++) {
+        int num = nums[i];
+        if (curr.contains(num)) continue; // 待改进项，这一步会递归重复，可优化
+        curr.add(num);
+        permute(nums, index+1, res, curr);
+        curr.remove(num);
+    }
+}
+
+// 官方版
+public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> res = new ArrayList<>();
+    permute(nums, res, 0);
+    return res;
+}
+public void permute(int[] nums, List<List<Integer>> res,int index ) {
+    if (index == nums.length) {
+        List<Integer> cur = new ArrayList<>();
+        for (int i = 0; i < nums.length; i++) {
+            cur.add(nums[i]);
+        }
+        res.add(cur);
+        return;
+    }
+    boolean[] use = new boolean[21]; // 因值范围为-10-10，故最大长度为21
+    for (int i = index; i < nums.length; i++) {
+        if(!use[nums[i]+10]){
+            use[nums[i]+10] = true;
+            // 与交换index位置
+            exch(nums,i,index);
+            permute(nums, res, index+1);
+            // 与index位置再交换回来
+            exch(nums,i,index);
+        }
+    }
+}
+public void exch(int[] nums,int i,int j){
+    int temp = nums[i];
+    nums[i] = nums[j];
+    nums[j] = temp;
+}
+
+// 加速
+public List<List<Integer>> permute(int[] nums) {
+    return new AbstractList<List<Integer>>() {
+        private List<List<Integer>> res;
+        void init(){
+            if(res != null) return;
+            res = new ArrayList<>();
+            permute(0);
+        }
+        @Override
+        public List<Integer> get(int index) {
+            init();
+            return res.get(index);
+        }
+
+        @Override
+        public int size() {
+            init();
+            return 0;
+        }
+        void permute(int index ) {
+            if (index == nums.length) {
+                List<Integer> cur = new ArrayList<>();
+                for (int i = 0; i < nums.length; i++) {
+                    cur.add(nums[i]);
+                }
+                res.add(cur);
+                return;
+            }
+            boolean[] use = new boolean[21]; // 因值范围为-10-10，故最大长度为21
+            for (int i = index; i < nums.length; i++) {
+                if(!use[nums[i]+10]){
+                    use[nums[i]+10] = true;
+                    exch(nums,i,index); // 与交换index位置
+                    permute(index+1);
+                    exch(nums,i,index); // 与index位置再交换回来
+                }
+            }
+        }
+        void exch(int[] nums,int i,int j){
+            int temp = nums[i];
+            nums[i] = nums[j];
+            nums[j] = temp;
+        }
+    };
+}
+```
+
+# 47. Permutations II(中等)
+    Given a collection of numbers, nums, that might contain duplicates, return all possible unique permutations in any order.
+
+* **约束**
+  * `1 <= nums.length <= 8`
+  * `-10 <= nums[i] <= 10`
+* **思路**：**回溯法**，寻找所有可能,与[46题](#46-permutations中等)类似，只是需要处理重复元素
+  * 验证是否已添加过值改为索引校验
+  * 只在添加结果时，根据索引值取出值
+  * 增加一个记录结果已被记录的`Set`，避免重复添加相同结果：根据结果值做`key`
+  * 使用`StringBuilder`构建`key`
+* **改进**：逻辑和[46题](#46-permutations中等)一致
+* **加速**: 同理自定义实现`AbstractList`，逻辑和[46题](#46-permutations中等)一致
+```java
+public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> res = new ArrayList<>();
+    Set<Integer> curr = new LinkedHashSet<>();
+    permute(nums, 0, res, curr,new HashSet<>());
+    return res;
+}
+
+public void permute(int[] nums, int index, List<List<Integer>> res,Set<Integer> curr,Set<String> keys) {
+    if (index == nums.length) {
+        List<Integer> cur = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        for(int i:curr){
+            sb .append(nums[i]).append(",");
+            cur.add(nums[i]);
+        }
+        String key = sb.toString();
+        if (keys.contains(key))  return;
+        keys.add(key);
+        res.add(new ArrayList<>(cur));
+        return;
+    }
+    
+    for (int i = 0; i < nums.length; i++) { 
+        if (curr.contains(i)) continue; // 此步骤允许重复
+        curr.add(i);
+        permute(nums, index+1, res, curr,keys);
+        curr.remove(i);
+    }
+}
+
+// 改进版
+public List<List<Integer>> permuteUnique(int[] nums) {
+    List<List<Integer>> ans = new ArrayList<>();
+    permuteUnique(nums, ans, 0);
+    return ans;
+}
+public void permuteUnique(int[] nums, List<List<Integer>> ans, int idx) {
+    if (idx == nums.length) {
+        ArrayList<Integer> row = new ArrayList<>();
+        for (int num : nums) {
+            row.add(num);
+        }
+        ans.add(row);
+        return;
+    }
+
+    boolean[] use = new boolean[21];
+    for (int i = idx; i < nums.length; i++) {
+        // swap
+        if (!use[nums[i] + 10]) {
+
+            use[nums[i] + 10] = true;
+
+            int temp = nums[i];
+            nums[i] = nums[idx];
+            nums[idx] = temp;
+            permuteUnique(nums, ans, idx + 1);
+            int temp2 = nums[i];
+            nums[i] = nums[idx];
+            nums[idx] = temp2;
+        }
+    }
 }
 ```
 
