@@ -826,9 +826,20 @@ public class BusConfiguration {
 由Netflix提供支持，详情见[Eureka](./eureka.md)
 
 ### Consul
-**统一服务发现和配置管理**
+**统一服务发现和配置管理**,Eureka的替代品
 
-* 安装Consul
+* 安装Consul server
+```bash
+# 下载最新版 (1.16.0示例)
+wget https://releases.hashicorp.com/consul/1.16.0/consul_1.16.0_linux_amd64.zip
+unzip consul_1.16.0_linux_amd64.zip
+sudo mv consul /usr/local/bin/
+
+# 验证安装
+consul --version
+# 启动开发模式
+consul agent -dev -client=0.0.0.0 -ui
+```
 * 依赖
 ```xml
 <dependency>
@@ -858,8 +869,27 @@ public class Application {
         new SpringApplicationBuilder(Application.class).web(true).run(args);
     }
 }
+// DiscoveryClient 可以根据需要拉取一个或多个服务实例列表
+@Service
+public class Services {
+    
+    @Autowired
+    private DiscoveryClient discoveryClient;
+    
+    public String serviceUrl(){
+        List<ServiceInstance> list = discoveryClient.getInstances("service-id");
+        if (!list.isEmpty()){
+            return list.get(0).getUri().toString();
+        }
+        return null;
+    }
+
+    public List<String> getServices(){
+        return discoveryClient.getServices();
+    }
+}
 ```
-* 配置管理
+#### 配置管理(集成Config)
 ```xml
 spring:
   cloud:
