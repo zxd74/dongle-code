@@ -38,6 +38,9 @@
 - [45. Jump Game II(中等)](#45-jump-game-ii中等)
 - [46. Permutations(中等)](#46-permutations中等)
 - [47. Permutations II(中等)](#47-permutations-ii中等)
+- [48. Rotate Image(中等)](#48-rotate-image中等)
+- [49. Group Anagrams(中等)](#49-group-anagrams中等)
+- [50. Pow(x, n)(中等)](#50-powx-n中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
@@ -2637,6 +2640,237 @@ public void permuteUnique(int[] nums, List<List<Integer>> ans, int idx) {
             nums[idx] = temp2;
         }
     }
+}
+```
+
+# 48. Rotate Image(中等)
+    You are given an n x n 2D matrix representing an image, rotate the image by 90 degrees (clockwise).
+
+    You have to rotate the image in-place, which means you have to modify the input 2D matrix directly. DO NOT allocate another 2D matrix and do the rotation.
+
+* **约束**
+* `1 <= matrix.length <= 5`
+* `matrix[i].length == matrix.length`
+* `-1000 <= matrix[i][j] <= 1000`
+* **思路**：**矩阵旋转**，将矩阵分为四个象限，分别旋转
+  * 算法规则：`(i,j)->(j,n--1-i)`
+  * 方式一(基本实现)：提供辅助新数组，遍历赋值，然后将新数组值覆盖原数组
+    * 提供辅助数组
+    * 两次双循环
+  * 方式二：提供辅助判断数组，直接在原数组上操作交换
+    * 提供辅助数组
+    * 单循环
+* **官方其它解法**：对角线反转，再左右反转（**推荐**）
+  * **容易理解**
+  * 无辅助数组(**空间效率高**)
+  * 两次双半循环(内部平均循环n/2次)(**性能差异不大**)
+```java
+// 基本实现
+public void rorate(int[][] matrix){
+    int n = matrix.length,idx=n-1;
+    int[][] res = new int[n][n];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            res[j][idx-i] = matrix[i][j];
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++)
+            matrix[i][j] = res[i][j];
+    }
+}
+// 方式二
+public void rotate(int[][] matrix){
+    int n = matrix.length,idx=n-1; // 定义数组长度，数组索引最大值
+    boolean[][] bs = new boolean[n][n]; // 判断位置是否已处理
+    int i=0,j=0,cur = -1001; // 定义的默认值要超出值范围，否则容易冲突
+    while(i<n && j<n){
+        if(bs[i][j]){ // 若位置已处理，则处理下一个元素
+            j = j==idx?++i:j+1; // 当j到达数组末位时，另起一行,由于是从外向内，故j=i
+            cur = -1001; // 外层循环结束，cur重新赋值默认值
+            continue;
+        }
+        if(cur == -1001) cur = matrix[i][j];// 若curr 为默认值，则赋值为当前元素
+        bs[i][j] = true; // 标记位置已处理
+        // 将i,j 按照规则(i,j)->(j,idx-i)进行索引转换
+        int k = j; 
+        j = idx-i;
+        i = k;
+        int tmp = matrix[i][j]; // 记录被替换的值
+        matrix[i][j] = cur; // 将当前值赋值给被替换的位置
+        cur = tmp; // 将当前值赋值给cur
+    }
+}
+
+// 官方其他版
+public void rotate(int[][] matrix) {
+    int n = matrix.length;
+    for(int i = 0;i<n;i++)
+    {
+        for(int j = i + 1;j<n;j++)
+        {
+            // 延左上到右下对角线翻转
+            int temp = matrix[i][j];
+            matrix[i][j] = matrix[j][i];
+            matrix[j][i] = temp;
+        }
+    }
+    for(int i = 0;i<n;i++)
+    {
+        for(int j = 0;j<n/2;j++)
+        {  
+            // 延每一行中间位置翻转
+            int temp = matrix[i][j];
+            matrix[i][j] = matrix[i][n-1-j];
+            matrix[i][n-1-j] = temp;
+        }
+    }
+}
+```
+
+# 49. Group Anagrams(中等)
+    Given an array of strings strs, group the anagrams together. You can return the answer in any order.
+
+    An Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.
+
+* **约束**
+  * `1 <= strs.length <= 10^4`   
+  * `0 <= strs[i].length <= 100`
+  * `strs[i]` consists of lowercase English letters.
+* **思路**
+  * 循环数组
+    * 获取当前字符，根据字符从小到大排序，并根据其次数组成`key`
+    * 将当前字符存入map相同key的values中
+  * 遍历map：将values存入ans中
+* **改进**
+  * 直接将`String`转`char[]`
+  * 使用`Arrays.sort`对`char[]`排序
+  * 使用`map.computeIfAbsent`，对**缺失key进行初始化**
+  * 在**map初始化缺失key时**，将结果也同步加入结果集中(**引用类型**)
+* **加速**：针对Leetcode加速，自定义实现`AbstractList`，将逻辑放入读取数据时
+```java
+public List<List<String>> groupAnagrams(String[] strs) {
+    List<List<String>> ans = new ArrayList<>();
+    Map<String, List<String>> map = new HashMap<>();
+    for (int i = 0; i < strs.length; i++) {
+        String cur = strs[i];
+        int[] count = new int[26];
+        for (int j = 0; j < cur.length(); j++) {
+            count[cur.charAt(j) - 'a']++;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < 26; j++) {
+            if (count[j] != 0) {
+                sb.append((char)('a' + j));
+                sb.append(count[j]);
+            }
+        }
+        String key = sb.toString();
+        List<String> list = map.getOrDefault(key, new ArrayList<>());
+        list.add(cur);
+        map.put(key, list);
+    }
+    for (List<String> list : map.values()) {
+        ans.add(list);
+    }
+    return ans;
+}
+
+// 改进版
+public List<List<String>> groupAnagrams(String[] strs) {
+    List<List<String>> ans = new ArrayList<>();
+    Map<String, List<String>> map = new HashMap<>();
+    for(String str:strs){
+        char[] chars = str.toCharArray();
+        Arrays.sort(chars);
+        map.computeIfAbsent(new String(chars), k->{
+            List<String> list = new ArrayList<>();
+            ans.add(list);
+            return list;
+        }).add(str);
+    }
+    return ans;
+}
+
+
+// 加速版
+public List<List<String>> groupAnagrams(String[] strs) {
+    return new AbstractList<List<String>>(){
+        List<List<String>> ans;
+        Map<String, List<String>> map;
+        void init(){
+            if(ans != null) return;
+            ans = new ArrayList<>();
+            map = new HashMap<>();
+            groupAnagrams();
+        }
+        @Override
+        public List<String> get(int index) {
+            init();
+            return ans.get(index);
+        }
+
+        @Override
+        public int size() {
+            init();
+            return ans.size();
+        }
+        void groupAnagrams(){
+            for(String str:strs){
+                char[] chars = str.toCharArray();
+                Arrays.sort(chars);
+                map.computeIfAbsent(new String(chars), k->{
+                    List<String> list = new ArrayList<>();
+                    ans.add(list);
+                    return list;
+                }).add(str);
+            }
+        }
+    };
+}
+```
+
+# 50. Pow(x, n)(中等)
+    Implement pow(x, n), which calculates x raised to the power n (i.e., xn).
+
+* **约束**
+  * `-100.0 < x < 100.0`
+  * `-2^31 <= n <= 2^31 - 1`
+  * `-10^4 <= xn <= 10^4`
+* **思路**：没解除完整
+* **改进**
+  * `int*double`不等于`double*double`
+  * `Integer.MIN_VALUE`取绝对值会导致溢出，需转换成double类型
+```java
+// 执行错误
+public double myPow(double x, int n) {
+    int nn = n;
+    if(n<0){
+        n = -n;
+    }
+    double xr = 1;
+    for (int i = 0; i < n; i++) {
+        xr *=x;
+    }
+    return nn<0?1/xr:xr;
+}
+
+// 改进
+public double myPow(double x, int n) {
+    double ans=1,nn = n;
+    
+    if(nn<0) nn=-1*nn; // 取绝对值，若为Integer.MIN_VALUE，会溢出
+    
+    while(nn>0){
+        if(nn%2==0){ // 偶数，两数相乘
+            x=x*x; // x^2 每次偶数都代表可以直接平方
+            nn=nn/2;
+        }else{ // 奇数，乘单次x
+            ans= ans*x;
+            nn--;
+        }
+    }
+    return (n>=0)? ans: 1/ans; 
 }
 ```
 
