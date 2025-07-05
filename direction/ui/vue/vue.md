@@ -1,3 +1,6 @@
+- [创建项目](#创建项目)
+  - [项目模板](#项目模板)
+    - [离线模板](#离线模板)
 - [动态组件](#动态组件)
 - [通信](#通信)
   - [组件参数传递](#组件参数传递)
@@ -14,6 +17,52 @@
 - [打包配置](#打包配置)
   - [webpack](#webpack)
   - [Vite](#vite)
+
+# 创建项目
+* 创建空白项目`vue create`
+```bash
+vue create demo
+# -n 忽略.git初始化，默认会初始化.git目录
+```
+* 创建模板项目`vue init`
+```bash
+# vue init [options] <template> <project-name>
+vue init webpack demo # 如webpack
+# -c --clone 使用git clone方式克隆template
+# --offline 使用本地模板
+```
+* 第三方工具创建：如[`npm` + `vie`](#vite)
+```bash
+npm create vite demo #--template vue
+```
+* **手动创建**
+  * 创建文件
+```txt
+/demo           -- 项目根目录
+  /src              -- 源码目录
+    /assets             -- 静态资源(可选)
+    /components         -- 公共组件(可选)
+    /views              -- 页面组件(可选)
+    App.vue             -- 主组件
+    main.js             -- 入口文件，创建Vue(v2.x)或App(v3.x)
+  package.json      -- 负责包管理：依赖，入口，脚本等
+  vue.config.json   -- 负责项目配置(可选)：打包，代理，路径等,其打包工具，类似，如vite：vite.config.js
+  README.md         -- 项目说明
+```
+## 项目模板
+* 可在[Github](https://github.com/vuejs-templates)查看官方支持的模板：webpack, pwa, simple
+  * 其它模板可以自定义或有第三方提供
+  * 亦可以由第三方命令自身支持，如vite
+* **模板存储**路径`C:\Users\<UserName>\.vue-templates`
+
+### 离线模板
+* 每次创建模板项目时都会从远程仓库拉取模板，可以通过`--offline`参数指定本地模板
+* **默认本地模板**路径为`C:\Users\<UserName>\.vue-templates`
+  * 可以根据需要变更
+```bash
+vue init --offline webpack demo
+# 提示 > Use cached template at ~\.vue-templates\webpack
+```
 
 # 动态组件
 1. 动态添加组件
