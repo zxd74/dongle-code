@@ -41,6 +41,8 @@
 - [48. Rotate Image(中等)](#48-rotate-image中等)
 - [49. Group Anagrams(中等)](#49-group-anagrams中等)
 - [50. Pow(x, n)(中等)](#50-powx-n中等)
+- [53. Maximum Subarray(简单)](#53-maximum-subarray简单)
+- [54. Spiral Matrix(中等)](#54-spiral-matrix中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
@@ -2871,6 +2873,135 @@ public double myPow(double x, int n) {
         }
     }
     return (n>=0)? ans: 1/ans; 
+}
+```
+
+# 53. Maximum Subarray(简单)
+    Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.
+
+    A subarray is a contiguous part of an array.
+
+* **约束**
+  * `1 <= nums.length <= 3 * 10^4`
+  * `-10^5 <= nums[i] <= 10^5`
+  * `nums` contains at least one positive number.
+* **思路**
+  * 分别定义最大和，和当前和最大，当前对比位
+  * 默认最大和，当前最大和为头元素
+  * 循环数组`(idx<nums.length)`
+    * 若`sum<0`
+      * 则对比元素是否小于等于sum，则取下一位(没有对比性)
+      * 否则取当前元素为当前sum
+    * 否则`sum>=0`，进行累加
+    * 每次循环，取max,sum最大值最为max
+* **简化**
+  * 只要sum<0,后面的和都没有必要再和后面的和合并
+  * 每次都要对比sum,max取最大值
+```java
+public int maxSubArray(int[] nums) {
+    int idx=0,sum=nums[0],max=nums[0];
+    while (++idx<nums.length) {
+        int num = nums[idx];
+        if(sum<0){ // 若当前和小于0，则比较num，sum
+            if(num<=sum){ // 若num比sum还小，后面和没必要再算到当前sum中
+                if (idx<nums.length-1) sum = nums[++idx]; // 若下一个元素还存在，则从下一个元素作为新的和
+            }else sum = num; // 若num比sum大，则当前sum最大为num
+        }else sum+=num; // 若sum小于0，则继续累加
+        max = Math.max(max, sum); // 每次处理一个数都要进行max与当前sum比较
+    }
+    return max;
+}
+// 简化：只要sum<0,后面的和都没有必要再与其合并；每次都要对比sum,max取最大值
+public int maxSubArray(int[] nums) {
+    int sum=0,max=nums[0];
+    for (int i = 0; i < nums.length; i++) {
+        sum+=nums[i];
+        max = Math.max(sum, max); // 重点，每次都要对比sum,max取最大值
+        if(sum<0) sum=0; // 若sum<0 则代表前面的和没有必要再和后面的和合并
+    }
+    return max;
+}
+```
+
+# 54. Spiral Matrix(中等)
+    Given an m x n matrix, return all elements of the matrix in spiral order.
+
+* **约束**
+  * `m == matrix.length`
+  * `n == matrix[i].length`
+  * `1 <= m, n <= 10`
+  * `-100 <= matrix[i][j] <= 100`
+* **思路**
+  * 定义层数，及正负方向(正：左右，上下；负：右左，下上)
+  * 当负转正时，层数+1
+  * 每层位置索引范围`i:l-1,n-l`,`j:l-1,m-l`
+  * **结束位点**(**重点**): 由外围大小先行决定
+    * 当外围为奇数时，结束方向一定为正(左右)：`i==n/2 && j==m-l`
+    * 当外围为偶数时，结束方向一定为负(下上)：`i==n/2 && j==m/2`
+* **改进**：**边界限定法**
+  * 尝试每处理一周将外围消减(虚拟，限定边界)，直到超出边界，**可读性高**
+  * 时间复杂度`O(n/2+m/2)=O(N)` 空间复杂度`O(1)`
+```java
+public List<Integer> spiralOrder(int[][] matrix) {
+    List<Integer> res = new ArrayList<>();
+    int n = matrix.length,m = matrix[0].length;
+    int l = 1; // 右外到内层数
+    boolean flag = true; // true 正向 左右，上下；false代表反向 右左，下上
+    for(int i=0,j=0;i>=l-1 && i<=n-l && j>=l-1 && j<=m-l;){
+        res.add(matrix[i][j]);
+        if (flag) {
+            if(j<m-l) j++;
+            else if(i<n-l) i++;
+            else {
+                if(n%2==1 && i==n/2 && j==m-l) break; // 外围是奇数时，方向一定是左右，右结束
+                j--;
+                flag = false;
+            }
+        }else{
+            if(j>l-1) j--;
+            else if(i>l) i--;
+            else {
+                if(n%2==0 && i==n/2 && j==m/2) break; // 外围是偶数时，结束位置一定是在下上，下结束
+                j++;
+                flag = true;
+                l++;
+            }
+        }
+    }
+    return res;
+}
+
+// 改进版：每处理一周，将外围消减，直到外围为0
+public List<Integer> spiralOrder(int[][] matrix) {
+    List<Integer> res = new ArrayList<>();
+    int n = matrix.length,m = matrix[0].length;
+    int i = 0,j = 0;
+    while(i<n-1 && j< m-1){ // 每次循环会退出外层，内层相当于全新的开始
+        // top row
+        for(int k = j;k<m;k++){
+            res.add(matrix[i][k]);
+        }
+        i++; // 行数增加，因为最上边已经遍历过了
+        // right col
+        for(int k = i;k<n;k++){
+            res.add(matrix[k][m-1]);
+        }
+        m--; // 列数消减 ，因为最右边已经遍历过了
+        if(i<n){
+            for(int k=m;k>=j;k--){ 
+                res.add(matrix[n-1][k]);
+            }
+            n--; // 行数消减，因为最下边已经遍历过了
+        }
+
+        if(j<=m){
+            for(int k = n;k>=i;k--){
+                res.add(matrix[k][j]);
+            }
+            j++; // 列数增加，因为最左边已经遍历过了
+        }
+    }
+    return res;
 }
 ```
 
