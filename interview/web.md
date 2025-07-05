@@ -1,4 +1,116 @@
+# CSS
+## 跑马灯文字效果
+* 所有文字单字使用一个元素包裹，如`<span>`
+* 创建一个动画
+* 每个元素增加动画`animation`属性
+* 按顺序给元素`nth-child(n)`增加`animation-delay`动画延迟属性
+```html
+<body>
+    <div class="content">
+        <span>D</span>
+        <span>O</span>
+        <span>N</span>
+        <span>G</span>
+        <span>L</span>
+        <span>E</span>
+    </div>
+</body>
+<style type="text/css">
+    :root{
+        background-color: black;
+        --delay:0.1s;
+    }
+    .content span{
+        color: red;
+        animation: dongle 1s infinite ease-in-out alternate;
+        font-size: 50px;
+    }
+    @keyframes dongle {
+        to{
+            color: white;
+        }
+    }
+    .content span:nth-child(1) {
+        animation-delay: calc(1*var(--delay));
+    }
+    .content span:nth-child(2) {
+        animation-delay: calc(2*var(--delay));
+    }
+    .content span:nth-child(3) {
+        animation-delay: calc(3*var(--delay));
+    }
+    .content span:nth-child(4) {
+        animation-delay: calc(4*var(--delay));
+    }
+    .content span:nth-child(5) {
+        animation-delay: calc(5*var(--delay));
+    }
+    .content span:nth-child(6) {
+        animation-delay: calc(6*var(--delay));
+    }
+
+</style>
+```
+**考点**
+1. `nth-child(n)`
+2. `animation`
+3. `animation-delay`
+4. 延迟计算
+   1. `calc()`
+   2. `var()` 引用自定义变量
+   3. 自定义变量`--xxx`，使用`:root`定义
+
+
 # JavaScript(JS)
+## 并发相关
+### 并发执行
+**思路**
+* 使用`async`异步函数创建请求
+  * 使用完成数检测任务完成
+  * 保留任务顺序，需使用索引保存结果
+  * 当索引超出后，不再创建索引
+  * 使用`await`等待异步函数执行结束
+* 使用最小并发数启动并发任务
+```js
+function task(){}
+function request(urls,max) {
+    return new Promise((resolve)=>{
+        const res = [];
+        let nextIndex = 0;
+        let finnished = 0;
+        async function _request() { // 异步请求函数
+            if(nextIndex >= urls.length) {
+                return;
+            }
+            const  i = nextIndex;
+            const url = urls[i++];
+            const result = await task(url);
+
+            // res.push(result);
+            res[i] = result; // 保留任务顺序
+            finnished++; // 记录已完成任务数
+
+            if(finnished === urls.length){
+                resolve(res); // 所有任务完成，回调成功结果
+                return;
+            }
+            _request(); // 继续下一个任务
+        }
+        for(let i=0;i<MIN(urls.length,max);i++) { // 启动并发任务
+            _request();
+        }
+    })
+}
+```
+**考点**
+1. `async`异步函数，只有通过异步才能创建并发
+2. `Promise`
+3. `await`
+4. `Promise.all`与`Promise.race`区别
+   1. `Promise.all`所有任务完成才返回
+   2. `Promise.race`任意一个任务完成就返回
+5. `Promise`回调函数
+
 
 ## 请求相关
 ### 给Fetch怎加超时功能
@@ -67,6 +179,89 @@ const requestC = createRequestWithTimeout(3000);
 5. **公共方法**：传递timeout参数，返回包装函数
 
 ## Promise相关
+### 给定大量长任务执行，优化使其不阻塞
+```txt
+运行一个耗时大批量任务,每次调用一次
+若需要异步执行任务，请返回Promise
+要尽快完成，同时不要让页面产生卡顿（检验方式：动画）
+尽量多的兼容浏览器
+```
+**思路**
+* `requestIdleCallback`：**空闲回调**函数（部分浏览器支持）
+* `requestAnimationFrame`：**动画帧回调**函数(需要自定义实现)
+```js
+function execute(tasks) { // tasks.lenth is large
+    tasks.forEach(task=>runTask(task));
+}
+
+function runTask(task) { // 若task也是耗时任务，那么仍旧会卡顿，需要优化任务逻辑
+    return new Promise((resolve)=> _run(task,resolve));
+}
+function _run(task,callback){
+    requestIdleCallback((dealine)=>{
+        if(dealine.timeRemaining()>0){
+            task();
+            callback();
+        }else{
+            _run(task,callback);
+        }
+    })
+    // const start = Performance.now();
+    // requestAnimationFrame(()=>{
+    //     if(Performance.now()-start<16){ 
+    //         task();
+    //         callback();
+    //     }else{
+    //         _run(task,callback);
+    //     }
+    // })
+}
+```
+**考点**
+1. `requestIdleCallback`：**空闲回调**函数（部分浏览器支持）
+2. `requestAnimationFrame`：**动画帧回调**函数(需要自定义实现)
+3. **公共方法**：传递任务，返回Promise
+4. **注意**：若单任务也是耗时任务，那么仍旧会卡顿
+
+### 给定一个Promise函数，将给定字符串中的内容异步替换成Promise返回值
+```txt
+给定一个异步函数getName，返回Promise
+给定一个template字符串，其中包含N多个数字，使用其它符号分割
+根据匹配到的整个数字通过getName获取结果只，然后替换，然后输出结果
+```
+**思路**
+* 先匹配
+* 根据匹配结果异步执行
+* 等待所有异步任务完成
+* 最后通过替换+关联结果（数组方法`shift`）：肯定一一对应
+* **注意**：不能根据匹配列表的内容进行替换查询
+  * 容易错位匹配，如分别存在15，1，5，
+    * 15会替换成`namename1namename5`，理论应该为`name15`
+      * 15替换成`name15`
+      * 1再替换`namename1name5`
+      * 5再替换`namename1namename5`
+```js
+const getName = (num)=> Promise.resolve("name" + num); // 模拟异步函数
+
+const template = '15,1,5,6,8,,,5,99,655,....45,..3';
+
+(async ()=>{
+    const matchs = template.match(/\d+/g);
+    let names = matchs.map(getName)
+    names = await Promise.all(names);
+    const result = template.replace(/\d+/g,()=>{ // replace匹配的顺序和matchs匹配顺序一致
+        return names.shift(); // 获取并移除第一个元素
+    })
+})();
+```
+**考点**
+1. `Promise`异步操作
+2. `Promise.all`异步操作
+3. `match`字符串匹配
+4. `replace`字符串替换
+5. `shift`数组移除并返回first元素
+6. **注意**：字符串替换时不能根据匹配列表的内容进行替换查询
+
 ### 给定Promise输出顺序
 ```js
 Promise.resolve()
