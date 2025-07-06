@@ -43,6 +43,9 @@
 - [50. Pow(x, n)(中等)](#50-powx-n中等)
 - [53. Maximum Subarray(简单)](#53-maximum-subarray简单)
 - [54. Spiral Matrix(中等)](#54-spiral-matrix中等)
+- [55. Jump Game(中等)](#55-jump-game中等)
+- [56. Merge Intervals(中等)](#56-merge-intervals中等)
+- [57. Insert Interval(中等)](#57-insert-interval中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
@@ -3002,6 +3005,172 @@ public List<Integer> spiralOrder(int[][] matrix) {
         }
     }
     return res;
+}
+```
+# 55. Jump Game(中等)
+    You are given an integer array nums. You are initially positioned at the array's first index, and each element in the array represents your maximum jump length at that position.
+
+    Return true if you can reach the last index, or false otherwise.
+
+* **约束**
+  * `1 <= nums.length <= 3 * 10^4`
+  * `0 <= nums[i] <= 10^5`
+  * `nums[0] != 0`
+* **思路**
+  * 求每走一步所能**剩余最大步数**
+    * 若等于0，且未走完，则代表false
+    * 否则继续下一步
+  * 最终返回true
+* **优化**：比较**最大跳跃位点(索引值)**
+```java
+public boolean canJump(int[] nums) {
+    int max=0,n=nums.length;
+    for (int i = 0; i < n; i++) {
+        if ((max=Math.max(max,nums[i]))==0 && i<n-1)  return false;
+        max--;
+    }
+    return true;
+}
+
+// 优化：对比最大位点
+public static boolean canJump(int[] nums) 
+{
+    int maxjump = 0;
+    for(int i=0; i<nums.length; i++){
+        if(i > maxjump ) return false;
+        maxjump = Math.max(maxjump , i+ nums[i]);
+    }        
+    return true;
+}
+```
+# 56. Merge Intervals(中等)
+    Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.
+
+* **约束**
+  * `1 <= intervals.length <= 10^4`
+  * `intervals[i].length == 2`
+  * `0 <= starti <= endi <= 10^4`
+* **思路**
+  * 如数组无效，则原路返回
+  * 先按头元素排序，再比较已处理的集合的尾元素与当前集合集合的头元素
+    * 若尾元素小，则合并，取最大尾元素(当前集合尾元素)
+    * 否则，添加当前集合，并更新当前集合为下一个集合
+  * 由于存在合并情况，所以不能直接初始化为数组形式，应采用集合形式
+* **优化**：
+  * 以最大二维头元素+1做数组长度，关联头元素和尾元素
+    * 当二维头元素相同时，取最大尾元素
+  * 记录已处理区间索引，是否需要合并，合并区间头元素
+  * 当存在尾元素不为0时
+    * 若无区间头元素，则记录为区间头元素
+    * 取最大尾元素
+  * 若当前元素为尾元素时
+    * 则对区间索引重置新的区间
+    * 并重置下一轮尾元素，头元素
+  * 若存在最后一个区间，则处理
+  * 若区间数未变更，则直接返回
+  * 否则，重新创建数组，按区间数处理赋值，并返回
+* **注意**
+  * 前一个区间尾元素和后一个区间头元素相差1时，应合并
+```java
+public int[][] merge(int[][] intervals) {
+    if (intervals == null || intervals.length == 0 || intervals.length == 1)  return intervals;
+    Arrays.sort(intervals, Comparator.comparingInt(o -> o[0]));
+    List<int[]> list = new ArrayList<>();
+    for (int[] interval : intervals) {
+        if (list.isEmpty() || list.get(list.size() - 1)[1] < interval[0]) {
+            list.add(interval);
+        } else {
+            list.get(list.size() - 1)[1] = Math.max(list.get(list.size() - 1)[1], interval[1]);
+        }
+    }
+    return list.toArray(new int[list.size()][]);
+}
+
+// 优化
+public int[][] merge(int[][] intervals) {
+    int max = 0; // 记录二维数组首元素最大值
+    for (int i = 0; i < intervals.length; i++) max = Math.max(intervals[i][0], max);
+
+    int start,end;
+    int[] mp = new int[max + 1];  // 以二维首元素最大值取得数组长度？
+    for (int i = 0; i < intervals.length; i++) {
+        start = intervals[i][0];
+        end = intervals[i][1];
+        // 重点 end+1避免出现与下一个区间相差1的区间，应该合并
+        mp[start] = Math.max(end+1, mp[start]); // 当存在相同首元素时，取最大。
+    }
+
+    int idx = 0; // 记录已处理区间索引
+    start = -1;end = -1; // 重置区间头元素，尾元素 为-1
+    for (int i = 0; i < mp.length; i++) { // mp相当于已经对首元素排序
+        if (mp[i] != 0) {
+            if (start == -1) start = i;
+            end = Math.max(mp[i]-1, end); // 取实际end值
+        }
+        if (end == i) { // 当匹配到end时，记录完整区间
+            intervals[idx++] = new int[] { start, end };
+            start = -1;end = -1; // 重置区间头尾
+        }
+    }
+
+    if (start != -1) { // 补充最后一个区间
+        intervals[idx++] = new int[] { start, end };
+    }
+    if (intervals.length == idx) { // 若区间数未发生变化，直接返回
+        return intervals;
+    }
+
+    int[][] res = new int[idx][]; // 区间数变更，则重新创建数组
+    for (int i = 0; i < idx; i++) {
+        res[i] = intervals[i];
+    }
+
+    return res;
+}
+```
+# 57. Insert Interval(中等)
+    You are given an array of non-overlapping intervals intervals where intervals[i] = [starti, endi], representing the start and the end of the ith interval and an integer newInterval where newInterval = [start, end]. Insert newInterval into intervals such that intervals is still sorted in ascending order and does not have any overlapping intervals (merge overlapping intervals if necessary).
+    Insert newInterval into intervals such that intervals is still sorted in ascending order and does not have any overlapping intervals (merge overlapping intervals if necessary).
+
+    Return an array of integers representing the new intervals that form the union of the original intervals and the new interval.
+
+* **约束**
+  * `1 <= intervals.length <= 10^4`
+  * `intervals[i].length == 2`
+  * `0 <= starti <= endi <= 10^4`
+* **思路**: [参考56题](#56-merge-intervals中等)
+  * 在获取二维数组最大头元素后，再与新区间头元素对比
+  * 在映射二维数组的头尾元素后，再将新区间头尾映射
+  * **缺陷**
+    * 由于二维区间本身已经排序无重复，继续原来逻辑，会导致其它区间被重复处理，且没有变更
+* **改进**
+```java
+public int[][] insert(int[][] intervals, int[] newInterval) {
+    int max = 0;
+    for (int[] interval : intervals) {
+        max = Math.max(max, interval[0]);
+    }
+    max = Math.max(max, newInterval[0]);
+    int[] mp = new int[max + 1];
+    for (int[] interval : intervals) {
+        mp[interval[0]] = Math.max(interval[1]+1, mp[interval[0]]);
+    }
+    mp[newInterval[0]] = Math.max(newInterval[1]+1, mp[newInterval[0]]);
+
+    int start = -1,end =-1,r=0;
+    int[][] res = new int[intervals.length+1][2];
+    for (int i = 0; i < mp.length; i++) {
+        if(mp[i]>0){
+            if(start==-1) start = i;
+            end = Math.max(mp[i]-1,end);
+        }
+        if(end == i){
+            res[r++] = new int[]{start,end};
+            start = -1;end =-1;
+        }
+    }
+    if(start!=-1) res[r++] = new int[]{start,end};
+    return Arrays.copyOf(res,r);
 }
 ```
 
