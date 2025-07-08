@@ -47,6 +47,11 @@
 - [56. Merge Intervals(中等)](#56-merge-intervals中等)
 - [57. Insert Interval(中等)](#57-insert-interval中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
+- [59. Spiral Matrix II(中等)](#59-spiral-matrix-ii中等)
+- [61. Rotate List(中等)](#61-rotate-list中等)
+- [62. Unique Paths(中等)](#62-unique-paths中等)
+- [63. Unique Paths II(中等)](#63-unique-paths-ii中等)
+- [64. Minimum Path Sum(中等)](#64-minimum-path-sum中等)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
 - [69. Sqrt(x)(简单)](#69-sqrtx简单)
@@ -3143,7 +3148,15 @@ public int[][] merge(int[][] intervals) {
   * 在映射二维数组的头尾元素后，再将新区间头尾映射
   * **缺陷**
     * 由于二维区间本身已经排序无重复，继续原来逻辑，会导致其它区间被重复处理，且没有变更
-* **改进**
+* **通用**
+  * 分别找到新区间头尾元素在二维数组中的位置
+  * 若头尾索引无效，则代表新增
+  * 否则代表合并
+* **改进**：不要想着同时处理，并且考虑合并情况
+  * 主要思想：寻找头尾合适位置
+  * 前面的无需处理
+  * 当前的和后面小于新数组的头节点，合并到新区间
+  * 结果循环加入前面的，当前的(合并后的新区间)，后面的
 ```java
 public int[][] insert(int[][] intervals, int[] newInterval) {
     int max = 0;
@@ -3172,6 +3185,99 @@ public int[][] insert(int[][] intervals, int[] newInterval) {
     if(start!=-1) res[r++] = new int[]{start,end};
     return Arrays.copyOf(res,r);
 }
+
+// 通用：耗时
+public int[][] insert(int[][] intervals, int[] newInterval) {
+    if (intervals.length == 0) {
+        return new int[][]{newInterval};
+    }
+
+    int startIndex = binarySearch(intervals, newInterval[0], 0,true);
+    int endIndex = binarySearch(intervals, newInterval[1],startIndex, false);
+
+    List<int[]> result = new ArrayList<>();
+
+    // No overlap; insert directly
+    if (startIndex == -1 || endIndex == -1 || startIndex > endIndex) {
+        int i = 0;
+        while (i < intervals.length && intervals[i][0] < newInterval[0]) {
+            result.add(intervals[i++]);
+        }
+        result.add(newInterval);
+        while (i < intervals.length) {
+            result.add(intervals[i++]);
+        }
+        return result.toArray(new int[0][]);
+    }
+
+    // Add intervals before merge
+    for (int i = 0; i < startIndex; i++) {
+        result.add(intervals[i]);
+    }
+
+    // Merge overlapping intervals
+    int mergedStart = Math.min(intervals[startIndex][0], newInterval[0]);
+    int mergedEnd = Math.max(intervals[endIndex][1], newInterval[1]);
+    result.add(new int[]{mergedStart, mergedEnd});
+
+    // Add intervals after merge
+    for (int i = endIndex + 1; i < intervals.length; i++) {
+        result.add(intervals[i]);
+    }
+
+    return result.toArray(new int[0][]);
+}
+private int binarySearch(int[][] arrs, int point, int start,boolean isLower) {
+    int lo = 0,hi = arrs.length - 1,mid = lo + (hi - lo) / 2;
+    int result = -1;
+    if(start<0) start = 0;
+
+    if (isLower) {
+        while (lo <= hi) {
+            if (arrs[mid][1] < point) {
+                lo = mid + 1;
+            } else {
+                result = mid;
+                hi = mid - 1;
+            }
+        }
+    } else {
+        while (lo <= hi) {
+            if (arrs[mid][0] > point) {
+                hi = mid - 1;
+            } else {
+                result = mid;
+                lo = mid + 1;
+            }
+        }
+    }
+    return result;
+}
+
+// 改进版
+public int[][] insert(int[][] intervals, int[] newInterval) {
+    List<int[]> result = new ArrayList<>();
+    int n = intervals.length;
+    int i=0;
+    while(i<n && intervals[i][1]<newInterval[0]){
+        result.add(intervals[i++]);
+    }
+    while(i<n && intervals[i][0]<=newInterval[1]){
+        newInterval[0]= Math.min(newInterval[0],intervals[i][0]);
+        newInterval[1]= Math.max(newInterval[1],intervals[i][1]);
+        i++;
+    }
+    result.add(newInterval);
+    while(i<n){
+        result.add(intervals[i++]);
+    }
+    // return result.toArray(new int[result.size()][]);
+    int [][] new_result = new int[result.size()][2];
+    for(int j=0;j<result.size();j++){
+        new_result[j]=result.get(j);
+    }
+    return new_result;
+}
 ```
 
 # 58. Length of Last Word(简单)
@@ -3189,6 +3295,281 @@ public int lengthOfLastWord(String s) {
     return end - s.lastIndexOf(' ', end);
 }
 ```
+# 59. Spiral Matrix II(中等)
+    Given a positive integer n, generate an n x n matrix filled with elements from 1 to n2 in spiral order.
+
+* **约束**
+  * `1 <= n <= 20`
+* **思路**
+  * 分别从上，右，下，左填充
+  * 填充时，判断是否越界，越界则退出,并将越界修正
+  * 每完整轮填充后，缩小边界
+```java
+public int[][] generateMatrix(int n) {
+    int[][] res = new int[n][n];
+    int num = 1;
+    for(int k=0;k<n;k++,n--){  // k作为每轮起始位置，最小边界，n为最大边界
+        int i = k,j = k;
+        while(j<n){
+            res[i][j++] = num++;
+        }
+        j--; // j==n => j==n-1 // 修正溢出位置
+
+        // right
+        while((++i)<n){
+            res[i][j] = num++;
+        }
+        i--; // i==n => i==n-1
+
+        // bottom
+        while((--j)>=k){
+            res[i][j] = num++;
+        }
+        j++; // j==k-1 > j==k
+
+        // left
+        while((--i)>k){
+            res[i][j] = num++;
+        } 
+    }
+    return res;
+}
+```
+# 61. Rotate List(中等)
+    Given the head of a linked list, rotate the list to the right by k places.
+
+* **约束**
+  * `The number of nodes in the list is in the range [0, 500]`
+  * `-100 <= Node.val <= 100`
+  * `0 <= k <= 2 * 10^9`
+* **思路**
+  * 先遍历链表，计算链表长度
+  * 计算实际需要旋转的次数`k = k % len`
+  * 若`k == 0`，则无需旋转
+  * 否则，将链表分为两部分，将后k个节点放到链表头部，将前`len-k`个节点放到链表尾部
+  * **注意**：前面`len-k`的链表尾部要置空，否则会形成环
+* **改进**
+  * 计算长度之后，若`k!=0`，将链表首尾相连，形成环
+  * 然后从链表头部开始，跳过`len-k`个节点，将链表断开，形成新的链表尾部
+  * 将后面的作为链表头部(，由于前面已经做了首位相连，故无需额外处理头尾问题)
+```java
+public ListNode rotateRight(ListNode head, int k) {
+        if(head == null || head.next == null || k == 0) return head;
+        int len = 1;
+        ListNode next = head;
+        while(next.next != null){
+            len++;
+            next = next.next;
+        }
+        k = k % len;
+        if(k == 0) return head;
+
+        ListNode first = new ListNode(-1,head);
+        next = head;
+
+        int pos = 1; // 获取下一个即将旋转的next节点
+        while (pos<len-k) {
+            pos++;
+            next = next.next;
+        }
+
+        ListNode temp = next.next; // 记录寻转节点
+        next.next = null; // 将旋转节点从前一个节点断开
+        next = temp; // 将next指向旋转节点
+
+        temp = first.next; // 记录当前first.next
+        first.next = next; // 将旋转节点放到first.next
+        while(next.next != null){ // 遍历旋转节点到最后节点
+            next = next.next;
+        }
+        next.next = temp; // 将旋转节点最后节点指向之前记录的first.next
+        
+        return first.next;
+}
+// 改进
+public ListNode rotateRight(ListNode head, int k) {
+    if(head == null || head.next == null || k == 0) return head;
+    int len = 1;
+    ListNode next = head;
+    while(next.next != null){
+        len++;
+        next = next.next;
+    }
+    k = k % len;
+    if(k == 0) return head;
+    next.next = head; // 将链表首尾相连，避免后续处理
+
+    int skip = len-k; // 获取跳跃个数
+    ListNode newLast = head;
+    for(int i = 1; i < skip; i++){
+        newLast = newLast.next;
+    }
+    head = newLast.next;
+    newLast.next = null;
+    return head;
+}
+```
+# 62. Unique Paths(中等)
+    There is a robot on an m x n grid. The robot is initially located at the top-left corner (i.e., grid[0][0]). The robot tries to move to the bottom-right corner (i.e., grid[m - 1][n - 1]). The robot can only move either down or right at any point in time.
+
+    Given the two integers m and n, return the number of possible unique paths that the robot can take to reach the bottom-right corner.
+
+
+* **约束**
+  * `1 <= m, n <= 100`
+* **思路**：动态规划
+  * 若**任一方向到达边界，则只有一种路径**
+  * 否则，存在两种路径，分别从右和从下移动一步
+  * **优化**：可使用记忆化搜索
+    * 存在超时问题：当`i+1,j+1`和`j+1,i+1`对应同一个位置，会导致重复记录
+    * 适用二维数组存储位置结果
+* **其他**：从终点向起点合并计算
+  * 循环法代替递归
+  * 从后向前合并结果
+  * 二维数组填充1
+```java
+public int uniquePaths(int m, int n) {
+    return uniquePaths(m, n,1,1);
+}
+public int uniquePaths(int m,int n,int i,int j){
+    if(i == m || j == n) return 1;
+    return uniquePaths(m,n,i+1,j)+uniquePaths(m,n,i,j+1);
+}
+
+// 优化
+public int uniquePaths(int m, int n) {
+    return uniquePaths(m, n,new int[m][n],0,0);
+}
+public int uniquePaths(int m,int n,int[][] arr,int i,int j){ // 超时问题
+    if(i == m-1 || j == n-1) return 1;
+    if (arr[i][j] != 0) return arr[i][j];
+    arr[i][j] = uniquePaths(m,n,arr,i+1,j) + uniquePaths(m,n,arr,i,j+1);
+    return arr[i][j];
+}
+
+// 其他解法
+public int uniquePaths(int m, int n) {
+    int[][] dp = new int[m][n];
+    dp[m-1][n-1] = 1;
+    
+    for (int i = m - 1; i >= 0; i--) {
+        for (int j = n - 1; j >= 0; j--) {
+            if (i + 1 < m)
+                dp[i][j] += dp[i+1][j]; // move down
+            if (j + 1 < n)
+                dp[i][j] += dp[i][j+1]; // move right
+        }
+    }
+    return dp[0][0];
+}
+```
+# 63. Unique Paths II(中等)
+    You are given an m x n integer array grid. There is a robot initially located at the top-left corner (i.e., grid[0][0]). The robot tries to move to the bottom-right corner (i.e., grid[m - 1][n - 1]). The robot can only move either down or right at any point in time.
+
+    An obstacle and space are marked as 1 or 0 respectively in grid. A path that the robot takes cannot include any square that is an obstacle.
+
+    Return the number of possible unique paths that the robot can take to reach the bottom-right corner.
+
+* **约束**
+  * `m == obstacleGrid.length`
+  * `n == obstacleGrid[i].length`
+  * `1 <= m, n <= 100`
+  * `obstacleGrid[i][j]` is `0` or `1`.
+* **思路**：动态规划,[参考62题](#62-unique-paths中等)
+  * 若超出边界或遇到障碍，则返回0
+  * 若能到达终点，则返回1
+  * 若当前位置已被计算过，则返回计算值
+  * 否则，返回向右向下的路径之和
+```java
+public int uniquePathsWithObstacles(int[][] grid) {
+    int m = grid.length,n = grid[0].length;
+    int[][] dp = new int[m][n];
+    for (int i = 0; i < m; i++) Arrays.fill(dp[i],-1); // 由于存在阻塞非阻塞情况，用0代表阻塞，则用-1代表默认无效值
+    return uniquePathsWithObstacles(grid,dp,m, n,0,0);
+}
+public int uniquePathsWithObstacles(int[][] grid,int[][] dp,int m,int n,int i,int j){ // 超时问题
+    if(i==m || j == n || grid[i][j] == 1) return 0;
+    if (i == m-1 && j == n-1) return 1;
+    if (dp[i][j] != -1) return dp[i][j];
+    dp[i][j] = uniquePathsWithObstacles(grid,dp,m,n,i+1,j) + uniquePathsWithObstacles(grid,dp,m,n,i,j+1);
+    return dp[i][j];
+}
+```
+
+# 64. Minimum Path Sum(中等)
+    You are given a m x n grid filled with non-negative numbers. Let each element of the grid represent the cost of moving through that cell. Find a path from top-left to bottom-right which minimizes the sum of all numbers along its path.
+
+    Note: You can only move either down or right at any point in time.
+* **约束**
+  * `m == grid.length`
+  * `n == grid[i].length`
+  * `1 <= m, n <= 200`
+  * `0 <= grid[i][j] <= 100`
+* **思路**：动态规划,[参考63题](#63-unique-paths-ii中等)
+  * 到达终点，返回终点值(隐式一定存在最小值，而不会都越界)
+  * 当前位置已被计算过，返回计算值（隐式处理越界问题）
+  * 否则，返回向右向下的有效最小值
+  * 可读性强，需要辅助数组，极端情况会栈溢出
+  * **优化**：获取有效最小值时，后一位无效时则赋值为最大Integer(一定会存在最小值)，减少代码量
+* **其他**：动态规划 + 斜向更新
+  * 空间优化，不适用辅助数组
+  * 可读性差
+```java
+public int minPathSum(int[][] grid) {
+    int m = grid.length,n = grid[0].length;
+    int[][] dp = new int[m][n];
+    for (int i = 0; i < m; i++) Arrays.fill(dp[i],-1); // 由于存在阻塞非阻塞情况，用0代表阻塞，则用-1代表默认无效值
+    return minPathSum(grid,dp,m, n,0,0);
+}
+private int minPathSum(int[][] grid,int[][] dp,int m,int n,int i,int j){ // 超时问题
+    if (i == m-1 && j == n-1) return grid[i][j]; // 终点
+    if (dp[i][j] != -1) return dp[i][j];
+    // 获取有效最小值
+    int min = 0;
+    if(i+1 == m){
+        min = minPathSum(grid,dp,m,n,i,j+1);
+    }else if(j+1 == n){
+        min = minPathSum(grid,dp,m,n,i+1,j);
+    }else{
+        min = Math.min(minPathSum(grid,dp,m,n,i+1,j), minPathSum(grid,dp,m,n,i,j+1));
+    }
+
+    dp[i][j] = grid[i][j] + min;
+    return dp[i][j];
+}
+
+// 优化: 获取有效最小值时，若无效，则赋值为最大，不会存在i+1=m && j+1=n的情况，即肯定存在最小值
+private int minPathSum(int[][] grid,int[][] dp,int m,int n,int i,int j){ // 超时问题
+    if (i == m-1 && j == n-1) return grid[i][j]; // 终点
+    if (dp[i][j] != -1) return dp[i][j];
+    int down = (i + 1 < m) ? minPathSum(grid, dp, m, n, i + 1, j) : Integer.MAX_VALUE;
+    int right = (j + 1 < n) ? minPathSum(grid, dp, m, n, i, j + 1) : Integer.MAX_VALUE;
+    dp[i][j] = grid[i][j] + Math.min(down, right);
+    return dp[i][j];
+}
+
+// 其他
+public int minPathSum(int[][] grid) {
+    int m = grid.length, n = grid[0].length;
+    for (int i = m - 2; i > -1; i--)
+        updategrid(grid, i, n - 1, m, n);
+    for (int i = n - 2; i > -1; i--)
+        updategrid(grid, 0, i, m, n);
+    return grid[0][0];
+}
+private void updategrid(int[][] grid, int i, int j, int m, int n) {
+    int mini;
+    while (i > -1 && j > -1 && i < m && j < n) {
+        mini = Integer.MAX_VALUE;
+        if (i < m - 1) 
+            mini = grid[i + 1][j];
+        if (j < n - 1) 
+            mini = Math.min(mini, grid[i][j + 1]);
+        grid[i++][j--] += mini;
+    }
+}
+```
+
 # 66. Plus One(简单)
     You are given a large integer represented as an integer array digits, where each digits[i] is the ith digit of the integer. The digits are ordered from most significant to least significant in left-to-right order. The large integer does not contain any leading 0's.
 
