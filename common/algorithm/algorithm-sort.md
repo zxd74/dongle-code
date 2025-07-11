@@ -105,19 +105,13 @@ static void selectSort(int[] arr){
 
 # 插入排序
 ```java
-    public void insertSort(int[] arrays){
-        for (int i = 1; i < arrays.length; i++) {
-            int j = i -1;
-            // 取当前值，
-            int tmp = arrays[i];
-            // 与前面有序数组做比较，并将加大元素后移
-            for (; j>0 && arrays[j] > tmp ; j--) {
-                arrays[j+1] = arrays[j];
-            }
-            // 找到合适位置赋值
-            arrays[j] = tmp;
+static void insertSort(int[] arr){
+    for(int i=1;i<arr.length;i++){
+        for(int j = i;j>0 && less(arr[j],arr[j-1]);j--){
+            exch(arr,j,j-1);
         }
     }
+}
 ```
 
 # 希尔排序
@@ -138,19 +132,17 @@ static void selectSort(int[] arr){
     }
 
     // 步长为N/3+1
-    public void shellSortBy3(int[] arrays){
-        int grap=1,i,j,len = arrays.length,tmp;
-        // 确定最合适的开始步长
-        while (grap<len/3)
-            grap = grap * 3 +1;
-
-        for (;grap > 0;grap /= 3)
-            for (i=grap;i<len;i++){
-                tmp=arrays[i];
-                for (j = i - grap; j >= 0 && arrays[j] > tmp; j -= grap)
-                    arrays[j + grap] = arrays[j];
-                arrays[j + grap] = tmp;
+    static void shellSort(int[] arr){
+        int n = arr.length,h = 1;
+        while(h<n/3) h = h*3+1;
+        while(h>0){
+            for(int i = h;i<arr.length;i++){
+                for(int j = i;j>=h && less(arr[j], arr[j-h]);j-=h){
+                    exch(arr,j,j-h);
+                }
             }
+            h=h/3;
+        }
     }
 ```
 
@@ -236,22 +228,17 @@ static void quickSort(int[] arr){
 static void quickSort(int[] arr, int lo, int hi) {
     if (hi <= lo)
         return;
-    int j = partation(arr, lo, hi);
+    int j = partition(arr, lo, hi);
     quickSort(arr, lo, j - 1);
     quickSort(arr, j + 1, hi);
 }
 
-static int partation(int[] arr, int lo, int hi) {
+static int partition(int[] arr, int lo, int hi) {
     int i = lo, j = hi + 1, v = arr[lo];
     while (true) {
-        while (less(arr[++i], v))
-            if (i == hi)
-                break;
-        while (less(v, arr[--j]))
-            if (j == lo)
-                break;
-        if (i >= j)
-            break;
+        while(less(arr[++i],v)) if(i==hi) break;
+        while(less(v,arr[--j])) if(j == lo) break;
+        if (i>=j) break;
         exch(arr, i, j); // 代表存在左序列大于v，有序列小于v，即arr[j]<v<arr[i]
     }
     exch(arr, lo, j);

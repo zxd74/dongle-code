@@ -56,6 +56,7 @@
 - [67. Add Binary(简单)](#67-add-binary简单)
 - [69. Sqrt(x)(简单)](#69-sqrtx简单)
 - [70. Climbing Stairs(简单)](#70-climbing-stairs简单)
+- [71. Simplify Path(中等)](#71-simplify-path中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
@@ -3776,6 +3777,38 @@ public static int climbStairs2(int n ){
         p2 = cur;
     }
     return cur;
+}
+```
+# 71. Simplify Path(中等)
+Given a string path, which is an **absolute path** (starting with a slash `/`) to a file or directory in a Unix-style file system, convert it to the simplified canonical path.
+
+In a Unix-style file system, a period `.` refers to the current directory, a double period `..` refers to the directory up a level, and any multiple consecutive slashes (i.e. `//`) are treated as a single slash `/`. For this problem, any other format of periods such as `...` are treated as file/directory names.
+
+* 约束
+  * `1 <= path.length <= 3000`
+  * `path` consists of English letters, digits, period '.', slash '/' or '_'.
+  * `path` is a valid absolute Unix path.
+* **思路**
+  * **栈**：将路径按`/`拆分，遇到`.`忽略，遇到`..`则弹出栈顶，其他则入栈
+  * **字符串操作**：将路径按`/`拆分，遇到`.`忽略，遇到`..`则删除前一个`/`，其他则拼接
+```java
+public String simplifyPath(String path) {
+    StringBuilder sb = new StringBuilder();
+    Stack<String> stack = new Stack<>();
+    for (String str : path.split("/")) {
+        if (str.equals(".")|| str.equals("")) continue;
+        if (str.equals("..")) {
+            if (!stack.isEmpty()){
+                String pre = stack.pop();
+                sb.delete(sb.length()-pre.length()-1, sb.length());
+            }
+        }
+        else {
+            stack.push(str);
+            sb.append("/").append(str);
+        }
+    }
+    return sb.length() == 0 ? "/":sb.toString();
 }
 ```
 

@@ -27,8 +27,15 @@
 | [**原型模式**](#原型-prototype)      | 通过克隆现有对象创建新对象            | 实现 `Cloneable` 接口，避免重复初始化开销       | 创建成本高的对象（如游戏角色复制）        |
 ## 单例
 * 隐藏构造函数，通过静态方法获取实例
-* 实现：饿汉式和懒汉式
+* 实现想法：饿汉式和懒汉式
   * 懒汉式存在并发问题，需要加锁
+* 具体实现
+  * 静态不可变属性
+  * 静态可变属性，调用时初始化
+  * 方法同步锁初始化
+  * 双重验证+同步锁初始化
+  * 内部静态类不可变属性
+  * 枚举实现
 ```java
     // 单例模式
     static class SingleObject{
@@ -89,6 +96,26 @@ public class Singleton {
     }
 }
 ```
+### 枚举实现
+```java
+class SingletonObject {
+    private SingletonObject(){}
+    enum SingletonObjectEnum{
+        INSTANCE(new SingletonObject());
+        private SingletonObject obj;
+        private SingletonObjectEnum(SingletonObject obj){
+            this.obj = obj;
+        }
+        public SingletonObject getObj(){
+            return obj;
+        }
+    }
+    public static SingletonObject getInstance5(){
+        return SingletonObjectEnum.INSTANCE.getObj();
+    }
+}
+```
+
 
 ## 工厂方法 Factory Method
 * 适用于提供**不同类型**产品
@@ -859,6 +886,8 @@ static class MediatorOne extends Mediator{
 static abstract class Colleague{
     protected Mediator m;
     public Colleague(Mediator m ){this.m =m ;}
+    abstract void send(String msg);
+    abstract void recv(String msg);
 }
 static class ColleagueOne extends Colleague{
     public ColleagueOne(Mediator m ){super(m);}
