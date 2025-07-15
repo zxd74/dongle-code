@@ -2,7 +2,7 @@
 - [对一个整数m删除n位数后，顺序不变，输出最大值](#对一个整数m删除n位数后顺序不变输出最大值)
 - [8 字符串转整数](#8-字符串转整数)
 - [9 数字是回环数字](#9-数字是回环数字)
-- [10 正则表达式匹配](#10-正则表达式匹配)
+- [10. 正则表达式匹配](#10-正则表达式匹配)
 - [13 Roman to Integer(中)](#13-roman-to-integer中)
 - [14 返回最长公共字符串前缀](#14-返回最长公共字符串前缀)
 - [20 括号开闭校验](#20-括号开闭校验)
@@ -41,6 +41,7 @@
 - [48. Rotate Image(中等)](#48-rotate-image中等)
 - [49. Group Anagrams(中等)](#49-group-anagrams中等)
 - [50. Pow(x, n)(中等)](#50-powx-n中等)
+- [51. N-Queens(困难)](#51-n-queens困难)
 - [53. Maximum Subarray(简单)](#53-maximum-subarray简单)
 - [54. Spiral Matrix(中等)](#54-spiral-matrix中等)
 - [55. Jump Game(中等)](#55-jump-game中等)
@@ -332,7 +333,58 @@ class Solution {
 }
 ```
 
-# 10 正则表达式匹配
+# 10. 正则表达式匹配
+Given an input string s and a pattern p, implement regular expression matching with support for `.` and `*` where:
+```markdown
+`.` Matches any single character.​​​​
+`*` Matches zero or more of the preceding element.
+```
+The matching should cover the entire input string (not partial).
+
+
+* 约束
+  * `1 <= s.length <= 20`
+  * `1 <= p.length <= 20`
+  * `s` contains only lowercase English letters.
+  * `p` contains only lowercase English letters, `.`, and `*`.
+  * It is guaranteed for each appearance of the character `*`, there will be a previous valid character to match.
+* **思路**：从后向前匹配
+  *  遇到`*` 正则向前2步，因至少`*`前一个是匹配的
+  *  遇到`.` 内容向前1步
+  *  都走完，则匹配成功
+  *  正则走完，则失败
+  *  内容走完，单正则非`*`，则失败
+```java
+public boolean isMatch(String s, String p) {
+    return checkMatch(s, p, p.length() - 1, s.length() - 1);
+}
+
+public boolean checkMatch(String s, String p, int pe, int se) { // 右侧开始匹配，从后向前匹配
+    if (pe < 0 && se < 0) {
+        return true;
+    } else if (se < 0 && pe >= 0) {
+        if (p.charAt(pe) == '*') {
+            return checkMatch(s, p, pe - 2, se);
+        } else {
+            return false;
+        }
+    } else if (pe < 0) {
+        return false;
+    }
+
+    if (p.charAt(pe) == '*') {
+        if (p.charAt(pe - 1) == s.charAt(se) || p.charAt(pe - 1) == '.') {
+            return checkMatch(s, p, pe, se - 1) || checkMatch(s, p, pe - 2, se);
+        } else {
+            return checkMatch(s, p, pe - 2, se);
+        }
+    } else if (p.charAt(pe) == s.charAt(se) || p.charAt(pe) == '.') {
+        return checkMatch(s, p, pe - 1, se - 1);
+    } else {
+        return false;
+    }
+}
+```
 
 # 13 Roman to Integer(中)
     Roman numerals are usually written largest to smallest from left to right.
@@ -654,6 +706,7 @@ public static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
   * `2 <= n <= 10^5`
   * `0 <= height[i] <= 10^4`
 * 个人解法:逻辑通，但超时
+* **改进**
 ```java
 public static int maxArea(int[] height) {
     int min=0,max=Math.min(height[0], height[1]);
@@ -693,23 +746,17 @@ class Solution {
 ```
 * 疑问：为什么最优解中，left和right的值一定会小于最大值?
   * 答案：因为每次循环，都会将left和right的值向中间移动，所以left和right的值一定会小于最大值
-* 最优解升级版:持续降低循环次数
+* **最优解升级版**:持续降低循环次数
 ```java
 public int maxArea(int[] height) {
-    int max = 0;
-    int s = 0;
-    int e = height.length-1;
+    int max = 0,s = 0,e = height.length-1;
 
     while(s<e){
         int h = Math.min(height[s],height[e]);
         int amt = h*(e-s);
         if(max<amt) max = amt;
-        while(s<e && height[s]<=h){
-            s++;
-        }
-        while(s<e && height[e]<=h){
-            e--;
-        }
+        while(s<e && height[s]<=h) s++;
+        while(s<e && height[e]<=h) e--;
     }
     return max;
 }
@@ -2882,6 +2929,169 @@ public double myPow(double x, int n) {
         }
     }
     return (n>=0)? ans: 1/ans; 
+}
+```
+
+# 51. N-Queens(困难)
+    The n-queens puzzle is the problem of placing n queens on an n x n chessboard such that no two queens attack each other.
+
+    Given an integer n, return all distinct solutions to the n-queens puzzle. You may return the answer in any order.
+
+    Each solution contains a distinct board configuration of the n-queens' placement, where 'Q' and '.' both indicate a queen and an empty space, respectively.
+
+* **约束**
+  * `1 <= n <= 9`
+* **思路**：使用递归方法处理
+  * 定义计数器`count`
+  * 定义`n*n boolean`数组，记录是否有皇后
+  * 当`count==n`时，代表此解有效
+  * 当`count<n`时，并且格子遍历完，则代表此解无效
+  * 每行从第一列到最后一列依次尝试，若有效则继续下一行，无效则回溯
+    * 校验**行，列，对角线**
+      * 行不变，列变
+      * 行变，列不变
+      * 行列同减
+      * 行减列加
+* **优化**：使用`AbstractList`
+* **改进**:
+  * 使用默认`n*n`数组,赋值`.`
+  * 使用位运算验证是否有效防止皇后
+  * 处理下一行时，过滤掉当前列
+```java
+ public List<List<String>> solveNQueens(int n) {
+    List<List<String>> res = new ArrayList<>();
+    solveNQueens(n, 0, new boolean[n][n],res, 0);
+    return res;
+}
+public void solveNQueens(int n, int row,boolean[][] flag, List<List<String>> res,int count) {
+    if(count >= n){ // 满足条件
+        List<String> list = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            StringBuilder sb = new StringBuilder();
+            for (int j = 0; j < n; j++) {
+                if(flag[i][j]) sb.append("Q");
+                else sb.append(".");
+            }
+            list.add(sb.toString());
+        }
+        res.add(list);
+        return;
+    }
+    if(row>=n) return; // 当行超出，无效
+    int col = 0;
+    while(col<n){
+        if(!isValid(row,col++, flag)) continue;
+        flag[row][col-1] = true; // 当前有效
+        solveNQueens(n, row+1, flag, res, count+1); // 换行，继续
+        flag[row][col-1] = false; //重置
+    }
+}
+public boolean isValid(int i,int j, boolean[][] flag){
+    for(int k = i;k>=0;k--){
+        if(flag[k][j] || flag[i][k]) return false;
+    }
+
+    // 对角线验证
+    for(int k1=i,k2=j;k1>=0&&k2>=0;k1--,k2--){
+        if(flag[k1][k2]) return false;
+    }
+    for(int k1=i,k2=j;k1>=0&&k2<flag.length;k1--,k2++){
+        if(flag[k1][k2]) return false;
+    }
+    return true;
+}
+
+// 优化版
+public List<List<String>> solveNQueens(int n) {
+    return new AbstractList<List<String>>() {
+        List<List<String>> res;
+        char[][] ctx;
+        void init(){
+            if(res != null) return;
+            res = new ArrayList<>();
+            ctx = new char[n][n];
+            for (char[] r: ctx) Arrays.fill(r, '.');
+            solveNQueens(n, 0, 0);
+        }
+        @Override
+        public List<String> get(int index) {
+            init();
+            return res.get(index);
+        }
+        @Override
+        public int size() {
+            init();
+            return res.size();
+        }
+        void solveNQueens(int n, int row,int count) {
+            if(count >= n){ // 满足条件
+                List<String> list = new ArrayList<>();
+                for (char[] r:ctx) list.add(new String(r));
+                res.add(list);
+                return;
+            }
+            if(row>=n) return; // 当行超出，无效
+            int col = 0;
+            while(col<n){
+                if(!isValid(row,col++)) continue;
+                ctx[row][col-1] = 'Q'; // 当前有效
+                solveNQueens(n, row+1, count+1); // 换行，继续
+                ctx[row][col-1] = '.'; //重置
+            }
+        }
+        boolean isValid(int i,int j){
+            for(int k = i;k>=0;k--){
+                if(ctx[k][j] == 'Q' || ctx[i][k] == 'Q') return false;
+            }
+
+            // 对角线验证: 左上右下
+            for(int k1=i,k2=j;k1>=0&&k2>=0;k1--,k2--){
+                if(ctx[k1][k2] == 'Q') return false;
+            }
+            // 左下右上
+            for(int k1=i,k2=j;k1>=0&&k2<ctx.length;k1--,k2++){
+                if(ctx[k1][k2] == 'Q') return false;
+            }
+            return true;
+        }
+    };
+}
+
+// 改进版
+public List<List<String>> solveNQueens(int n) {
+    List<List<String>> result = new ArrayList<>();
+    char[][] board = new char[n][n];
+    for (char[] r : board) Arrays.fill(r, '.');
+
+    int mask = (1 << n) - 1; // Only n bits are relevant
+    solve(n, 0, 0, 0, 0, mask, board,result);
+    return result;
+}
+private void solve(int n, int row, int cols, int d1, int d2, int mask, char[][] board,List<List<String>> result) {
+    if (row == n) {
+        List<String> temp = new ArrayList<>();
+        for (char[] r : board) temp.add(new String(r));
+        result.add(temp);
+        return;
+    }
+
+    // Get available positions: mask ensures only n bits are considered
+    int available = ~(cols | d1 | d2) & mask;
+
+    while (available != 0) {
+        // Pick the rightmost available bit
+        int pos = available & -available;
+        int col = Integer.bitCount(pos - 1);
+
+        // 有效，则放置皇后
+        board[row][col] = 'Q';
+        // Recurse to the next row
+        solve(n, row + 1,cols | pos,(d1 | pos) << 1,(d2 | pos) >> 1,mask,board,result);
+        // 回退
+        board[row][col] = '.';
+        // Remove the used bit
+        available &= available - 1;
+    }
 }
 ```
 
