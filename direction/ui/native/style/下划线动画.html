@@ -1,0 +1,44 @@
+<!-- 
+重点：
+* background-image 背景作为图片
+* background-size 背景图片大小，由文字高度改为指定高度
+* background-position 背景图片位置，即背景显示相对于内容位置
+* transition 过渡动画, 指定具体属性过渡效果
+* hover 鼠标悬停，伪类
+* linear-gradient 线性渐变,方向，颜色1，颜色2，...
+* 
+
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        body{
+            margin: 30px;
+        }
+        span{
+            line-height: 2;
+            background-image: linear-gradient(to right, #ff7e5f, #feb47b);
+            background-repeat: no-repeat;
+            background-size: 0 2px;
+            background-position: right bottom;
+            transition: background-size 2s;
+        }
+        span:hover{
+            background-size: 100% 2px;
+            background-position: left bottom;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="title">
+        <span>
+            In both cases, the actual matches in the different scopes that caused a document to be returned are hidden. In many cases, it’s very useful to know which inner nested objects (in the case of nested) or children/parent documents (in the case of parent/child) caused certain information to be returned. The inner hits feature can be used for this. This feature returns per search hit in the search response additional nested hits that caused a search hit to match in a different scope.
+        </span>
+    </div>
+</body>
+</html>
