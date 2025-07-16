@@ -34,6 +34,7 @@
 - [39 组合总和(中)](#39-组合总和中)
 - [40 组合总和 II(中)](#40-组合总和-ii中)
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
+- [42. Trapping Rain Water(困难)](#42-trapping-rain-water困难)
 - [43. Multiply Strings(中等)](#43-multiply-strings中等)
 - [45. Jump Game II(中等)](#45-jump-game-ii中等)
 - [46. Permutations(中等)](#46-permutations中等)
@@ -42,6 +43,7 @@
 - [49. Group Anagrams(中等)](#49-group-anagrams中等)
 - [50. Pow(x, n)(中等)](#50-powx-n中等)
 - [51. N-Queens(困难)](#51-n-queens困难)
+- [52. N-Queens II(中等)](#52-n-queens-ii中等)
 - [53. Maximum Subarray(简单)](#53-maximum-subarray简单)
 - [54. Spiral Matrix(中等)](#54-spiral-matrix中等)
 - [55. Jump Game(中等)](#55-jump-game中等)
@@ -2353,6 +2355,42 @@ public int firstMissingPositive(int[] nums) {
     return count + 1; 
 }
 ```
+# 42. Trapping Rain Water(困难)
+    Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.
+
+* **约束**
+  * `n == height.length`
+  * `0 <= n <= 3 * 10^4`
+  * `0 <= height[i] <= 10^5`
+* **思路**： [参考11题](#11-最大水量中)
+  * 从前后向中间遍历
+  * 记录每一边的最大水量
+  * 水增量为边最大值-当前值
+    * 若左边最大值小于右边最大值，则水量增量为左边最大值-当前值
+    * 若右边最大值小于左边最大值，则水量增量为右边最大值-当前值
+```java
+public int trap(int[] height) {
+    int left = 0;
+    int right = height.length - 1;
+    int leftMax = height[left];
+    int rightMax = height[right];
+    int water = 0;
+
+    while (left < right) {
+        if (leftMax < rightMax) {
+            left++;
+            leftMax = Math.max(leftMax, height[left]);
+            water += leftMax - height[left]; // 若当前为最大值，则水增量为0，若当前非最大值，则差值即为水增量
+        } else {
+            right--;
+            rightMax = Math.max(rightMax, height[right]);
+            water += rightMax - height[right];
+        }
+    }
+
+    return water;        
+}
+```
 # 43. Multiply Strings(中等)
     Given two non-negative integers num1 and num2 represented as strings, return the product of num1 and num2, also represented as a string.
 
@@ -2987,7 +3025,7 @@ public void solveNQueens(int n, int row,boolean[][] flag, List<List<String>> res
     }
 }
 public boolean isValid(int i,int j, boolean[][] flag){
-    for(int k = i;k>=0;k--){
+    for(int k 0;k<flag.length;k--){
         if(flag[k][j] || flag[i][k]) return false;
     }
 
@@ -3067,6 +3105,13 @@ public List<List<String>> solveNQueens(int n) {
     solve(n, 0, 0, 0, 0, mask, board,result);
     return result;
 }
+/**
+ * cols 表示已被占用的列
+ * d1 表示已被占用的左对角线
+ * d2 表示已被占用的右对角线
+ * ~(cols | d1 | d2) 结果取反，得到所有未被占用的位置
+ * & mask 与掩码进行按位与操作，确保只考虑有效的位(即 n 位)，否则可能跟系统位数保持一致
+ */
 private void solve(int n, int row, int cols, int d1, int d2, int mask, char[][] board,List<List<String>> result) {
     if (row == n) {
         List<String> temp = new ArrayList<>();
@@ -3092,6 +3137,77 @@ private void solve(int n, int row, int cols, int d1, int d2, int mask, char[][] 
         // Remove the used bit
         available &= available - 1;
     }
+}
+```
+# 52. N-Queens II(中等)
+    The n-queens puzzle is the problem of placing n queens on an n x n chessboard such that no two queens attack each other.
+
+    Given an integer n, return the number of distinct solutions to the n-queens puzzle.
+
+* **约束**
+  * `1 <= n <= 9`
+* **思路**:[参考51题](#51-n-queens困难)
+```java
+public int totalNQueens(int n) {
+    char[][] board = new char[n][n];
+    for (int i = 0; i < n; i++) Arrays.fill(board[i], '.');
+    return backtrack(board, 0, n);
+}
+private int backtrack(char[][] board, int row, int n) {
+    if (row == n) return 1;
+    int count = 0;
+    for (int col = 0; col < n; col++) {
+        if (isValid(board, row, col)) {
+            board[row][col] = 'Q'; // 放置皇后
+            count += backtrack(board, row + 1, n);
+            board[row][col] = '.'; // 回溯
+        }
+    }
+    return count;
+}
+private boolean isValid(char[][] board, int row, int col) {
+    for (int i = 0; i < board.length; i++) {
+        if (board[i][col] == 'Q' || board[row][i] == 'q') return false;
+    }
+    // 检查左上方
+    for (int i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
+        if (board[i][j] == 'Q') return false;
+    }
+    // 检查右上方
+    for (int i = row - 1, j = col + 1; i >= 0 && j < board.length; i--, j++) {
+        if (board[i][j] == 'Q') return false;
+    }
+    return true;
+}
+
+// 改进版
+public int totalNQueens(int n) {
+    char[][] board = new char[n][n];
+    for (char[] r : board) Arrays.fill(r, '.');
+    int mask = (1 << n) - 1; // Only n bits are relevant
+    return backtrack(n, 0, 0, 0, 0, mask, board);
+}
+private int backtrack(int n, int row, int cols, int d1, int d2, int mask, char[][] board) {
+    if (row == n) {
+        return 1;
+    }
+
+    int available = ~(cols | d1 | d2) & mask;
+    int count = 0;
+    while (available != 0) {
+        int pos = available & -available;
+        int col = Integer.bitCount(pos - 1);
+
+        // 有效，则放置皇后
+        board[row][col] = 'Q';
+        // Recurse to the next row
+        count +=backtrack(n, row + 1,cols | pos,(d1 | pos) << 1,(d2 | pos) >> 1,mask,board);
+        // 回退
+        board[row][col] = '.';
+        // Remove the used bit
+        available &= available - 1;
+    }
+    return count;
 }
 ```
 
