@@ -36,6 +36,7 @@
 - [41 缺失的第一个正数(难)](#41-缺失的第一个正数难)
 - [42. Trapping Rain Water(困难)](#42-trapping-rain-water困难)
 - [43. Multiply Strings(中等)](#43-multiply-strings中等)
+- [44. Wildcard Matching(困难)](#44-wildcard-matching困难)
 - [45. Jump Game II(中等)](#45-jump-game-ii中等)
 - [46. Permutations(中等)](#46-permutations中等)
 - [47. Permutations II(中等)](#47-permutations-ii中等)
@@ -51,6 +52,7 @@
 - [57. Insert Interval(中等)](#57-insert-interval中等)
 - [58. Length of Last Word(简单)](#58-length-of-last-word简单)
 - [59. Spiral Matrix II(中等)](#59-spiral-matrix-ii中等)
+- [60. Permutation Sequence(中等)](#60-permutation-sequence中等)
 - [61. Rotate List(中等)](#61-rotate-list中等)
 - [62. Unique Paths(中等)](#62-unique-paths中等)
 - [63. Unique Paths II(中等)](#63-unique-paths-ii中等)
@@ -2498,7 +2500,74 @@ public String multiply(String num1, String num2) {
     return sb.toString();
 }
 ```
+# 44. Wildcard Matching(困难)
+    Given an input string (s) and a pattern (p), implement wildcard matching with support for '?' and '*' where:
 
+    '?' Matches any single character.
+    '*' Matches any sequence of characters (including the empty sequence).
+    The matching should cover the entire input string (not partial).
+
+* **约束**
+  * `0 <= s.length，p.length <= 2000`
+  * `s` only contains lowercase English letters.
+  * `p` contains only lowercase English letters, '?' or '*'.
+* **思路**: [参考10题](#10-正则表达式匹配)
+  * 由`.`改为`?`
+  * `*`可匹配任意字符串，包括空字符串
+  * 支持多个通配符相连，如`***`
+* **改进**：类似**滑动窗口(匹配子串)**，但本例是**全局匹配**
+  * 遇到`*`时，记录当前匹配的起始位置，并记录当前`*`的索引
+  * 当后续匹配失败时，回退到`*`的下一个位置，继续匹配
+```java
+// 超时
+public boolean isMatch(String s, String p) {
+    p=p.replaceAll("[\\*]+", "*"); // 多个*合并为一个*
+    return checkMatch(s,p,s.length()-1,p.length()-1);
+}
+private boolean checkMatch(String s,String p,int sidx,int pidx){
+    if(sidx <0 && pidx <0) return true;
+    else if(sidx <0 && pidx >=0){
+        if(p.charAt(pidx) == '*') return checkMatch(s,p,sidx,pidx-1);
+        else return false;
+    }else if(pidx <0) return false;
+
+    // sidx>=0 && pidx>=0
+    if(p.charAt(pidx) == '*'){
+        if(pidx==0) return true;
+        if(p.charAt(pidx-1) == s.charAt(sidx) || p.charAt(pidx-1) == '?'|| p.charAt(pidx-1) == '*'){
+            return checkMatch(s,p,sidx,pidx-1) || checkMatch(s,p,sidx-1,pidx);
+        }else{
+            return checkMatch(s,p,sidx-1,pidx);
+        }
+    }else if (p.charAt(pidx) == s.charAt(sidx) || p.charAt(pidx) == '?'){
+        return checkMatch(s,p,sidx-1,pidx-1);
+    }
+    return false;
+}
+
+// 改进版
+public boolean isMatch(String s, String p) {
+    int sIdx = 0, pIdx = 0, starIdx = -1, match = 0;
+    while (sIdx < s.length()) {
+        if (pIdx < p.length() && (p.charAt(pIdx) == '?' || p.charAt(pIdx) == s.charAt(sIdx))) { // 正常单字母匹配
+            sIdx++;
+            pIdx++;
+        }else if (pIdx < p.length() && p.charAt(pIdx) == '*') { // 字符串匹配任意字符
+            starIdx = pIdx;
+            match = sIdx;
+            pIdx++;
+        }else if (starIdx != -1) { // 当字母不匹配时，并且前一个字符是*，则回溯到*的位置，继续匹配
+            pIdx = starIdx + 1;
+            match++;
+            sIdx = match;
+        }else return false; // 字母不匹配，并且前一个字符不是*，则匹配失败
+            
+    }
+    // 当p长度大于s时，p剩余的字符必须是*
+    while (pIdx < p.length() && p.charAt(pIdx) == '*') pIdx++;
+    return pIdx == p.length();
+}
+```
 # 45. Jump Game II(中等)
     Given an array of non-negative integers nums, you are initially positioned at the first index of the array.
 
@@ -3660,6 +3729,60 @@ public int[][] generateMatrix(int n) {
         } 
     }
     return res;
+}
+```
+# 60. Permutation Sequence(中等)
+    The set [1,2,3,...,n] contains a total of n! unique permutations.
+
+    By listing and labeling all of the permutations in order, we get the following sequence for n = 3:
+
+    "123"
+    "132"
+    "213"
+    "231"
+    "312"
+    "321"
+
+    Given n and k, return the kth permutation sequence.
+* **约束**
+  * `1 <= n <= 9`
+  * `1 <= k <= n!`
+* **思路**
+  * 存储数字列表
+  * 存储阶乘数(存在重复计算)
+  * 当k与n-1的阶乘商为当前位数字索引，并移除该数字
+    * 当整除时，索引应减一，即在对应数字范围内
+  * 当n<=2时，根据k%2的余数对列表剩余数字是否进行反转
+* **优化**
+  * 由于n的**阶乘是固定的**，并且n有限制，故而可直接定义**静态变量**
+  * 由于n有限制并且只有1位，可使用`char[]`代替`LinkedList，StringBuilder`
+  * 以上优化**不适用**n不固定，并且数字不连续的情况
+```java
+public String getPermutation(int n, int k) {
+    LinkedList<Integer> list = new LinkedList<>(); // 存储数字
+    Map<Integer, Integer> map = new HashMap<>(); // 存储阶乘数
+    for (int i = 1; i <= n; i++) {
+        list.add(i);
+        if(i!=n) map.put(i, i*map.getOrDefault(i-1, 1));
+    }
+
+    StringBuilder sb = new StringBuilder(); // 存储结果
+    while(n>2 && k>0){ // 当n<=2或k=0时，后面的内容直接追加即可
+        int tmp = map.get(--n);
+        int index = k/tmp;
+        if((k=k% tmp)==0) index--;
+        sb.append(list.remove(index));
+    }
+    if(k%2==0){
+        for (int i = list.size()-1; i >= 0; i--) {
+            sb.append(list.get(i));
+        }
+    }else{
+        for (int i = 0; i<list.size(); i++) {
+            sb.append(list.get(i));
+        }
+    }
+    return sb.toString();
 }
 ```
 # 61. Rotate List(中等)
