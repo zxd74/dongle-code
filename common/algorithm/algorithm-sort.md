@@ -363,44 +363,35 @@ public static void countSort(int[] arr){
 * 对每个桶内元素进行排序：**桶内元素只是确定最值范围，仍需排序**
 * 遍历每个桶，将桶内元素按顺序放入原数组
 ```java
-public static void bucketSort(int[] arr,int bucketSize){
-    // 找最值
-    int max = arr[0],min=arr[0];
-    for(int num:arr){
-        if(num>max) max = num;
-        if(num<min) min = num;
+public static void bucketSort(int[] arr,int bucketSize) {
+    int max = arr[0],min=arr[0]; 
+    for (int i = 1; i < arr.length; i++) { // 统计最大值和最小值
+        if(arr[i] > max) max = arr[i];
+        if(arr[i] < min) min = arr[i];
     }
-
-    // 确定桶个数:由桶内能存储的数量决定
-    int bucket_count = (max-min)/bucketSize+1;
-    List<List<Integer>> buckets = new ArrayList<>(bucket_count);
-    // 初始化桶
-    for(int i = 0;i<bucket_count;i++){
-        buckets.add(new ArrayList<>());
+    int bucketCount = (max - min) / bucketSize + 1; // 由最大值和最小值差与桶大小确定桶的数量，+1兼容
+    int[][] buckets = new int[bucketCount][bucketSize]; // 初始化桶
+    int[] bucketIndex = new int[bucketCount]; // 记录每个桶中元素的数量
+    for (int i = 0; i < arr.length; i++) {
+        int index = (arr[i] - min) / bucketSize; // 计算元素属于哪个桶
+        buckets[index][bucketIndex[index]++] = arr[i]; // 将元素放入桶中
     }
-    // 将元素放入桶中
-    for(int i= 0;i<arr.length;i++){
-        int index = (arr[i]-min)/bucketSize;
-        buckets.get(index).add(arr[i]);
+    for (int i = 0; i < buckets.length; i++) { // 对每个桶进行排序
+        countSort(buckets[i]); // 任意排序算法都可
     }
-    // 桶内排序
-    for(List<Integer> bucket:buckets){
-        Collections.sort(bucket);
-    }
-    // 将桶内元素放回原数组
-    int sortIndex = 0;
-    for(List<Integer> bucket:buckets){
-        for(int num:bucket){
-            arr[sortIndex++]=num;
+    int sorted_index = 0; // 记录已排序的元素个数
+    for (int i = 0; i < buckets.length; i++) {
+        for (int j = 0; j < bucketIndex[i]; j++) {
+            arr[sorted_index++] = buckets[i][j]; // 将桶中的元素依次放入原数组
         }
     }
 }
 ```
 # 基数排序
 基数排序是根据每个元素的尾部进行排序，依次从尾到首进行排序，直到最大首位数排序完成
-* 是对计数排序的改进
+* 是对桶排序的改进
 * 不仅仅适用于整数，也可以用于字符串
-* 关键步骤
+* 关键步骤: **根据进制数，定义桶个数**，如`整数0-9就是10个桶`，`字符串a-z就是26个桶`
   * 根据最大值取最大位数
   * 根据每个元素每一位上的内容，定义指定桶个数，如`整数0-9就是10个桶`，`字符串a-z就是26个桶`
   * 需要多次遍历，具体由最大位数决定
@@ -408,38 +399,26 @@ public static void bucketSort(int[] arr,int bucketSize){
   * 每次遍历完，模和余都要向前进一位，如`整数是10进制，则模10，余10`
 ```java
 public static void radixSort(int[] arr){
-    // 取最大值，并根据最大值获取最大位数
-    int max = arr[0];
-    for(int num:arr){
-        if(max<num) max = num;
-    }
-    // 取最大位数
-    int maxDigit = 0;
-    while(max!=0){
-        maxDigit++;
-        max /=10;
-    }
-    
-    int couterCount = 10; // 若考虑负数，则couterCount = 20
-    List<List<Integer>> counter = new ArrayList<>(couterCount);
-    int mod = 10,dev=1;
-    for(int i = 0;i<maxDigit;i++){
-        for(int j = 0;j<couterCount;j++){ // 必需，重置
-            counter.add(new ArrayList<>());
-        }
-        for(int j = 0;j<arr.length;j++){
-            // 若考虑负数情况时， int bucket = int((arr[j] % mod) / dev) + mod;
-            int bucket = (arr[j] % mod)/dev;
-            counter.get(bucket).add(arr[j]);
+    int max = arr[0]; // 找到最大值
+    for (int i = 1; i < arr.length; i++) if(arr[i] > max) max = arr[i];
+    int maxDigit = 1; // 取最大位数(最大值的位数)
+    while((max= max /= 10) > 0) maxDigit++;
+
+    int couterCount = 10; // 每个桶的大小，0-9
+    int[][] buckets = new int[couterCount][arr.length]; // 初始化桶
+    int[] bucket = new int[couterCount]; // 记录每个桶中元素的数量
+    int mod = 10,dev=1,digit=10; // mod:模，dev:除，digit:进制数
+    for (int i = 0; i < maxDigit; i++,mod *= digit,dev *= digit) { // 每次循环进制升级
+        for (int j = 0; j < arr.length; j++) {
+            int index = (arr[j] % mod) / dev; // 计算元素在当前位上的值
+            buckets[index][bucket[index]++] = arr[j]; // 将元素放入桶中
         }
         int pos = 0;
-        for(int j =0;j<counter.size();j++){
-            if(counter.get(j).size()==0) continue;
-            for(int k = 0;k<counter.get(j).size();k++){
-                arr[pos++] = counter.get(j).get(k);
+        for (int j = 0; j < couterCount; j++) {
+            for (int k = 0; k < bucket[j]; k++) {
+                arr[pos++] = buckets[j][k]; // 将桶中的元素依次放入原数组
             }
         }
-        dev *=10;mod *=10;
     }
 }
 ```
