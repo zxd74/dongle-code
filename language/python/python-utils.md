@@ -104,6 +104,7 @@ class DataUtil:
         return  datetime.datetime.fromtimestamp((ts/p))
 ```
 # JsonUtils
+* **原生json库**
 ```python
 import json
 class JsonUtil:
@@ -138,6 +139,44 @@ class JsonUtil:
         with open(fp, 'r') as file:
             return json.load(file, object_hook=handler)
 ```
+* **自定义JSON编码器/解码器**
+```python
+import json
+from datetime import datetime
+
+class User:
+    def __init__(self, name, join_date):
+        self.name = name
+        self.join_date = join_date  # 假设是 datetime 对象
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()  # 转换 DateTime 为字符串
+        return super().default(obj)
+
+class CustomDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+        if 'join_date' in obj:
+            obj['join_date'] = datetime.fromisoformat(obj['join_date'])
+        return obj
+
+# 示例
+user = User('Alice', datetime.now())
+
+# 使用自定义编码器
+json_str = json.dumps(user, cls=CustomEncoder)
+print(json_str)
+
+# 使用自定义解码器
+user_from_json = json.loads(json_str, cls=CustomDecoder)
+print(user_from_json.name)
+print(user_from_json.join_date)
+```
+* 第三方库：`orjson, ujson,...`
 
 # DbUtils
     简单封装，功能不全
