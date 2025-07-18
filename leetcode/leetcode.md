@@ -57,8 +57,10 @@
 - [62. Unique Paths(中等)](#62-unique-paths中等)
 - [63. Unique Paths II(中等)](#63-unique-paths-ii中等)
 - [64. Minimum Path Sum(中等)](#64-minimum-path-sum中等)
+- [65. Valid Number(中等)](#65-valid-number中等)
 - [66. Plus One(简单)](#66-plus-one简单)
 - [67. Add Binary(简单)](#67-add-binary简单)
+- [68. Text Justification(中等)](#68-text-justification中等)
 - [69. Sqrt(x)(简单)](#69-sqrtx简单)
 - [70. Climbing Stairs(简单)](#70-climbing-stairs简单)
 - [71. Simplify Path(中等)](#71-simplify-path中等)
@@ -4019,6 +4021,60 @@ private void updategrid(int[][] grid, int i, int j, int m, int n) {
     }
 }
 ```
+# 65. Valid Number(中等)
+    A valid number can be split up into these components (in order):
+
+    * A decimal number or an integer.
+    * (Optional) An 'e' or 'E', followed by an integer.
+    * A decimal number can be split up into these components (in order):
+
+    * (Optional) A sign character (either '+' or '-').
+    * One of the following formats:
+    * One or more digits, followed by a dot '.'.
+* **约束**
+  * `1 <= s.length <= 20`
+  * `s` consists of English letters (lower-case and upper-case), digits (0-9), '+', '-', ' ', or '.'.
+* **思路**：罗列所有无效情况，剩下的即有效
+  * `+/-`只能出现在首位或`e/E`后
+  * `e/E`只能出现一次
+  * `.`只能出现一次且不能出现在`e/E`后(**不可忽略**)
+  * 必需要有数字，且`e/E`后面要有数字
+  * **提示**：`e/E`相当于10的次方，不能是小数，故后面不能有`.`
+```java
+public boolean isNumber(String s) {
+    boolean hasNumber= false; 
+    boolean hasDot = false; // 判断多余小数点
+    boolean hasE = false; // 判断多余e
+    boolean hasNumberAfterExp = true; // 判断e后是否有数字
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
+        if(c>='0' && c<='9'){
+            hasNumber = true;
+            if(hasE) hasNumberAfterExp = true;
+            continue;
+        }
+        if(i==s.length()-1 && !hasNumber) return false; // 最后一位仍无数字无效
+
+        if (c == '+' || c == '-') { // 判断符号位
+            if(i==0) continue; // 首位有效
+            if (!hasE || !isE(s.charAt(i-1))) return false; // 非首位校验是否在e或E后面
+        }else if(c == '.') { // 判断小数点,多余/E后无效
+            if(hasDot || hasE) return false;
+            hasDot = true;
+        }else if (isE(c)) { // 判断科学计数法,多余/无数字/首位末尾无效
+            if(!hasNumber||hasE) return false;
+            hasE = true;
+            hasNumberAfterExp = false;
+        }else { // 判断非数字
+            return false;
+        }
+    }
+    return hasNumber && hasNumberAfterExp;
+}
+private boolean isE(char c) {
+    return c == 'e' || c == 'E';
+}
+```
 
 # 66. Plus One(简单)
     You are given a large integer represented as an integer array digits, where each digits[i] is the ith digit of the integer. The digits are ordered from most significant to least significant in left-to-right order. The large integer does not contain any leading 0's.
@@ -4136,6 +4192,68 @@ public String addBinary(String a, String b) {
         res[k--] = '1';
     }
     return new String(res,k+1,res.length-k-1);
+}
+```
+# 68. Text Justification(中等)
+    Given an array of words and a width maxWidth, format the text such that each line has exactly maxWidth characters and is fully (left and right) justified.
+
+    You should pack your words in a greedy approach; that is, pack as many words as you can in each line. Pad extra spaces ' ' when necessary so that each line has exactly maxWidth characters.
+    Extra spaces between words should be distributed as evenly as possible. If the number of spaces on a line do not divide evenly between words, the empty slots on the left will be assigned more spaces than the slots on the right.
+
+    For the last line of text, it should be left justified and no extra space is inserted between words.
+
+    Note:
+
+    A word is defined as a character sequence consisting of non-space characters only.
+    Each word's length is guaranteed to be greater than 0 and not exceed maxWidth.
+    The input array words contains at least one word.
+
+* 约束
+  * `1 <= words.length <= 300`
+  * `1 <= maxWidth <= 100`
+  * `words[i].length <= maxWidth`
+  * `words[i]` consists of English letters and ' '.
+  * `words[i]` does not contain leading or trailing spaces.
+  * `words` represents a single line of text, and there is at least one word in each line.
+* **思路**
+  * 遍历数组，每次遍历重置记录当前行开始位置，行内字符长度
+  * 若当前行未超出，则循环遍历
+  * 超出，则准备格式化当前行
+  * 若是单个词(无空格，起始位和超出位相差1)或最后一行，则标准格式化，空格不均分，末尾补齐
+  * 否则，空格均分，并且若有剩余，则左侧空格应多余右侧
+```java
+public List<String> fullJustify(String[] words, int maxWidth) {
+    List<String> result = new ArrayList<>();
+    int i = 0;
+    while (i < words.length) {
+        int j = i, len = 0;
+        while (j < words.length && len + words[j].length() + (j - i) <= maxWidth) {
+            len += words[j].length();
+            j++;
+        }
+        int gaps = j - i - 1;
+        int spaces = maxWidth - len;
+        StringBuilder line = new StringBuilder();
+        if (j == words.length || gaps == 0) { // 最后一行或单个单词
+            for (int k = i; k < j; k++) {
+                line.append(words[k]);
+                if (k != j - 1) line.append(" ");
+            }
+            while (line.length() < maxWidth) line.append(" ");
+        } else {
+            int spaceEach = spaces / gaps, extra = spaces % gaps;
+            for (int k = i; k < j; k++) {
+                line.append(words[k]);
+                if (k != j - 1) {
+                    int toAdd = spaceEach + (extra-- > 0 ? 1 : 0);
+                    while (toAdd-- > 0) line.append(" ");
+                }
+            }
+        }
+        result.add(line.toString());
+        i = j;
+    }
+    return result;
 }
 ```
 # 69. Sqrt(x)(简单)
