@@ -375,6 +375,76 @@ urlpatterns = [
     path("<int:question_id>/vote/", views.vote, name="vote"),
 ]
 ``` 
+* 外部通过路径访问，内部(**模板访问**)通过`name`访问
+* **模板访问**：反向解析`reverse`函数
+  * 不能直接使用URL，即直接url路径错误
+  * 使用命名空间
+
+### 命名空间
+* 默认没有命名空间
+* 配置命名空间：需要在`urls.py` 指定`app_name`
+```python
+# web/urls.py
+from django.urls import path
+from . import views
+
+app_name = 'web'  # 显式定义命名空间
+urlpatterns = [
+    path("index", views.index, name="index"),
+]
+```
+* 使用命名空间
+  * 使用普通方式时，通过`name`
+  * 使用命名空间方式时，通过`app_name:name`
+    ```html
+    <a href="{% url 'index' "/> <!--普通方式-->
+    <a href="{% url 'web:index' "/> <!--命名空间方式-->
+    ```
+    ```python
+    HttpResponseRedirect(reverse("index"))  # 重定向时普通方式
+    HttpResponseRedirect(reverse("web:index"))  # 重定向时命名空间方式
+    ```
+
+### 参数路径
+* 顺序不可更换
+```python
+url(r'^users/([a-z]+)/(\d{4})/$', views.get_user),
+  
+def get_user(request, name, ID):
+    pass
+```
+* 具名参数路径:`?P`修饰
+```python
+url(r'^users/(?P<name>[a-z]+)/(?P<id>\d{4})/$', views.users),
+  
+def weather(request, name, id):
+    pass
+```
+### 请求数据解析
+* **表单数据**：根据请求方式，以字典形式解析请求参数
+```python
+  
+def get_value(request):
+    a = request.GET.get('a')  #3
+    b = request.GET.get('b')  #2
+    num_list = request.GET.getlist('a') #['1','3']
+
+def get_body(request):
+    form_data = request.POST.get('c')
+```
+* **非表单数据**: `request.body` 获取原始数据
+```python
+def get_body_json(request):
+    json_str = request.body
+```
+* **请求头解析**:`request.META.get("header key")`
+  * `request.method`
+  * `request.path`
+  * `request.user`
+  * `request.FILES`
+  * `request.encoding`
+
+
 
 ## 模板路径
 * 静态配置：相对项目目录的绝对路径
