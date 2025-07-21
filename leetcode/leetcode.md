@@ -64,6 +64,10 @@
 - [69. Sqrt(x)(简单)](#69-sqrtx简单)
 - [70. Climbing Stairs(简单)](#70-climbing-stairs简单)
 - [71. Simplify Path(中等)](#71-simplify-path中等)
+- [72. Edit Distance(困难)](#72-edit-distance困难)
+- [73. Set Matrix Zeroes(中等)](#73-set-matrix-zeroes中等)
+- [74. Search a 2D Matrix(中等)](#74-search-a-2d-matrix中等)
+- [75. Sort Colors(中等)](#75-sort-colors中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
@@ -118,6 +122,7 @@
 # 总结
 * 算法方法：二分法、双指针、滑动窗口、BFS、DFS、并查集、位运算、数学、字符串、数组、链表、树、图、堆、栈、队列、哈希表、排序、搜索
 * 算法思想：分治，贪心，回溯，动态规划，分支有界
+  * **使用动态规划时避免重复计算问题**
 * 算法应用：排序、查找、字符串处理、数组处理、链表处理、树处理、图处理、堆处理、栈处理、队列处理、哈希表处理
 * 字符操作
   * 使用char对比
@@ -4378,7 +4383,194 @@ public String simplifyPath(String path) {
     return sb.length() == 0 ? "/":sb.toString();
 }
 ```
+# 72. Edit Distance(困难)
+    Given two strings word1 and word2, return the minimum number of operations required to convert word1 to word2.
 
+    You have the following three operations permitted on a word:
+
+    * Insert a character
+    * Delete a character
+    * Replace a character
+* 约束
+  * `1 <= word1.length, word2.length <= 500`
+  * `word1` and `word2` consist of lowercase English letters.
+* **思路**: **动态规划**
+  * 使用辅助二维数组，行代表word1，列代表word2
+  * 并初始化第一行和第一列分别对应其所对应的列数`dp[0][j]=j`和行数`dp[i][0]=i`
+  * 相等时，`dp[i][j] = dp[i - 1][j - 1]`
+  * 不等时，分别对比替换/删除/插入的最小值+1
+* **改进**：从后向前匹配，使用记忆法递归方法,但可能存在栈溢出情况
+  * 上一个方法需遍历所有情况，本方法只计算必要部分
+  * 使用记忆法避免重复计算
+```java
+public int minDistance(String word1, String word2) {
+    final int m = word1.length(),n = word2.length();
+    // dp[i][j] := min # of operations to convert word1[0..i) to word2[0..j)
+    int[][] dp = new int[m + 1][n + 1];
+    for (int i = 1; i <= m; ++i)
+        dp[i][0] = i;
+
+    for (int j = 1; j <= n; ++j)
+        dp[0][j] = j;
+
+    for (int i = 1; i <= m; ++i)
+        for (int j = 1; j <= n; ++j)
+        if (word1.charAt(i - 1) == word2.charAt(j - 1))//same characters
+            dp[i][j] = dp[i - 1][j - 1];//no operation
+        else
+            dp[i][j] = Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1])) + 1;  //replace,delete,insert
+
+    return dp[m][n];
+}
+// 改进版
+public int minDistance(String word1, String word2) {
+    int n1 = word1.length();
+    int n2 = word2.length();
+    int[][] dp = new int[n1][n2];
+    for(int arr []: dp) Arrays.fill(arr,-1);
+    return minDistance(word1,word2,n1-1,n2-1,dp);
+}
+private int minDistance(String w1, String w2,int i1,int i2,int[][] dp){
+    if(i1<0) return i2+1;
+    if(i2<0) return i1+1;
+    if(dp[i1][i2]!=-1) return dp[i1][i2];
+
+    int min = Integer.MAX_VALUE;
+    if(w1.charAt(i1)==w2.charAt(i2)) return  dp[i1][i2]=minDistance(w1,w2,i1-1,i2-1,dp);
+    // replace vs delete vs insert
+    int insert = minDistance(w1,w2,i1,i2-1,dp);
+    int delete = minDistance(w1,w2,i1-1,i2,dp);
+    int  replace = minDistance(w1,w2,i1-1,i2-1,dp);
+    min = Math.min(insert,delete);
+    min = Math.min(min,replace);
+    return dp[i1][i2] = min+1;
+}
+```
+# 73. Set Matrix Zeroes(中等)
+    Given an m x n integer matrix matrix, if an element is 0, set its entire row and column to 0's, and return the matrix.
+
+    You must do it in place.
+* 约束
+  * `m == matrix.length`
+  * `n == matrix[0].length`
+  * `1 <= m, n <= 200`
+  * `-2^31 <= matrix[i][j] <= 2^31 - 1`
+* **思路**: 辅助数组判断是否时原生0
+  * 初始化辅助数组，记录是否时原生0
+  * 遍历辅助数组，遇到原生0，则将对应行和列置为0
+* **优化**：将二维辅助数组优化为两个一维数组，减少重置0时的循环
+```java
+public void setZeroes(int[][] matrix) {
+    //定义辅助数组，记录是否时原生0
+    int n = matrix.length;
+    int m = matrix[0].length;
+    boolean[][] row = new boolean[n][m];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            row[i][j] = matrix[i][j] == 0;
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (row[i][j]) {
+                for (int j2 = 0; j2 < n; j2++) {
+                    matrix[j2][j] = 0;
+                }
+                for (int j2 = 0; j2 < m; j2++) {
+                    matrix[i][j2] = 0;
+                }
+            }
+        }
+    }
+}
+
+// 优化版
+public void setZeroes(int[][] matrix) {
+    int n = matrix.length;
+    int m = matrix[0].length;
+    boolean[] row = new boolean[n];
+    boolean[] col = new boolean[m];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if(matrix[i][j] == 0){
+                row[i] = true;
+                col[j] = true;
+            }
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (row[i]||col[j]) {
+                matrix[i][j] = 0;
+            }
+        }
+    }
+}
+```
+# 74. Search a 2D Matrix(中等)
+    You are given an m x n integer matrix matrix with the following two properties:
+
+    * Each row is sorted in non-decreasing order.
+    * The first integer of each row is greater than the last integer of the previous row.
+    Return true if target is in matrix or false otherwise.
+* 约束
+  * `m == matrix.length`
+  * `n == matrix[0].length`
+  * `1 <= m, n <= 100`
+  * `-10^4 <= matrix[i][j], target <= 10^4`
+* **思路**: **二分查找**
+  * 首先判断收尾是否包含target
+  * 若包含，则在当前数组中查找
+  * 通过二分法查找相对较快
+  * **基本实现**：双遍历，对比每一个元素
+```java
+public boolean searchMatrix(int[][] matrix, int target) {
+    for (int[] arr : matrix) {
+        if (arr[0] > target) return false;
+        if (arr[arr.length-1] < target) continue;
+            int left = 0, right = arr.length - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (arr[mid] == target) return true;
+            else if (arr[mid] < target) left = mid + 1;
+            else right = mid - 1;
+        }
+    }
+    return false;
+}
+```
+# 75. Sort Colors(中等)
+    Given an array nums with n objects colored red, white, or blue, sort them **in-place** so that objects of the same color are adjacent, with the colors in the order red, white, and blue.
+
+    We will use the integers 0, 1, and 2 to represent the color red, white, and blue, respectively.
+    You must solve this problem without using the library's sort function.
+* 约束
+  * `n == nums.length`
+  * `1 <= n <= 300`
+  * `nums[i]` is either `0`, `1`, or `2`.
+* **思路**: **排序算法**，将0，1，2排序
+```java
+public void sortColors(int[] nums) {
+    quick3Way(nums, 0, nums.length - 1);
+}
+private void quick3Way(int[] nums, int lo, int hi) {
+    if (lo >= hi) return;
+    int lt = lo, i = lo + 1, gt = hi;
+    int v = nums[lo];
+    while (i <= gt) {
+        if (nums[i] < v) exch(nums, lt++, i++);
+        else if (nums[i] > v) exch(nums, i, gt--);
+        else i++;
+    }
+    quick3Way(nums, lo, lt - 1);
+    quick3Way(nums, gt + 1, hi);
+}
+private static void exch(int[] arr, int i, int j) {
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
+```
 # 83. Remove Duplicates from Sorted List(简单)
     Given the head of a sorted linked list, delete all duplicates such that each element appears only once. Return the linked list sorted as well.
 
