@@ -68,6 +68,9 @@
 - [73. Set Matrix Zeroes(中等)](#73-set-matrix-zeroes中等)
 - [74. Search a 2D Matrix(中等)](#74-search-a-2d-matrix中等)
 - [75. Sort Colors(中等)](#75-sort-colors中等)
+- [76. Minimum Window Substring(困难)](#76-minimum-window-substring困难)
+- [77. Combinations(中等)](#77-combinations中等)
+- [78. Subsets(中等)](#78-subsets中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
@@ -4569,6 +4572,140 @@ private static void exch(int[] arr, int i, int j) {
     int temp = arr[i];
     arr[i] = arr[j];
     arr[j] = temp;
+}
+```
+# 76. Minimum Window Substring(困难)
+    Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string "".
+
+    The testcases will be generated such that the answer is unique.
+
+    A substring is a contiguous sequence of characters in a string.
+* 约束
+  * `m == s.length`
+  * `n == t.length`
+  * `1 <= m, n <= 10^5`
+  * `s` and t consist of uppercase and lowercase English letters.
+* **思路**: **滑动窗口**
+  * 定义两个指针，start和end，分别指向窗口的起始位置和当前位置
+  * 定义两个数组，count和need，分别记录当前窗口的字符数量和t中字符的数量
+  * 定义一个变量match，记录当前窗口中已经匹配的字符数量
+  * 当match等于t的长度时，说明当前窗口已经包含了t中所有字符，此时可以尝试缩小窗口
+* **改进**
+  * 以int类型记录最小长度，当窗口长度小于最小长度时，更新最小长度
+  * 以int类型记录所需数量，当所需数量为0时，说明当前窗口已经包含了t中所有字符，此时可以尝试缩小窗口
+  * 将原字符串转char数组，避免重复通过字符串读取char
+  * 根据char的int值，直接在数组中记录字符数量
+  * 最后根据start索引和最小长度，直接获取子串
+```java
+public String minWindow(String s, String t) {
+    String res = "";
+    if(s.length()<t.length()) return res;
+
+    int start = 0,cur = 0; // 活动窗口的起始位置和当前位置
+    int[] count = new int[128],need = new int[128]; // count记录当前窗口的字符数量，need记录t中字符的数量
+    for(char c : t.toCharArray()) need[c]++; // 将t中字符的数量记录到need中
+
+    int match = 0; // 匹配数字，只有出现t中字符时才会+1，当match == t.length()时，说明当前窗口已经包含了t中所有字符
+    int min = Integer.MAX_VALUE; // 最小长度
+    while(cur < s.length()){
+        char c = s.charAt(cur);
+        if(need[c] > 0){ // 如果当前字符在t中出现过
+            count[c]++;
+            if(count[c] <= need[c]) match++;
+        }
+        cur++;
+        while(match == t.length()){ // 当前窗口已经包含了t中所有字符
+            if(cur - start < min){ // 更新最小长度和结果
+                min = cur - start;
+                res = s.substring(start,cur);
+            }
+            char c2 = s.charAt(start);
+            if(need[c2] > 0){ // 如果当前字符在t中出现过,则count[c2]--，match--
+                count[c2]--;
+                if(count[c2]<need[c2]) match--; // 重点，因为可能存在重复字符较多时
+            }
+            start++;
+        }
+    }
+    return res;
+}
+
+// 改进版
+public String minWindow(String s, String t) {
+    int[] need = new int[128];
+    int count = t.length();
+    int start = 0, end = 0, minLen = Integer.MAX_VALUE, startIndex = -1;
+    for (char c : t.toCharArray()) need[c]++;
+    char[] chs = s.toCharArray();
+    while (end < chs.length) {
+        if (need[chs[end++]]-- > 0) count--; // 找到目标字符，则所需计数器减一
+        while (count == 0) { // 当计数器为0，代表已找到包含目标字符串字符的子串
+            if (end - start < minLen) { // 更新最短子串长度
+                startIndex = start;
+                minLen = end - start;
+            }
+            if (need[chs[start++]]++ == 0) count++; // 移动左指针，若移除的字符是目标字符，则所需计数器加一
+        }
+    }
+
+    return minLen == Integer.MAX_VALUE ? "" :s.substring(startIndex, startIndex + minLen);
+}
+```
+# 77. Combinations(中等)
+    Given two integers n and k, return all possible combinations of k numbers out of the range [1, n].
+    You may return the answer in any order.
+* 约束
+  * `1 <= n <= 20`
+  * `1 <= k <= n`
+* **思路**: **回溯算法**
+* **优化**：自定义实现`java.util.AbstractList`，仅限于Leetcode加速
+```java
+public List<List<Integer>> combine(int n, int k) {
+    List<List<Integer>> list = new ArrayList<>();
+    combine(1, n,k, new ArrayList<>(),list);
+    return list;
+}
+private void combine(int start,int n,int k,List<Integer> tmp,List<List<Integer>> result){
+    if (tmp.size() == k) {
+        result.add(new ArrayList<>(tmp));
+        return;
+    }
+    for (int i = start; i <= n; i++) {
+        tmp.add(i);
+        combine(i+1,n,k,tmp,result);
+        tmp.remove(tmp.size()-1);
+    }
+}
+```
+# 78. Subsets(中等)
+    Given an integer array nums of unique elements, return all possible subsets (the power set).
+    The solution set must not contain duplicate subsets. Return the solution in any order.
+* 约束
+  * `1 <= nums.length <= 10`
+  * `1 <= nums[i] <= 10`
+  * All the elements in nums are unique.
+* **思路**: **回溯算法**，[参考77题](#77-combinations中等)
+  * 由于是指定nums，则start要从0开始，并且不可等于或大于nums.length
+* **优化**：自定义实现`java.util.AbstractList`，仅限于Leetcode加速
+```java
+public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> list = new ArrayList<>();
+    list.add(new ArrayList<>());
+    for (int i = 1; i <= nums.length; i++) {
+        subsets(nums,0, i, new ArrayList<>(),list);
+    }
+    return list;
+}
+private void subsets(int[] nums,int start,int k,List<Integer> tmp,List<List<Integer>> result){
+    if (tmp.size() == k) {
+        result.add(new ArrayList<>(tmp));
+        return;
+    }
+    for (int i = start; i < nums.length; i++) {
+        tmp.add(nums[i]);
+        subsets(nums,i+1,k,tmp,result);
+        tmp.remove(tmp.size()-1);
+    }
 }
 ```
 # 83. Remove Duplicates from Sorted List(简单)
