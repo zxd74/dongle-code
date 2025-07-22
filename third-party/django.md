@@ -33,6 +33,39 @@ python manage.py runserver
 ```
 1. 打开浏览器访问`http://127.0.0.1:8000/admin/`，输入账号密码登录
 
+### 模型后台管理
+* 默认是启动`admin`模块的
+* 后台管理用于管理数据库中的数据
+* 管理模型数据流程
+  * 先[创建模型](#创建模型)
+  * 向后台管理模块注册模型
+  * 配置后台模型显示：如字段，列表，内联等等
+  * 详细配置见`admin.ModelAdmin`
+```python
+from django.contrib import admin
+
+# Register your models here.
+
+from .models import Choice, Question
+
+class ChoiceInline(admin.StackedInline): # StackedInline、TabularInline
+    model = Choice
+    extra = 3 # 额外显示3个
+    
+class QuestionAdmin(admin.ModelAdmin):
+    # fields = ['pub_date', 'question_text'] # 自定义显示字段
+    fieldsets = [ # 自定义字段分组显示
+        (None, {"fields": ["question_text"]}),
+        ("Date information", {"fields": ["pub_date"]}),
+    ]
+    inlines = [ChoiceInline] # 内联显示，关联其他模型
+    list_display = ["question_text", "pub_date"] # 列表数据显示字段
+
+
+admin.site.register(Question, QuestionAdmin) # 自定义显示
+admin.site.register(Choice) # 默认显示所有字段
+```
+
 # 模型管理
 ## 创建模型
 Django**默认使用**sqlite数据库，会在项目目录下生成一个`db.sqlite3`文件.其他数据库需要额外安装驱动
