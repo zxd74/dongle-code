@@ -71,6 +71,7 @@
 - [76. Minimum Window Substring(困难)](#76-minimum-window-substring困难)
 - [77. Combinations(中等)](#77-combinations中等)
 - [78. Subsets(中等)](#78-subsets中等)
+- [79. Word Search(中等)](#79-word-search中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
@@ -120,6 +121,7 @@
 - [232. Implement Queue using Stacks(简单)](#232-implement-queue-using-stacks简单)
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
+- [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 
 
 # 总结
@@ -4708,6 +4710,89 @@ private void subsets(int[] nums,int start,int k,List<Integer> tmp,List<List<Inte
     }
 }
 ```
+# 79. Word Search(中等)
+    Given an m x n grid of characters board and a string word, return true if word exists in the grid.
+    The word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.
+* 约束
+  * `m == board.length`
+  * `n == board[i].length`
+  * `1 <= m, n <= 6`
+  * `1 <= word.length <= 15`
+  * `board` and `word` consist of only lowercase and uppercase English letters.
+* **思路**: **回溯算法**
+  * 记录已访问过的节点，防止重复访问
+  * 遍历board，找到与word第一个字符相同的节点，开始回溯
+  * 回溯时，判断当前节点是否在board范围内，是否已访问过，是否与word当前字符相同
+  * 若条件满足，则继续向四个方向回溯，如有匹配立即退出
+  * 直至word匹配结束或条件不符
+* **改进**
+  * 先决边界：增加先决条件判断，超出边界，直接无效
+  * 将word首位根据次数决定是否反转(次数少的在头部)
+  * 减少回溯次数
+    * 字符次数从小到大开始匹配，
+    * 当无法与头字符匹配，直接跳过
+    * 循环各方向，如有匹配立即退出
+  * 通过将二维数组重置为**任意非字母**用于代表已访问过的节点，避免使用Set结构
+    * 当不符合时，记得将其还原
+```java
+public boolean exist(char[][] board, String word) {
+    int m = board.length,n = board[0].length;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if(board[i][j] != word.charAt(0)) continue;
+            if(fs(board,word,new HashSet<>(),i,j,0)) return true;
+        }
+    }
+    return false;
+}
+private boolean fs(char[][] board,String word,Set<String> visited,int i,int j,int k){
+    if(k == word.length()) return true;
+    if(i<0 || i>=board.length || j<0 || j>=board[0].length ||
+        visited.contains(i+","+j) || board[i][j] != word.charAt(k)) return false;
+
+    visited.add(i+","+j);
+    int[] ds = {-1, 1, 0, 0};
+    for (int l = 0; l < 4; l++) {
+        if(fs(board,word,visited,i+ds[l],j+ds[3-l],k+1)) return true; // 更早结束
+    }
+    visited.remove(i+","+j);
+    return false;
+}
+
+// 改进版
+public boolean exist(char[][] board, String word) {
+    int n = board.length, m = board[0].length;
+    if (word.length() > n * m) return false; // Not enough chars on board
+    int[] freq = new int[128]; // ASCII size
+    for (char[] row : board)  for (char ch : row) freq[ch]++;
+    for (char ch : word.toCharArray()) if (--freq[ch] < 0) return false; // Not enough chars on board
+    // 从小量到大量，减少回溯次数
+    if (freq[word.charAt(0)] > freq[word.charAt(word.length() - 1)]) word = new StringBuilder(word).reverse().toString();
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if(board[i][j] != word.charAt(0)) continue;
+            if (dfs(board, word, i, j, 0)) return true;
+        }
+    }
+    return false;
+}
+private boolean dfs(char[][] board, String word, int row, int col, int idx) {
+    if (idx == word.length()) return true;
+    if (row < 0 || col < 0 || row >= board.length || col >= board[0].length
+        || board[row][col] != word.charAt(idx)) return false;
+    // Mark visited
+    char temp = board[row][col];
+    board[row][col] = '#'; // 任意非字母字符都可
+    // Move in 4 directions
+    int[] ds = {-1, 1, 0, 0};
+    for (int d = 0; d < 4; d++) {
+        if(dfs(board,word,row+ds[d],col+ds[3-d],idx+1))  return true;
+    }
+    board[row][col] = temp;
+    return false;
+}
+```
 # 83. Remove Duplicates from Sorted List(简单)
     Given the head of a sorted linked list, delete all duplicates such that each element appears only once. Return the linked list sorted as well.
 
@@ -6485,5 +6570,88 @@ public boolean isAnagram(String s, String t) {
         if(sa[i]!=0) return false;
     }
     return true;
+}
+```
+
+# 1717. Maximum Score From Removing Substrings(中等)
+You are given a 0-indexed string `s` that consists of only lowercase English letters, where each letter the string has an associated score. You are also given an integer array `nums` where `nums[i]` is the score of the `i`th character of `s`.
+You are allowed to remove any substring of `s` in one operation. The score of a string is the sum of the scores of its characters.
+Return the maximum score you can obtain after removing exactly one substring from `s`.
+A substring is a contiguous sequence of characters in a string.
+
+* **约束**
+  * `1 <= s.length <= 10^5`
+  * `s.length == nums.length`
+  * `1 <= nums[i] <= 10^5`
+* **思路**：
+  * 根据最大值，一次递归移除一个有效值
+  * 可能存在栈溢出或超时问题
+* **改进**
+  * 默认x为最大，若x<y，则将x，y交换
+  * 定义最大值次数和次值次数
+    * 当遇到次值时，若有最大值次数，则加最大值一次
+    * 否则次值次数+1
+  * 若遇到非两个字符，则取最大值次数和次值次数的最小值，乘以最小值计算结果
+  * 若最值次数有效，则计算最后剩余有效值
+```java
+public int maximumGain(String s, int x, int y) {
+    if(!(s.contains("ab") || s.contains("ba"))) return 0;
+    if(x > y){
+        return s.contains("ab")
+        ?maximumGain(s.replaceFirst("ab",""), x, y) + x
+        :maximumGain(s.replaceFirst("ba",""), x, y) + y;
+    }
+    return s.contains("ba")
+    ?maximumGain(s.replaceFirst("ba",""), x, y) + y
+    :maximumGain(s.replaceFirst("ab",""), x, y) + x;
+}
+// 递归版
+private final String AB = "ab";
+private final String BA = "ba";
+public int maximumGain(String s, int x, int y){
+    if(s.indexOf(AB) == -1 && s.indexOf(BA) == -1) return 0;
+    if(x > y && s.contains(AB)){
+        return maximumGain(s, AB, x) + maximumGain(s.replaceAll(AB, ""), x, y);
+    }
+    if(s.contains(BA)){
+        return maximumGain(s, BA, y) + maximumGain(s.replaceAll(BA, ""), x, y);
+    }
+    return maximumGain(s, AB, x) + maximumGain(s.replaceAll(AB, ""), x, y);
+}
+private int maximumGain(String s,String regex,int x){
+    int max = 0,index = 0;
+    while((index=s.indexOf(regex,index))!=-1){
+        max += x;
+        index += regex.length();
+    }
+    return max;
+}
+// 改进版
+public int maximumGain(String s, int x, int y) {
+    int score = 0;
+    char[] chars = s.toCharArray();
+    int len = chars.length;
+    char ch1 = 'a', ch2 = 'b';
+    int cnt1 = 0, cnt2 = 0;
+
+    if (x < y) { // 默认x为最大得分
+        int temp = x;x = y;y = temp;
+        ch1 = 'b';ch2 = 'a';
+    }
+    for (int i = 0; i < len; i++) {
+        if (chars[i] == ch1) cnt1++;
+        else if (chars[i] == ch2) {
+            if (cnt1 > 0) { // 存在最大值得分
+                cnt1--;
+                score += x;
+            } else cnt2++;
+        } else { // 遇到其他字符
+            score += Math.min(cnt1, cnt2) * y; // 次值得分计算
+            cnt1 = 0;
+            cnt2 = 0;
+        }
+    }
+    if (cnt1 != 0) score += Math.min(cnt1, cnt2) * y; // 最后剩余的
+    return score;
 }
 ```
