@@ -6679,25 +6679,89 @@ Return the **minimum** score of any possible pair of edge removals on the given 
   * `ai != bi`
   * `edges` represents a valid tree.
 * **思路**：
+  * 构建邻接表，子树异或组，节点相邻集(`Set`)
+  * 递归遍历子树，计算子树异或和，相邻节点数统计
+  * 遍历数组，根据子树节点集是否包含情况，计算最小异或值
+* **改进**：以当前节点的上层连接数和相邻节点数代替节点集
+  * 定义节点上层连接数，节点相邻连接数(含上下层)
+  * 递归处理时，计算节点异或，上层节点连接数，相邻节点连接数
+  * 遍历数组时
+    * 根据上层连接数大小和相邻节点连接数大小，判断节点是否在子树中
+    * 若在子树中，对比子节点/两节点/与根节点的XOR值，取最小
+    * 若不在相互子树中，对比两节点分别XOR/根节点与两值的XOR值，取最小
 ```java
+// 易理解版
 public int minimumScore(int[] nums, int[][] edges) {
     int n = nums.length;
-    List<List<Integer>> graph = new ArrayList<>(); // 将edges转邻接表
+    List<List<Integer>> graph = new ArrayList<>();
+    for (int i = 0; i < n; i++) graph.add(new ArrayList<>());
+    for (int[] edge : edges) { // 邻接表
+        graph.get(edge[0]).add(edge[1]);
+        graph.get(edge[1]).add(edge[0]);
+    }
+    int[] subtreeXor = new int[n]; // 每个节点和相邻节点的异或
+    List<Set<Integer>> descendants = new ArrayList<>(); // 每个节点所能到达的所有节点
+    for (int i = 0; i < n; i++) descendants.add(new HashSet<>());
+    // 递归计算每个节点的异或，相邻节点集
+    dfs(subtreeXor,descendants,graph,0, -1, nums); 
+
+    int rootXor = subtreeXor[0]; // 根节点的异或和
+    int minScore = Integer.MAX_VALUE;
+    for (int i = 1; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int xorI = subtreeXor[i]; // 相邻异或节点的异或值
+            int xorJ = subtreeXor[j];
+            int val1, val2, val3; // 三边的异或值
+
+            if (descendants.get(i).contains(j)) { // j is in i's subtree，j在i的子树中
+                val1 = xorJ;val2 = xorI ^ xorJ;val3 = rootXor ^ xorI;
+            } else if (descendants.get(j).contains(i)) { // i is in j's subtree，i在j的子树中
+                val1 = xorI;val2 = xorJ ^ xorI;val3 = rootXor ^ xorJ;
+            } else { // Independent subtrees
+                val1 = xorI;val2 = xorJ;val3 = rootXor ^ xorI ^ xorJ;
+            }
+            
+            int maxVal = Math.max(val1, Math.max(val2, val3));
+            int minVal = Math.min(val1, Math.min(val2, val3));
+            minScore = Math.min(minScore, maxVal - minVal);
+        }
+    }
+    return minScore;
+}
+private void dfs(int[] subtreeXor,List<Set<Integer>> descendants,List<List<Integer>> graph,int node, int parent, int[] nums) {
+    subtreeXor[node] = nums[node];
+    descendants.get(node).add(node);
+    for (int neighbor : graph.get(node)) { // 邻接表，遍历邻接点，总会有父节点
+        if (neighbor == parent) continue;
+        dfs(subtreeXor,descendants,graph,neighbor, node, nums);
+        subtreeXor[node] ^= subtreeXor[neighbor]; // 当前节点和相邻节点的异或
+        descendants.get(node).addAll(descendants.get(neighbor)); // 当前节点所能到达的所有节点
+    }
+}
+
+// 改进版
+public int minimumScore(int[] nums, int[][] edges) {
+    int n = nums.length;
+    List<List<Integer>> graph = new ArrayList<>(); // 定义邻接表
     for (int i = 0; i < n; i++)  graph.add(new ArrayList<>());
-    for (int[] e : edges) {
+    for (int[] e : edges) { // 转换为邻接表
         graph.get(e[0]).add(e[1]);
         graph.get(e[1]).add(e[0]);
     }
-    // subxor 记录子树异或和，childs 记录子树节点数，out 记录子树最右节点
-    int[] subxor = new int[n],childs = new int[n],out = new int[n],cnt = { 0 };
+    // xor 记录子树异或和，in记录节点上层(父级以上)连接数，out记录节点相邻节点(含父级和子级)连接数
+    int[] xor = new int[n],in = new int[n],out = new int[n],cnt = { 0 };
 
-    dfs(0, -1, nums, graph, subxor, childs, out, cnt);
+    dfs(0, -1, nums, graph, xor, in, out, cnt);
+    int rootXor = xor[0]; // 根节点的异或和
     int res = Integer.MAX_VALUE;
-    for (int u = 1; u < n; u++) {
-        for (int v = u + 1; v < n; v++) {
-            if (childs[v] > childs[u] && childs[v] < out[u]) res = Math.min(res,calc(subxor[0] ^ subxor[u], subxor[u] ^ subxor[v], subxor[v]));
-            else if (childs[u] > childs[v] && childs[u] < out[v]) res = Math.min(res,calc(subxor[0] ^ subxor[v], subxor[v] ^ subxor[u], subxor[u]));
-            else res = Math.min(res,calc(subxor[0] ^ subxor[u] ^ subxor[v], subxor[u], subxor[v]));
+    for (int i = 1; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (in[j] > in[i] && in[j] < out[i])  // j is in i's subtree
+                res = Math.min(res,calc(rootXor ^ xor[i], xor[i] ^ xor[j], xor[j]));
+            else if (in[i] > in[j] && in[i] < out[j])  // i is in j's subtree
+                res = Math.min(res,calc(rootXor ^ xor[j], xor[j] ^ xor[i], xor[i]));
+            else  // Independent subtrees
+                res = Math.min(res,calc(rootXor ^ xor[i] ^ xor[j], xor[i], xor[j]));
         }
     }
     return res;
@@ -6705,15 +6769,15 @@ public int minimumScore(int[] nums, int[][] edges) {
 private int calc(int part1, int part2, int part3) {
     return (Math.max(part1, Math.max(part2, part3)) -Math.min(part1, Math.min(part2, part3)));
 }
-private void dfs(int node,int parent,int[] nums,List<List<Integer>> graph,int[] subxor,int[] childs,int[] out,int[] cnt) {
-    childs[node] = cnt[0]++;
-    subxor[node] = nums[node];
-    for (int neighbor : graph.get(node)) {
+private void dfs(int cur,int parent,int[] nums,List<List<Integer>> graph,int[] xor,int[] in,int[] out,int[] cnt) {
+    in[cur] = cnt[0]++;
+    xor[cur] = nums[cur];
+    for (int neighbor : graph.get(cur)) {
         if (neighbor == parent) continue;
-        dfs(neighbor, node, nums, graph, subxor, childs, out, cnt);
-        subxor[node] ^= subxor[neighbor];
+        dfs(neighbor, cur, nums, graph, xor, in, out, cnt); // 递归相邻节点
+        xor[cur] ^= xor[neighbor]; // 当前节点和相邻节点的异或
     }
-    out[node] = cnt[0];
+    out[cur] = cnt[0];
 }
 ```
 # 3487. Maximum Unique Subarray Sum After Deletion(简单)
