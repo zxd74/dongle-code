@@ -122,6 +122,8 @@
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
+- [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
+- [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 
 
 # 总结
@@ -6653,5 +6655,117 @@ public int maximumGain(String s, int x, int y) {
     }
     if (cnt1 != 0) score += Math.min(cnt1, cnt2) * y; // 最后剩余的
     return score;
+}
+```
+# 2322. Minimum Score After Removals on a Tree(困难)
+There is an undirected connected tree with `n` nodes labeled from 0 to `n - 1` and `n - 1` edges.
+
+You are given a **0-indexed** integer array nums of length `n` where `nums[i]` represents the value of the `i^th` node. You are also given a 2D integer array edges of length `n - 1` where `edges[i] = [ai, bi]` indicates that there is an edge between nodes `ai` and `bi` in the tree.
+
+Remove two distinct edges of the tree to form three connected components. For a pair of removed edges, the following steps are defined:
+* Get the XOR of all the values of the nodes for **each** of the three components respectively.
+* The **difference** between the **largest** XOR value and the **smallest** XOR value is the score of the pair.
+* For example, say the three components have the node values: `[4,5,7]`, `[1,9]`, and `[3,3,3]`. The three XOR values are `4 ^ 5 ^ 7 = 6`, `1 ^ 9 = 8`, and `3 ^ 3 ^ 3 = 3`. The largest XOR value is `8` and the smallest XOR value is `3`. The score is then `8 - 3 = 5`.
+
+Return the **minimum** score of any possible pair of edge removals on the given tree.
+
+* **约束**
+  * `n == nums.length`
+  * `3 <= n <= 10^5`
+  * `1 <= nums[i] <= 10^9`
+  * `edges.length == n-1`
+  * `edges[i].length == 2`
+  * `0 <= ai, bi < n`
+  * `ai != bi`
+  * `edges` represents a valid tree.
+* **思路**：
+```java
+public int minimumScore(int[] nums, int[][] edges) {
+    int n = nums.length;
+    List<List<Integer>> graph = new ArrayList<>(); // 将edges转邻接表
+    for (int i = 0; i < n; i++)  graph.add(new ArrayList<>());
+    for (int[] e : edges) {
+        graph.get(e[0]).add(e[1]);
+        graph.get(e[1]).add(e[0]);
+    }
+    // subxor 记录子树异或和，childs 记录子树节点数，out 记录子树最右节点
+    int[] subxor = new int[n],childs = new int[n],out = new int[n],cnt = { 0 };
+
+    dfs(0, -1, nums, graph, subxor, childs, out, cnt);
+    int res = Integer.MAX_VALUE;
+    for (int u = 1; u < n; u++) {
+        for (int v = u + 1; v < n; v++) {
+            if (childs[v] > childs[u] && childs[v] < out[u]) res = Math.min(res,calc(subxor[0] ^ subxor[u], subxor[u] ^ subxor[v], subxor[v]));
+            else if (childs[u] > childs[v] && childs[u] < out[v]) res = Math.min(res,calc(subxor[0] ^ subxor[v], subxor[v] ^ subxor[u], subxor[u]));
+            else res = Math.min(res,calc(subxor[0] ^ subxor[u] ^ subxor[v], subxor[u], subxor[v]));
+        }
+    }
+    return res;
+}
+private int calc(int part1, int part2, int part3) {
+    return (Math.max(part1, Math.max(part2, part3)) -Math.min(part1, Math.min(part2, part3)));
+}
+private void dfs(int node,int parent,int[] nums,List<List<Integer>> graph,int[] subxor,int[] childs,int[] out,int[] cnt) {
+    childs[node] = cnt[0]++;
+    subxor[node] = nums[node];
+    for (int neighbor : graph.get(node)) {
+        if (neighbor == parent) continue;
+        dfs(neighbor, node, nums, graph, subxor, childs, out, cnt);
+        subxor[node] ^= subxor[neighbor];
+    }
+    out[node] = cnt[0];
+}
+```
+# 3487. Maximum Unique Subarray Sum After Deletion(简单)
+You are given an integer array `nums`.
+
+You are allowed to delete any number of elements from `nums` without making it **empty**. After performing the deletions, select a subarray of `nums` such that:
+
+All elements in the subarray are **unique**.
+The sum of the elements in the subarray is **maximized**.
+Return the **maximum sum** of such a subarray.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `1 <= nums[i] <= 10^9`
+* **思路**：
+  * 使用辅助结构Set去重
+  * 循环nums
+    * 判断set中是否存在，存在则过滤，否则继续
+    * 若>=0,判断sum是否小于0，小于0则赋值，否则相加
+    * 若<0，继续判断sum是否小于0，小于0则取最大值
+  * 提示：是对唯一元素进行求和
+* **改进**
+  * 对数组先排序
+  * 从最大值从右向左遍历
+    * 若`nums[i]`小于0，则直接退出
+    * 若未重复，则求和
+```java
+public int maxSum(int[] nums) {
+    int n = nums.length,max = -101;
+    Set<Integer> set = new HashSet<>();
+    for (int i = 0; i < n; i++) {
+        int tmp = nums[i];
+        if(set.contains(tmp)) continue;
+        if(tmp>=0) { // 若不小于0，则附加
+            if(max <0) max = tmp; // 若max小于0，则更新
+            else max+=tmp; // 若max不小于0，则附加
+        }
+        else if(max<0) max = Math.max(max, tmp); // 若都小于0，取最大值
+        set.add(tmp);
+    }
+    return max;
+}
+// 改进版
+public int maxSum(int[] nums) {
+    Arrays.sort(nums);
+    int pre=nums[nums.length-1],sum = pre;
+    for (int i = nums.length-2; i >= 0; i--) {
+        int tmp = nums[i];
+        if (tmp<=0) return sum;
+        else if(tmp!=pre) sum += tmp;
+        pre = tmp;
+    }
+    return sum;
 }
 ```
