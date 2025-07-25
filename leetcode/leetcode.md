@@ -72,6 +72,9 @@
 - [77. Combinations(中等)](#77-combinations中等)
 - [78. Subsets(中等)](#78-subsets中等)
 - [79. Word Search(中等)](#79-word-search中等)
+- [80. Remove Duplicates from Sorted Array II(中等)](#80-remove-duplicates-from-sorted-array-ii中等)
+- [81. Search in Rotated Sorted Array II(中等)](#81-search-in-rotated-sorted-array-ii中等)
+- [82. Remove Duplicates from Sorted List II(中等)](#82-remove-duplicates-from-sorted-list-ii中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
@@ -4795,6 +4798,109 @@ private boolean dfs(char[][] board, String word, int row, int col, int idx) {
     return false;
 }
 ```
+# 80. Remove Duplicates from Sorted Array II(中等)
+    Given an integer array nums sorted in **non-decreasing order**, remove the duplicates **in-place** such that each unique element appears at most twice. The relative order of the elements should be kept the same.
+    Since it is impossible to change the length of the array in some languages, you must instead have the result be placed in the first part of the array nums. More formally, if there are k elements after removing the duplicates, then the first k elements of nums should hold the final result. It does not matter what you leave beyond the first k elements.
+    Return k after placing the final result in the first k slots of nums.
+    Do **not** allocate extra space for another array. You must do this by **modifying the input array** in-place with O(1) extra memory.
+* 约束
+  * `1 <= nums.length <= 3 * 10^4`
+  * `-10^4 <= nums[i] <= 10^4`
+  * `nums` is sorted in **non-decreasing** order.
+* **思路**
+  * 记录前一个，当前有效索引，重复数量
+  * 由于数组时升序的，所以直接遍历处理即可
+  * 若当前值和前值相等，且重复数量大于2，则跳过
+  * 若当前值和前值不同，则重置前一个和重复数量
+  * 赋值有效索引为当前值
+* **优化**
+  * 提前结束，当数组长度小于等于2时，直接返回数组长度
+  * 从第三个元素开始对比，并且对比**有效**前面第二个元素
+```java
+public int removeDuplicates(int[] nums) {
+    int pre=nums[0],cur=1,count=1;
+    for (int i = 1; i < nums.length; i++) {
+        int tmp = nums[i];
+        if(tmp == pre){
+            if(++count>2) continue; // 超过两次则跳过
+        }else{ // 重置
+            pre = tmp;
+            count = 1;
+        }
+        nums[cur++] = tmp;
+    }
+    return cur;
+}
+// 优化
+public int removeDuplicates(int[] nums) {
+    if (nums.length <= 2) return nums.length;
+    int k = 2;
+    for (int i = 2; i < nums.length; i++) {
+        if (nums[i] != nums[k - 2]) nums[k++] = nums[i];
+    }
+    return k;
+}
+```
+# 81. Search in Rotated Sorted Array II(中等)
+There is an integer array nums sorted in non-decreasing order (not necessarily with distinct values).
+
+Before being passed to your function, nums is rotated at an unknown pivot index `k` (`0 <= k < nums.length`) such that the resulting array is `[nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]` (**0-indexed**). For example, `[0,1,2,4,4,4,5,6,6,7]` might be rotated at pivot index `5` and become `[4,5,6,6,7,0,1,2,4,4]`.
+
+* 约束
+  * `1 <= nums.length <= 5000`
+  * `-10^4 <= nums[i] <= 10^4`
+  * `-10^4 <= target <= 10^4`
+  * `nums` is guaranteed to be rotated at some pivot.
+* **思路**: 双指针查找法
+  * 若查找到，则返回true
+  * 前半部分属于大于查找，若后一个小于当前，则终止false
+  * 后半部分属于小于查找，如前一个大于当前，则终止false
+  * 结束未查找到则返回false
+```java
+public boolean search(int[] nums, int target) {
+    if(nums.length == 1) return nums[0] == target;
+    int left = 0,right = nums.length-1;
+    while (left<right) {
+        if(nums[left] == target || nums[right] == target) return true;
+        if(nums[left] < target) {
+            if(nums[left] > nums[left+1]) return false;
+            left++;
+        }else if(nums[right] > target) {
+            if(nums[right] < nums[right-1]) return false;
+            right--;
+        }else return false;
+    }
+    return false;
+}
+```
+# 82. Remove Duplicates from Sorted List II(中等)
+    Given the head of a sorted linked list, delete all nodes that have duplicate numbers, leaving only distinct numbers from the original list. Return the linked list sorted as well.
+* 约束
+  * The number of nodes in the list is in the range [0, 300].
+  * -100 <= Node.val <= 100
+  * The list is guaranteed to be sorted in ascending order.
+* **思路**
+  * 定义前值，当前值，下一个值（前值一定是唯一值）
+  * 遍历下一个值，若下一个值和下下个值不为null时处理
+  * 若当前值和下一个值相等
+    * 则将下一个值指向下一个的下一个，直到不相等
+      * 将前值的下一个值定义为不等于当前值的下一个值
+    * 若当前值和下一个值不等，则将前值指向当前值，当前值指向下一个值
+```java
+public ListNode deleteDuplicates(ListNode head) {
+    if(head == null) return null;
+    ListNode first = new ListNode(0,head);
+    ListNode pre = first,cur = head,next = head;
+    while(next!=null && (next = next.next)!= null){
+        if(cur.val == next.val){
+            while((next = next.next) != null && cur.val == next.val){}; // 找到下一个不重复的节点
+            pre.next = next;
+        }else pre = cur;
+        cur = next;
+    }
+    return first.next;
+}
+```
 # 83. Remove Duplicates from Sorted List(简单)
     Given the head of a sorted linked list, delete all duplicates such that each element appears only once. Return the linked list sorted as well.
 
@@ -4870,7 +4976,6 @@ public static ListNode deleteDuplicates2(ListNode head){
     return first.next;
 }
 ```
-
 # 88. Merge Sorted Array(简单)
     You are given two integer arrays nums1 and nums2, sorted in **non-decreasing order**, and two integers m and n, representing the number of elements in nums1 and nums2 respectively.
 
