@@ -125,7 +125,9 @@
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
+- [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
+- [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 
 
@@ -6762,6 +6764,38 @@ public int maximumGain(String s, int x, int y) {
     return score;
 }
 ```
+
+# 2210. Count Hills and Valleys in an Array(简单)
+You are given a **0-indexed** integer array nums. An index i is part of a **hill** in nums if the closest non-equal neighbors of i are smaller than `nums[i]`. Similarly, an index `i` is part of a **valley** in nums if the closest non-equal neighbors of `i` are larger than `nums[i]`. Adjacent indices `i` and `j` are part of the same hill or valley if `nums[i] == nums[j]`.
+
+Note that for an index to be part of a hill or valley, it must have a non-equal neighbor on **both** the left and right of the index.
+
+Return the number of hills and valleys in nums.
+
+* **约束**
+  * `3 <= nums.length <= 10^5`
+  * `1 <= nums[i] <= 100`
+* **思路**：
+  * 两边小于`nums[i]` ,`i`为山峰
+  * 两边大于`nums[i]` ,`i`为山谷
+  * 允许山峰或山谷存在相同值
+  * 返回山峰或山谷的数量
+```java
+public int countHillValley(int[] nums) {
+    int count = 0;
+    for (int i = 1; i < nums.length-1; i++) {
+        for (int j = i+1; j < nums.length; j++) {
+            if(nums[j] == nums[i]) continue;
+            if(nums[i-1]<nums[i]) if(nums[j]<nums[i]) count++;
+            else if(nums[i-1]>nums[i]) if(nums[j]>nums[i]) count++;
+            i = j-1;
+            break;
+        }
+    }
+    return count;    
+}
+```
+
 # 2322. Minimum Score After Removals on a Tree(困难)
 There is an undirected connected tree with `n` nodes labeled from 0 to `n - 1` and `n - 1` edges.
 
@@ -6883,6 +6917,45 @@ private void dfs(int cur,int parent,int[] nums,List<List<Integer>> graph,int[] x
         xor[cur] ^= xor[neighbor]; // 当前节点和相邻节点的异或
     }
     out[cur] = cnt[0];
+}
+```
+# 3330. Find the Original Typed String I(简单)
+Alice is attempting to type a specific string on her computer. However, she tends to be clumsy and **may** press a key for too long, resulting in a character being typed **multiple** times.
+
+Although Alice tried to focus on her typing, she is aware that she may still have done this **at most** once.
+
+You are given a string word, which represents the **final** output displayed on Alice's screen.
+
+Return the total number of possible original strings that Alice might have intended to type.
+
+* **约束**
+  * `1 <= word.length <= 100`
+  * `word` consists of lowercase English letters.
+* **思路**：
+  * 增加辅助变量前值
+  * 循环word
+    * 判断当前字符是否与下一个字符相同，相同则计数+1
+    * 否则，将前值赋值当前值
+* **优化**
+  * 在循环中，建立内循环过滤相等值
+```java
+public int possibleStringCount(String word) {
+    int count = 1;char pre = word.charAt(0);
+    for (int i = 1; i < word.length(); i++) {
+        if (word.charAt(i) != pre)  pre = word.charAt(i);
+        else count++;
+    }
+    return count;
+}
+// 优化
+public int possibleStringCount(String word) {
+    int count = 1,n = word.length();
+    for (int i = 0; i < n; i++) {
+        int start = i;
+        while(i+1<n && word.charAt(i+1) == word.charAt(start)) i++;
+        count += i-start;
+    }
+    return count;
 }
 ```
 # 3487. Maximum Unique Subarray Sum After Deletion(简单)
