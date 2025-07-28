@@ -1,4 +1,5 @@
 # 总结
+## 视频列表
 **视频响应结构**
 ```json
 {
@@ -32,6 +33,41 @@
 **视频采集**
 * 可以直接通过`requests`请求`api`，但需要携带必要的`header`信息(通过网页访问获取)，如`cookie`、`referer`、`user-agent`.
   * 但代码中会暴露隐私信息，如`msToken`、`uifid`等，故不推荐
+
+## 集合视频
+**集合列表**: `aweme/v1/web/mix/list`
+```json
+{
+    "mix_infos":[
+        {
+            "mix_id": "xxx", // 集合id  构成集合id  https://www.douyin.com/collection/{mix_id}|/{mix_index}
+            "mix_name": "xxx", // 集合名称
+        }
+    ]
+}
+```
+**集合视频列表** : `aweme/v1/web/mix/aweme`
+```json
+{
+    "aweme_list":[
+        {
+            "desc": "", // 类似标题，但可能存在多个tag
+            "aweme_id": "xxx", // 视频id 构成视频访问地址  https://www.douyin.com/video/{aweme_id}
+            "video": {
+                "play_addr": {
+                    "data_size": 0, // 视频大小
+                    "url_list":[
+                        ...
+                    ]
+                }
+                "format": "mp4", // 视频格式
+                "download_addr":{} // 视频下载地址, 若设置禁止下载时则无效
+            }
+        }
+    ],
+    "cursor": 6, // 下次视频索引游标
+}
+```
 
 # 视频采集
 ## 用户视频采集
@@ -114,3 +150,11 @@ for i in data:
 ```txt
 https://www.douyin.com/aweme/v1/web/general/search/single/?device_platform=webapp&aid=6383&channel=channel_pc_web&search_channel=aweme_general&enable_history=1&keyword=%E4%B8%80%E5%8F%A3%E6%B0%94%E7%9C%8B%E5%AE%8C%E7%B3%BB%E5%88%97&search_source=normal_search&query_correct_type=1&is_filter_search=0&from_group_id=&offset=0&count=10&need_filter_settings=0&list_type=single&search_id=202507272149492A9C3C0A5FE8558CC436&update_version_code=170400&pc_client_type=1&pc_libra_divert=Windows&support_h265=1&support_dash=1&cpu_core_num=16&version_code=190600&version_name=19.6.0&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Edge&browser_version=138.0.0.0&browser_online=true&engine_name=Blink&engine_version=138.0.0.0&os_name=Windows&os_version=10&device_memory=8&platform=PC&downlink=10&effective_type=4g&round_trip_time=50&webid=7530477843764348457&uifid=...&msToken=...&a_bogus=...
 ```
+## 合集视频采集
+1. 获取博主合集列表`aweme/v1/web/mix/list`
+2. 获取集合地址`https://www.douyin.com/collection/{mix_id}|/{mix_index}`
+   - 访问后会自动跳转执行mix_index的集合视频
+3. 获取集合视频列表`aweme/v1/web/mix/aweme/`
+4. 解析视频信息，获取播放地址或下载地址
+5. 使用requests请求视频内容，并保存至本地
+6. 可使用自动化工具，保证正常用户操作，避免被平台限制
