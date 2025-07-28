@@ -125,6 +125,7 @@
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
+- [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
@@ -6764,7 +6765,36 @@ public int maximumGain(String s, int x, int y) {
     return score;
 }
 ```
+# 2044. Count Number of Maximum Bitwise OR Subsets(中等)
+Given an integer array `nums`, find the maximum possible bitwise OR of a subset of `nums` and return the number of different non-empty subsets with the maximum bitwise OR.
 
+An array `a` is a subset of an array `b` if `a` can be obtained from `b` by deleting some (possibly zero) elements of `b`.
+
+The bitwise OR of an array is the bitwise OR of all the numbers in the array.
+
+* **约束**
+  * `1 <= nums.length <= 16`
+  * `1 <= nums[i] <= 10^8`
+* **思路**：回溯
+  * 求最大异或值
+  * 从开始位置深度递归对比异或值
+    * 当索引超出，终止
+    * 当OR等值，则返回剩余个数的排列组合数
+    * 否则，递归对比OR值(选择当前值+不选择当前值)
+```java
+public int countMaxOrSubsets(int[] nums) {
+    int maxOR = 0;
+    for (int num : nums) maxOR |= num; // 求最大异或值
+    return backtrack(nums, maxOR, 0, 0);
+}
+private int backtrack(int[] nums, int maxOR, int index, int currentOR) {
+    if (index == nums.length) return currentOR == maxOR ? 1 : 0; // 终止条件
+    if (currentOR == maxOR) return 1 << (nums.length - index); // 当结果等于，则取剩余元素数的排列组合数
+    // 选择当前元素 + 不选择当前元素
+    return backtrack(nums, maxOR, index + 1, currentOR | nums[index]) + 
+        backtrack(nums, maxOR, index + 1, currentOR);
+}
+```
 # 2210. Count Hills and Valleys in an Array(简单)
 You are given a **0-indexed** integer array nums. An index i is part of a **hill** in nums if the closest non-equal neighbors of i are smaller than `nums[i]`. Similarly, an index `i` is part of a **valley** in nums if the closest non-equal neighbors of `i` are larger than `nums[i]`. Adjacent indices `i` and `j` are part of the same hill or valley if `nums[i] == nums[j]`.
 
