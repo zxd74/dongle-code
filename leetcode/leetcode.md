@@ -128,6 +128,7 @@
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
+- [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 
@@ -6947,6 +6948,77 @@ private void dfs(int cur,int parent,int[] nums,List<List<Integer>> graph,int[] x
         xor[cur] ^= xor[neighbor]; // 当前节点和相邻节点的异或
     }
     out[cur] = cnt[0];
+}
+```
+# 2411. Smallest Subarrays With Maximum Bitwise OR(中等)
+You are given a **0-indexed** array `nums` of length `n`, consisting of non-negative integers. For each index `i` from `0` to `n - 1`, you must determine the size of the **minimum sized** non-empty subarray of `nums` starting at `i` (**inclusive**) that has the **maximum** possible **bitwise OR**.
+
+In other words, let `B_ij` be the bitwise OR of the subarray `nums[i...j]`. You need to find the smallest subarray starting at `i`, such that bitwise OR of this subarray is equal to `max(Bik)` where `i <= k <= n - 1`.
+
+The bitwise OR of an array is the bitwise OR of all the numbers in it.
+
+Return an integer array `answer` of size n where `answer[i]` is the length of the **minimum** sized subarray starting at `i` with **maximum** bitwise OR.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `0 <= nums[i] <= 10^9`
+* **思路**：
+  * 定义结果数组，长度与nums相同
+  * 循环nums
+    * 获取当前位置到最后的最大或值
+    * 从当前位置开始，循环获取符合最大或的最小子数组长度
+* **改进**
+  * 每次遍历，以当前值和前面的值做异或处理，
+  * 若不等于前面的值，则重置前面的值，改为异或结果(最大maxOR)
+  * 若等于，则跳过内循环(每次结果前面的值都会统一更新为最大maxOR)
+```java
+public int[] smallestSubarrays(int[] nums) { // 会超时
+    int n = nums.length;
+    int[] res = new int[n];
+    Arrays.fill(res, 1); // 没人最少一个数组长度
+    for (int i = 0; i < n; i++) {
+        int tmp = nums[i],maxOR = tmp;
+        for (int j = i+1; j <n; j++) { // 求最大或
+            maxOR |= nums[j];
+        }
+        for (int j = i+1; j < n; j++) { // 求符合最大或的最小子数长度
+            res[i]++;
+            if((tmp|= nums[j]) == maxOR) {
+                break;
+            }
+        }
+    }
+}
+
+// 改进版
+public int[] smallestSubarrays(int[] nums) {
+    int n = nums.length;
+    int[] res = new int[n];
+    Arrays.fill(res, 1);
+    for (int i = 0; i < n; i++){
+        int tmp = nums[i];
+        // 只有后续存在更大maxOR时才会更新前面的值，并且将前面的值重置为最大maxOR，否则不更新
+        for (int j = i - 1; j >= 0 && (nums[j] | tmp) != nums[j]; j--){
+            nums[j] |= tmp;
+            res[j] = i - j + 1; // 会重复对前面的元素进行更新
+        }
+    }
+    return res;
+}
+
+// 其它
+public int[] smallestSubarrays(int[] nums) {
+    int len = nums.length;
+    int[] last = new int[30]; // 记录每个bit最后出现的位置
+    int[] res = new int[len];
+    Arrays.fill(res, 1);
+    for (int i = len - 1; i >= 0; i--) {
+        for (int bit = 0; bit < 30; bit++) {
+            if ((nums[i] & (1 << bit)) > 0) last[bit] = i;
+            res[i] = Math.max(res[i], last[bit] - i + 1);
+        }
+    }
+    return res;
 }
 ```
 # 3330. Find the Original Typed String I(简单)
