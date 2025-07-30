@@ -129,6 +129,7 @@
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
+- [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 
@@ -7019,6 +7020,77 @@ public int[] smallestSubarrays(int[] nums) {
         }
     }
     return res;
+}
+```
+# 2419. Longest Subarray With Maximum Bitwise AND(中等)
+You are given an integer array `nums` of length `n`.
+You want to choose a subarray of `nums` such that the bitwise AND of the elements in the subarray is **maximum**.
+
+Return the length of the longest subarray with maximum bitwise AND. If there is no such subarray, return `0`.
+
+The bitwise AND of an array is the bitwise AND of all the elements in the array.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `1 <= nums[i] <= 10^6`
+* **思路**：
+  * 定义遍历索引，最大长度，最大AND值，当前AND值，当前长度
+  * 循环nums
+    * 当前AND值与当前值等值，则当前AND数组长度+1，并且索引+1
+    * 当前AND值小于当前值，则重置当前AND值为当前值，并重置当前长度为1，并且索引+1
+    * 当前AND值大于当前值，则对比最大AND值
+      * 若大于最大AND值，则将当前AND相关数据赋值给最大AND相关数据
+      * 若等于最大AND值，则对比最大AND长度与当前AND长度，取最大值
+      * 重置当前AND值为当前值，并重置当前长度为1，并且索引+1
+* **改进**：简化逻辑
+  * **先找最大值**，最大值肯定为最大AND值
+  * 遍历nums
+    * 若未遇到最大AND值，则跳过
+    * 若遇到最大AND值时，开始计算连续长度
+    * 对比已有连续长度，取最大
+* **提示**：求最大AND值，则最大值肯定为最大AND值
+```java
+private int longestSubarray(int[] nums) {
+    int start=0,max = 0,maxAnd = 0,curMaxAnd=0,count = 0;
+    while (start < nums.length) {
+        if(curMaxAnd == nums[start]){
+            count++;
+            start++;
+            continue;
+        }
+        // 若curMaxAnd<nums[start] 则AND结果肯定小于nums[start],AND 运算结果不大于最小的那个
+        if(curMaxAnd<nums[start]){ // 重置
+            curMaxAnd = nums[start];
+            count = 1;
+            start++;
+            continue;
+        } // else curMaxAnd>nums[start]
+        if(curMaxAnd>maxAnd){
+            maxAnd = curMaxAnd;
+            max = count;
+        }else if(curMaxAnd==maxAnd) max = Math.max(max,count);
+        curMaxAnd = nums[start];
+        count = 1;
+        start++;
+    }
+    return curMaxAnd== maxAnd?Math.max(max,count):curMaxAnd>maxAnd?count:max;
+}
+
+// 改进版(简化版)
+private int longestSubarray(int[] nums) {
+    int maxCount = 0,maxAnd = 0;
+    for(int num:nums) maxAnd = Math.max(maxAnd,num); // 先找到最大值，肯定为最大AND值
+    for (int i = 0; i < nums.length; i++) {
+        if(nums[i]!=maxAnd) continue; // 未遇到最大AND值，则跳过，如遇到，则开始计算连续长度
+        int c1 = 0;
+        while (i<nums.length && nums[i] == maxAnd) { // 最大AND值连续出现
+            c1++;
+            i++;
+        }
+        maxCount = Math.max(maxCount, c1); // 更新最大连续长度
+        i--;
+    }
+    return maxCount;
 }
 ```
 # 3330. Find the Original Typed String I(简单)
