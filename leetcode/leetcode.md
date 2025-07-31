@@ -76,6 +76,7 @@
 - [81. Search in Rotated Sorted Array II(中等)](#81-search-in-rotated-sorted-array-ii中等)
 - [82. Remove Duplicates from Sorted List II(中等)](#82-remove-duplicates-from-sorted-list-ii中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
+- [84. Largest Rectangle in Histogram(困难)](#84-largest-rectangle-in-histogram困难)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
 - [100. Same Tree(简单)](#100-same-tree简单)
@@ -4984,6 +4985,77 @@ public static ListNode deleteDuplicates2(ListNode head){
     }
     cur.next = null; // 避免最大值有next
     return first.next;
+}
+```
+# 84. Largest Rectangle in Histogram(困难)
+    Given an array of integers `heights` representing the histogram's bar height where the width of each bar is `1`, return the area of the largest rectangle in the histogram.
+
+* **约束**
+  * `1 <= heights.length <=105`
+  * `0 <= heights[i] <= 104`
+* **思路**
+  * 暴力法：遍历每个节点，向左向右遍历，找到左右边界，计算面积
+* **改进**
+  * 栈处理：遍历数组
+    * 若栈内有数据，并且当前值小于栈顶元素对应值，
+      * 则取出栈顶并和当前索引之间的面积
+    * 将当前值索引入栈
+    * 判断最后栈内数据，并计算最后面积
+  * **优化**：使用数组替代栈
+```java
+public int largestRectangleArea(int[] heights) { // 超时 O(n^2)
+    int n = heights.length,start=0,max = 0;
+    while(start < n){
+        int low = 0;
+        for (int i = start; i < n; i++) {
+            if(heights[i] == 0) break;
+            low = low == 0 ? heights[i] : Math.min(low,heights[i]);
+            max = Math.max(max,low*(i-start+1));
+        }
+        start++;
+    }
+    return max;
+}
+// 改进版：使用栈获取面积
+public int largestRectangleArea(int[] heights) { // 超时 O(nlogn)
+    Stack<Integer> stack = new Stack<>();
+    stack.push(-1);
+    int maxArea = 0;
+
+    for (int i = 0; i < heights.length; i++) {
+        while (stack.peek() != -1 && heights[i] <= heights[stack.peek()]) {
+            int height = heights[stack.pop()];
+            int width = i - stack.peek() - 1;
+            maxArea = Math.max(maxArea, height * width);
+        }
+        stack.push(i);
+    }
+
+    while (stack.peek() != -1) {
+        int height = heights[stack.pop()];
+        int width = heights.length - stack.peek() - 1;
+        maxArea = Math.max(maxArea, height * width);
+    }
+
+    return maxArea;
+}
+// 改进优化版：适用数组替代stack
+public int largestRectangleArea(int[] heights) {
+    int n = heights.length,top = -1,max = -1;
+    int[] stack = new int[n];
+    for (int i = 0; i < n; i++) {
+        while (top > -1 && heights[stack[top]] > heights[i]) {
+            max = Math.max(max, heights[stack[top]] * (i - (top == 0 ? -1 : stack[top - 1]) - 1));
+            top--;
+        }
+        stack[++top] = i; //push curr element
+    }
+    int nextIdx = n;
+    while (top >= 0) {
+        max = Math.max(max, heights[stack[top]] * (nextIdx - (top > 0 ? stack[top - 1] : -1) - 1));
+        top--;
+    }
+    return max;
 }
 ```
 # 88. Merge Sorted Array(简单)
