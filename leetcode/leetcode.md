@@ -124,6 +124,7 @@
 - [232. Implement Queue using Stacks(简单)](#232-implement-queue-using-stacks简单)
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
+- [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
@@ -139,6 +140,10 @@
 * 算法思想：分治，贪心，回溯，动态规划，分支有界
   * **使用动态规划时避免重复计算问题**
 * 算法应用：排序、查找、字符串处理、数组处理、链表处理、树处理、图处理、堆处理、栈处理、队列处理、哈希表处理
+* 运算符
+  * 位运算
+    * `&`：与运算，最大的肯定是最大`&`单只值,结果不大于最小值
+    * `|`：或运算
 * 字符操作
   * 使用char对比
   * 将char转int对比
@@ -6684,7 +6689,69 @@ public boolean isAnagram(String s, String t) {
     return true;
 }
 ```
+# 898. Bitwise ORs of Subarrays(中等)
+Given an integer array `nums`, return *the number of non-empty **subarrays** such that the bitwise OR of the subarray elements is equal to `nums[i]` for all `i` where `0 <= i < nums.length`*.
 
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `1 <= nums[i] <= 10^9`
+* **思路**：
+  * 适用Set结构存储结果，用于去重
+  * 遍历数组
+    * 将当前值加入结果集
+    * 将当前值分别从前值分别及遍历数组元素(0<=j<=i)进行异或，并加入结果集
+* **优化**
+  * 记录前结果集，避免内部重复与前值进行异或
+  * 记录当前结果集，加入当前值和当前值与前结果集分别异或结果
+  * 将当前结果集加入最终结果集，并赋值给前结果集
+* **改进**：**用前元素存储与当前值的异或值结果**
+```java
+// 基础实现
+public int subarrayBitwiseORs(int[] arr) {
+    Set<Integer> res = new HashSet<>();
+    for (int i = 0; i < arr.length; i++) { // 遍历数组
+        int tmp = arr[i];
+        if(!res.contains(tmp)) res.add(tmp); // 判断当前值
+        int start = i-1;
+        while(start>=0){ // 每次异或开始位置
+            for (int j = start; j >=0; j--) { // 异或结果判断
+                tmp |= arr[j];
+                if(!res.contains(tmp)) res.add(tmp); // 判断当前值和前面的异或值
+            }
+            start--;
+        }
+    }
+    return res.size();
+}
+// 优化版
+public int subarrayBitwiseORs(int[] arr) {
+    Set<Integer> res = new HashSet<>(); // 结果集
+    Set<Integer> pres = new HashSet<>(); // 前面异或结果集
+    for (int x : arr) {
+        Set<Integer> curs = new HashSet<>(); // 当前异或结果集
+        curs.add(x); // 当前值
+        for (int y : pres) curs.add(x | y); // 当前值与前面异或结果集异或
+        res.addAll(curs);
+        pres = curs;
+    }
+    return res.size();
+}
+
+// 改进版
+public int subarrayBitwiseORs(int[] arr) {
+    Set<Integer> res=new HashSet<>();
+    //不借助额外辅助，直接将当前位或结果赋值给前一位
+    for(int i=0;i<arr.length;i++){
+        res.add(arr[i]);
+        for(int j=i-1;j>=0;j--){
+            if(arr[j]==(arr[j] | arr[i])) break; 
+            arr[j]|=arr[i];
+            res.add(arr[j]);
+        }
+    }
+    return res.size();
+}
+```
 # 1717. Maximum Score From Removing Substrings(中等)
 You are given a 0-indexed string `s` that consists of only lowercase English letters, where each letter the string has an associated score. You are also given an integer array `nums` where `nums[i]` is the score of the `i`th character of `s`.
 You are allowed to remove any substring of `s` in one operation. The score of a string is the sum of the scores of its characters.
