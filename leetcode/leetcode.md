@@ -5381,6 +5381,64 @@ public List<List<Integer>> generate(int numRows) {
     }
     return res;
 }
+// 递归版实现
+public List<List<Integer>> generate(int numRows) {
+    List<List<Integer>> res = new ArrayList<>();
+    generate(numRows,res);
+    return res;
+}
+public void generate(int row,List<List<Integer>> res) {
+    List<Integer> curList = new ArrayList<>();
+    if(row < 2){
+        for(int i = 0;i< row;i++) curList.add(1);
+        res.add(curList);
+        return;
+    }
+    int preRow = row-1;
+    generate(preRow,res);
+    List<Integer> pre = res.get(preRow-1);
+    curList.add(1);
+    for(int j = 1;j<preRow;j++) curList.add(pre.get(j-1)+pre.get(j));
+    curList.add(1);
+    res.add(curList);
+}
+
+// 优化版：自定义是实现AbstractList
+public List<List<Integer>> generate(int numRows) {
+    return new AbstractList<List<Integer>>() {
+        List<List<Integer>> res;
+        void init(){
+            if(res!=null) return;
+            res = new ArrayList<>();
+            generate(numRows);
+        }
+        void generate(int row){
+            List<Integer> curList = new ArrayList<>();
+            if(row < 2){
+                for(int i = 0;i< row;i++) curList.add(1);
+                res.add(curList);
+                return;
+            }
+            int preRow = row-1;
+            generate(preRow);
+            List<Integer> pre = res.get(preRow-1);
+            curList.add(1);
+            for(int j = 1;j<preRow;j++) curList.add(pre.get(j-1)+pre.get(j));
+            curList.add(1);
+            res.add(curList);
+        }
+        @Override
+        public List<Integer> get(int index) {
+            init();
+            return res.get(index);
+        }
+        @Override
+        public int size() {
+            init();
+            return numRows;
+        }
+    };
+}
 
 // 改进版：优化空间复杂度
 public List<List<Integer>> generate(int numRows) {
@@ -5389,9 +5447,8 @@ public List<List<Integer>> generate(int numRows) {
         List<Integer> curList = new ArrayList<>();
         int num = 1;
         for (int j = 0; j <= i; j++) {
-            if (j == 0 || j == i) {
-                curList.add(1);
-            } else {
+            if (j == 0 || j == i) curList.add(1);
+            else {
                 num = num*(i-j+1)/j;
                 curList.add(num);
             }
