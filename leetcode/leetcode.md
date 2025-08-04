@@ -126,8 +126,10 @@
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
+- [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
+- [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
@@ -6881,6 +6883,44 @@ public int subarrayBitwiseORs(int[] arr) {
     return res.size();
 }
 ```
+# 904. Fruit Into Baskets(中等)
+You are visiting a farm that has a single row of fruit trees arranged from left to right. The trees are represented by an integer array `fruits` where `fruits[i]` is the type of fruit the `i`th tree produces.
+
+You want to collect as much fruit as possible. However, the owner has some strict rules that you must follow:
+* You only have **two** baskets, and each basket can only hold a **single type** of fruit. There is no limit on the amount of fruit each basket can hold.
+* Starting from any tree of your choice, you must pick **exactly one fruit** from **every** tree (including the start tree) while moving to the right. The picked fruits must fit in one of your baskets.
+* Once you reach a tree with fruit that cannot fit in your baskets, you must stop.
+
+Given the integer array fruits, return the **maximum** number of fruits you can pick.
+
+* **约束**
+  * `1 <= fruits.length <= 10^5`
+  * `0 <= fruits[i] < fruits.length`
+* **思路**：双指针法
+  * 由于只有两个包，故而只需通过两个索引即可判定两个包中水果类型
+  * 遍历数组，
+    * 当前水果类型与两个索引类型相同时，跳过
+    * 若两个索引等值，则将当前值赋值给第二个索引
+    * 两索引不等值及两个水果类型
+      * 取最大值
+      * 并将第一个索引赋值为第二个索引，并将当前索引重置为第一个索引(重点，避免漏检)
+```java
+public int totalFruit(int[] fruits) {
+    int max = 0,start = 0,next=0,cur = -1;
+    while((++cur) < fruits.length){
+        int fruit = fruits[cur];
+        if(fruits[start] == fruit || fruits[next] == fruit) continue;
+        if(start==next) next = cur;
+        else{
+            max = Math.max(max, cur-start);
+            start = next;cur = start;
+        }
+    }
+    max = Math.max(max, fruits.length-start);
+    return max;
+}
+```
+
 # 1717. Maximum Score From Removing Substrings(中等)
 You are given a 0-indexed string `s` that consists of only lowercase English letters, where each letter the string has an associated score. You are also given an integer array `nums` where `nums[i]` is the score of the `i`th character of `s`.
 You are allowed to remove any substring of `s` in one operation. The score of a string is the sum of the scores of its characters.
@@ -6991,6 +7031,43 @@ private int backtrack(int[] nums, int maxOR, int index, int currentOR) {
     // 选择当前元素 + 不选择当前元素
     return backtrack(nums, maxOR, index + 1, currentOR | nums[index]) + 
         backtrack(nums, maxOR, index + 1, currentOR);
+}
+```
+# 2106. Maximum Fruits Harvested After at Most K Steps(困难)
+Fruits are available at some positions on an infinite x-axis. You are given a 2D integer array `fruits` where `fruits[i] = [positioni, amounti]` depicts amounti fruits at the position positioni. `fruits` is already sorted by positioni in ascending order, and each positioni is unique.
+
+You are also given an integer `startPos` and an integer `k`. Initially, you are at the position `startPos`. From any position, you can either walk to the **left or right**. It takes **one step** to move **one unit** on the x-axis, and you can walk **at most** `k` steps in total. For every position you reach, you harvest all the fruits at that position, and the fruits will disappear from that position.
+
+Return the **maximum total number** of fruits you can harvest.
+* **约束**
+  * `1 <= fruits.length <= 10^5`
+  * `fruits[i].length == 2`
+  * `0 <= startPos, positioni<= 2*10^5`
+  * `positioni-1<positioni` for any `i>0`(**0-indexed**).
+  * `1 <= amounti <= 10^4`
+  * `0 <= k <= 2*10^5`
+* **思路**：滑动窗口
+  * 遍历字符串，当遇到`1`时，将`1`的索引加入队列
+  * 当队列长度大于`k`时，将队列头移除
+  * 当队列长度小于`k`时，将`0`的索引加入队列
+```java
+public int maxTotalFruits(int[][] fruits, int startPos, int k) {
+    int left = 0, sum = 0, max = 0;
+    for (int right = 0; right < fruits.length; right++) {
+        sum += fruits[right][1];
+        while (left <= right && minSteps(fruits[left][0], fruits[right][0], startPos) > k) {
+            sum -= fruits[left][1];
+            left++;
+        }
+        max = Math.max(max, sum);
+    }
+    return max;
+}
+private int minSteps(int left, int right, int start) {
+    // Two paths: left first or right first
+    int goLeft = Math.abs(start - left) + (right - left);
+    int goRight = Math.abs(start - right) + (right - left);
+    return Math.min(goLeft, goRight);
 }
 ```
 # 2210. Count Hills and Valleys in an Array(简单)
