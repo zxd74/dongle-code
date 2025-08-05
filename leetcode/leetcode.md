@@ -135,6 +135,7 @@
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
+- [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 
 
@@ -7047,9 +7048,11 @@ Return the **maximum total number** of fruits you can harvest.
   * `1 <= amounti <= 10^4`
   * `0 <= k <= 2*10^5`
 * **思路**：滑动窗口
-  * 遍历字符串，当遇到`1`时，将`1`的索引加入队列
-  * 当队列长度大于`k`时，将队列头移除
-  * 当队列长度小于`k`时，将`0`的索引加入队列
+  * 将当前索引对应水果信息作为窗口的右边界
+  * 将右边界水果数加入窗口结果
+  * 判断左边界，右边界与`startPos`的距离是否超过`k`
+    * 超过则减去左边界对应的水果数，并且左边界右移一位
+  * 取最大窗口结果
 ```java
 public int maxTotalFruits(int[][] fruits, int startPos, int k) {
     int left = 0, sum = 0, max = 0;
@@ -7065,6 +7068,7 @@ public int maxTotalFruits(int[][] fruits, int startPos, int k) {
 }
 private int minSteps(int left, int right, int start) {
     // Two paths: left first or right first
+    // == return Math.min(Math.abs(start-left),Math.abs(start-right))+(right-left);
     int goLeft = Math.abs(start - left) + (right - left);
     int goRight = Math.abs(start - right) + (right - left);
     return Math.min(goLeft, goRight);
@@ -7403,6 +7407,34 @@ public int possibleStringCount(String word) {
         count += i-start;
     }
     return count;
+}
+```
+# 3477. Fruits into Baskets II(简单)
+You are given an integer array `fruits` where `fruits[i]` represents the type of fruit the `i`-th basket of fruits has.
+You can choose any two types of fruits and swap them with each other. Afterward, the cost of swapping is equal to the product of the number of baskets of the first type and the number of baskets of the second type.
+
+Return the minimum cost of swapping required to make the number of each type of fruit **equal**.
+
+If it is impossible to make the number of each type of fruit equal, return `-1`.
+
+* **约束**
+  * `2 <= fruits.length <= 10^5`
+  * `1 <= fruits[i] <= 10^9`
+* **思路**：[参考904题](#904-fruit-into-baskets中等)
+  * **先计算能可以装下数，然后由水果数量减去装下的即未装下的数量**
+```java
+public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
+    int count = 0;
+    for (int i = 0; i < fruits.length; i++) {
+        for (int j = 0; j < baskets.length; j++) {
+            if (fruits[i]<=baskets[j]) {
+                count++;
+                baskets[j]=0;
+                break;
+            }
+        }
+    }
+    return fruits.length-count;
 }
 ```
 # 3487. Maximum Unique Subarray Sum After Deletion(简单)
