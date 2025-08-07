@@ -7541,11 +7541,51 @@ public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
   * `1 <= fruits[i], baskets[i] <= 10^9`
 * **思路**：[参考3477题](#3477-fruits-into-baskets-ii简单)
   * 由于数据量增加，并且时间复杂度为O(n^2)，会超时
-* **改进**：转堆处理，时间复杂度O(n*sqrt(n))
+* **改进**：**转堆处理**，时间复杂度`O(n log n)`
+  * 初始化线段树
+    * 确定线段树大小N(大于等于篮子数量最小2的幂)
+    * 并构建最大线段树
+    * 内部节点存储子节点的最大值
+  * 处理每个水果
+    * 对于每个水果，从线段树根节点开始查找
+    * 如果根节点最大值小于水果大小，说明没有合适篮子，计数增加
+    * 否则，沿着线段树向下查找第一个合适的篮子（左子树优先）
+    * 找到后将该篮子标记为已使用（设为-1），并更新线段树
+  * 动画逻辑示例: `fruits = [4, 2, 5, 6], baskets = [5, 3, 7, 2]`
+```txt
+初始化线段树：N=4 (最小2的幂≥篮子数量4)
+       7(1-4)
+     /      \
+   5(1-2)   7(3-4)
+   /   \    /   \
+5(1) 3(2) 7(3) 2(4)
+
+处理水果4：
+      7(1-4)
+    /      \
+  3(1-2)   7(3-4)
+  /   \    /   \
+-1(1) 3(2) 7(3) 2(4)
+
+处理水果2：
+      7(1-4)
+    /      \
+  -1(1-2)   7(3-4)
+  /   \     /   \
+-1(1) -1(2) 7(3) 2(4)
+
+处理水果5：
+      2(1-4)
+    /      \
+  -1(1-2)   2(3-4)
+  /   \     /   \
+-1(1) -1(2) -1(3) 2(4)
+
+处理水果6：根节点2 < 6，无法放置，计数增加
+```
 ```java
 public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
-    int n = baskets.length;
-    int N = 1;
+    int n = baskets.length,N = 1;
     while(N <= n) N <<= 1;
     // Build the segment tree
     int[] segTree = new int[N << 1];
@@ -7563,10 +7603,8 @@ public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
         }
         // Query the first valid basket
         while (index < N) {
-            if (segTree[index * 2] >= x) 
             index *= 2;
-            else
-            index = index * 2 + 1;
+            if (segTree[index] < x)  index += 1;
         }
         // Mark the found basket as used and update the segment tree
         segTree[index] = -1;
@@ -7578,7 +7616,6 @@ public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
     return count;     
 }
 ```
-
 # 3487. Maximum Unique Subarray Sum After Deletion(简单)
 You are given an integer array `nums`.
 
