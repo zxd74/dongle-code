@@ -77,6 +77,7 @@
 - [82. Remove Duplicates from Sorted List II(中等)](#82-remove-duplicates-from-sorted-list-ii中等)
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [84. Largest Rectangle in Histogram(困难)](#84-largest-rectangle-in-histogram困难)
+- [85. Maximal Rectangle(困难)](#85-maximal-rectangle困难)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
 - [100. Same Tree(简单)](#100-same-tree简单)
@@ -136,6 +137,7 @@
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
+- [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 
 
@@ -5061,6 +5063,52 @@ public int largestRectangleArea(int[] heights) {
     return max;
 }
 ```
+# 85. Maximal Rectangle(困难)
+    Given a rows x cols binary matrix filled with 0's and 1's, find the largest rectangle containing only 1's and return its area.
+
+* **约束**
+  * `m == matrix.length`
+  * `n == matrix[i].length`
+  * `1 <= m, n <= 200`
+  * `matrix[i][j]` is '0' or '1'.
+* **思路**
+  * 基本思路
+    * 求最大列连续有效值和最大行连续有效值
+    * 循环left/right
+      * 遇0，则right重置为0的列索引
+      * 每次内循环，求最大矩形面积
+    * 分别向左和向右，位移，重复操作，求最大
+    * 限制：O(n^3),超时,存在重复计算情况
+```java
+// 基本思路: 超时
+public int maximalRectangle(char[][] matrix) {
+    return maximalRectangle(matrix,matrix.length,matrix[0].length,0,0);
+}
+private int maximalRectangle(char[][] matrix,int n,int m,int i,int j) {
+    if(i == n || j == m) return 0;
+    int max = 0,left=i,right=j;
+    if(matrix[i][j] == '1'){
+        while (left<n && matrix[left][j] == '1') left++;
+        max = Math.max(max,left-i); // 单列连续有效最大值
+        while (right<m && matrix[i][right] == '1') right++;
+        max = Math.max(max,right-j); // 单行连续有效最大值
+        // 计算多行多列矩形最大值
+        for (int k = i; k < left; k++) {
+            for (int k2 = j; k2 < right; k2++) {
+                if(matrix[k][k2] == '0') {
+                    right = k2;
+                    break;
+                }
+            }
+            int sum = (k-i+1) * (right-j);
+            max = Math.max(max,sum);
+        }
+    }
+    max = Math.max(max,maximalRectangle(matrix,n,m, i+1, j));
+    max = Math.max(max,maximalRectangle(matrix,n,m, i, j+1));
+    return max;
+}
+```
 # 88. Merge Sorted Array(简单)
     You are given two integer arrays nums1 and nums2, sorted in **non-decreasing order**, and two integers m and n, representing the number of elements in nums1 and nums2 respectively.
 
@@ -7436,7 +7484,55 @@ public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
     }
     return fruits.length-count;
 }
+// 改进版
 ```
+# 3479. Fruits into Baskets III(简单)
+等同于[3477题](#3477-fruit-into-baskets-ii简单)，只不过大小和数字有所增加
+
+* **约束**
+  * `n == fruits.length==baskets.length`
+  * `1 <= n <= 10^5`
+  * `1 <= fruits[i], baskets[i] <= 10^9`
+* **思路**：[参考3477题](#3477-fruits-into-baskets-ii简单)
+  * 由于数据量增加，并且时间复杂度为O(n^2)，会超时
+* **改进**：转堆处理，时间复杂度O(n*sqrt(n))
+```java
+public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
+    int n = baskets.length;
+    int N = 1;
+    while(N <= n) N <<= 1;
+    // Build the segment tree
+    int[] segTree = new int[N << 1];
+    for (int i = 0; i < n; i++) 
+        segTree[N + i] = baskets[i];
+    for (int i = N - 1; i > 0; i--) 
+        segTree[i] = Math.max(segTree[2 * i], segTree[2 * i + 1]);
+    int count = 0;
+    for (int i = 0; i < n; ++i) {
+        int x = fruits[i];
+        int index = 1; // Start from the root of the segment tree
+        if (segTree[index] < x) {
+            count++;
+            continue;
+        }
+        // Query the first valid basket
+        while (index < N) {
+            if (segTree[index * 2] >= x) 
+            index *= 2;
+            else
+            index = index * 2 + 1;
+        }
+        // Mark the found basket as used and update the segment tree
+        segTree[index] = -1;
+        while (index > 1) {
+            index >>= 1;
+            segTree[index] = Math.max(segTree[2 * index], segTree[2 * index + 1]);
+        }
+    }
+    return count;     
+}
+```
+
 # 3487. Maximum Unique Subarray Sum After Deletion(简单)
 You are given an integer array `nums`.
 
