@@ -136,6 +136,7 @@
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
+- [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
@@ -7457,6 +7458,51 @@ public int possibleStringCount(String word) {
     return count;
 }
 ```
+# 3363. Find the Maximum Number of Fruits Collected(困难)
+There is a game dungeon comprised of `n x n` rooms arranged in a grid.
+
+You are given a 2D array fruits of size `n x n`, where `fruits[i][j]` represents the number of fruits in the room `(i, j)`. Three children will play in the game dungeon, with **initial** positions at the corner rooms `(0, 0)`, `(0, n - 1)`, and `(n - 1, 0)`.
+
+The children will make **exactly** `n - 1` moves according to the following rules to reach the room `(n - 1, n - 1)`:
+
+The child starting from `(0, 0) must move from their current room `(i, j)` to one of the rooms `(i + 1, j + 1)`, `(i + 1, j)`, and `(i, j + 1)` if the target room exists.
+The child starting from (0, n - 1) must move from their current room `(i, j)` to one of the rooms `(i + 1, j - 1)`, `(i + 1, j)`, and (i + 1, j + 1) if the target room exists.
+The child starting from `(n - 1, 0)` must move from their current room `(i, j)` to one of the rooms `(i - 1, j + 1)`, `(i, j + 1)`, and `(i + 1, j + 1)` if the target room exists.
+When a child enters a room, they will collect all the fruits there. If two or more children enter the same room, only one child will collect the fruits, and the room will be emptied after they leave.
+
+Return the **maximum** number of fruits the children can collect from the dungeon.
+
+* **约束**
+  * `2 <= n == fruits.length == fruits[i].length <= 1000`
+  * `0 <= fruits[i][j] <= 1000`
+* **思路**
+  * 一个小孩直沿着对角线走
+  * 另外两个小孩分别将`当前值+=周边最大值`
+    * 不能过界`i+j<n-1`，即不能超过对角线
+  * **重点**：由于要求每个孩子只能走`n-1`次到达终点，
+    * 所以不会有重复或回头走的情况
+    * 孩子只能向终点方向前进，不能反方向行进
+    * `(0,0)`起点的孩子只能对角线行进
+```java
+public int maxCollectedFruits(int[][] fruits) {
+    int n = fruits.length;
+    for(int i = 1; i < n; i++) {
+        fruits[i][i] += fruits[i-1][i-1]; // 对角
+        for(int j = i+1; j < n; j++) {
+            if(i+j < n-1) continue;
+            fruits[i][j] += Math.max(
+                j == n-1 ? 0 : fruits[i-1][j+1], 
+                i + j == n-1 ? 0 : Math.max(fruits[i-1][j], 
+                    j == 0 || i + j <= n ? 0 : fruits[i-1][j-1]));
+            fruits[j][i] += Math.max(j == n-1 ? 0 : fruits[j+1][i-1], 
+                i + j == n-1 ?0 : Math.max(fruits[j][i-1], 
+                    j == 0 || i + j <= n ? 0 : fruits[j-1][i-1]));
+        }
+    }
+    return fruits[n-1][n-2] + fruits[n-2][n-1] + fruits[n-1][n-1];
+}
+```
+
 # 3477. Fruits into Baskets II(简单)
 You are given an integer array `fruits` where `fruits[i]` represents the type of fruit the `i`-th basket of fruits has.
 You can choose any two types of fruits and swap them with each other. Afterward, the cost of swapping is equal to the product of the number of baskets of the first type and the number of baskets of the second type.
