@@ -126,6 +126,7 @@
 - [232. Implement Queue using Stacks(简单)](#232-implement-queue-using-stacks简单)
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
+- [808. Soup Servings(中等)](#808-soup-servings中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
@@ -6870,6 +6871,88 @@ public boolean isAnagram(String s, String t) {
     return true;
 }
 ```
+# 808. Soup Servings(中等)
+There are two types of soup: type `A` and type `B`. Initially we have `n` ml of each type of soup. There are four kinds of operations:
+  * Serve `100` ml of soup `A` and `0` ml of soup B
+  * Serve `75` ml of soup A and `25` ml of soup B
+  * Serve `50` ml of soup A and `50` ml of soup B
+  * Serve `25` ml of soup A and `75` ml of soup B
+
+Note:
+* There is no operation that pours 0 mL from A and 100 mL from B.
+* The amounts from A and B are poured simultaneously during the turn.
+* If an operation asks you to pour more than you have left of a soup, pour all that remains of that soup.
+
+The process stops immediately after any turn in which one of the soups is used up.
+
+Return the probability that A is used up before B, plus half the probability that both soups are used up in the same turn. Answers within 10-5 of the actual answer will be accepted.
+
+* **约束**
+  * `0 <= n <= 10^9`
+* **思路**：**递归思路**
+  * 分别计算每一步满足结果的条件
+  * 使用递归思路，每一步概率求下一个概率的和
+  * 当A或B为0时，返回结果
+    * 若都为0，则返回0.5
+    * 若A为0，则返回1
+    * 否则B先倒完，则返回0
+* **改进**：**记忆化递归**
+  * 一：使用Map存储，注意HashMap冲突时，若链表/树过大，会造成栈溢出
+  * 二：使用Double二维数组存储，查询/修改数据快，也不会造成栈溢出
+```java
+public double soupServings(int n) {
+    return soupServings(n,n);
+}
+private double soupServings(int A,int B) {
+    if(A <= 0 && B <= 0) return 0.5;
+    if(A <= 0) return 1;
+    if(B <= 0) return 0;
+
+    return 0.25 * (soupServings(A-100,B) + 
+        soupServings(A-75,B-25) + 
+        soupServings(A-50,B-50) + 
+        soupServings(A-25,B-75));
+}
+// 改进版： 使用map存储
+public double soupServings(int n) {
+    int units = (int)Math.ceil(n / 25.0);
+    Map<Integer,Map<Integer,Double>> cache = new HashMap<>();
+    for (int k = 1; k <= units; k++) { // 避免 cache hash冲突时 栈溢出
+        if (calcProb(k, k, cache) > 1 - 1e-5) return 1.0;
+    }
+    return calcProb(units, units,cache);
+}
+private double calcProb(int a, int b,Map<Integer,Map<Integer,Double>> cache) {
+    if (a <= 0 && b <= 0) return 0.5; // Both soups empty → half probability
+    if (a <= 0) return 1.0; // A empty first
+    if (b <= 0) return 0.0; // B empty first
+    // If already computed, return cached result
+    if (cache.containsKey(a) && cache.get(a).containsKey(b)) return cache.get(a).get(b);
+    double res = 0.25 * ( calcProb(a - 4, b,cache) + calcProb(a - 3, b - 1,cache) +
+        calcProb(a - 2, b - 2,cache) + calcProb(a-1, b - 3,cache));
+    cache.computeIfAbsent(a, k-> new HashMap<>()).put(b, res);
+    return res;
+}
+// 改进版二：使用Double二维数组替代HashMap，避免hash冲突
+public double soupServings(int n) {
+    // Optimization: for large n, probability approaches 1
+    if (n > 5000) return 1.0;
+    int units = (int)Math.ceil(n / 25.0);
+    Double[][] cache = new Double[units+1][units+1];
+    return calcProb(units, units,cache);
+}
+private double calcProb(int a, int b,Double[][] cache) {
+    if (a <= 0 && b <= 0) return 0.5; // Both soups empty → half probability
+    if (a <= 0) return 1.0; // A empty first
+    if (b <= 0) return 0.0; // B empty first
+    // If already computed, return cached result
+    if (cache[a][b] != null) return cache[a][b];
+    cache[a][b] = 0.25 * ( calcProb(a - 4, b,cache) + calcProb(a - 3, b - 1,cache) +
+        calcProb(a - 2, b - 2,cache) + calcProb(a-1, b - 3,cache));
+    return cache[a][b];
+}
+```
+
 # 898. Bitwise ORs of Subarrays(中等)
 Given an integer array `nums`, return *the number of non-empty **subarrays** such that the bitwise OR of the subarray elements is equal to `nums[i]` for all `i` where `0 <= i < nums.length`*.
 
