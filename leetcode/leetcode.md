@@ -78,6 +78,7 @@
 - [83. Remove Duplicates from Sorted List(简单)](#83-remove-duplicates-from-sorted-list简单)
 - [84. Largest Rectangle in Histogram(困难)](#84-largest-rectangle-in-histogram困难)
 - [85. Maximal Rectangle(困难)](#85-maximal-rectangle困难)
+- [86. Partition List(中等)](#86-partition-list中等)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
 - [100. Same Tree(简单)](#100-same-tree简单)
@@ -5181,7 +5182,7 @@ public int maximalRectangle(char[][] matrix) {
     if (matrix == null || matrix.length == 0 || matrix[0].length == 0) return 0;
     int m = matrix.length,n = matrix[0].length;
     int[] heights = new int[n],leftEdge = new int[n],rightEdge = new int[n];
-    Arrays.fill(rightEdge, n);
+    Arrays.fill(rightEdge, n); // 重点
     int maxArea = 0;
     for (int i = 0; i < m; i++) {
         int left = 0,right = n;
@@ -5220,6 +5221,44 @@ private int calculateMaxRectangle(int[] heights, int[] leftEdge, int[] rightEdge
         maxArea = Math.max(maxArea, area);
     }
     return maxArea;
+}
+```
+# 86. Partition List(中等)
+Given the `head` of a linked list and a value `x`, partition it such that all nodes **less than** `x` come before nodes **greater than or equal** to `x`.
+
+You should **preserve** the original relative order of the nodes in each of the two partitions.
+
+* **约束**
+  * The number of nodes in the list is in the range `[0, 200]`.
+  * `-100 <= Node.val <= 100`
+  * `-200 <= x <= 200`
+* **思路**: 双指针法
+  * 三指针:一个指针指向小于x的链表最后节点pre，一个指针指向大于x的链表最后节点last，一个指针遍历链表next
+  * 遍历链表
+    * 若不小于目标值，则置换last,next
+    * 若前一个小于目标值pre.next为next，则置换pre,next
+    * 否则，置换pre,last,next
+```java
+public ListNode partition(ListNode head, int x) {
+    ListNode first = new ListNode(-1,head);
+    ListNode pre = first,next = head,last = next;
+    while(next!=null){
+        if(next.val>=x){ // 大于等于x的节点，放到last后面
+            last = next;
+            next = next.next;
+            continue;
+        }
+        if(pre.next == next){ // 若next是pre的下一个节点，则直接移动pre和next
+            pre = next;
+            next = next.next;
+            continue;
+        } // 否则置换pre,next,last
+        ListNode tmp = pre.next; // 临时记录pre的下一个节点
+        pre.next = next;  // pre的下一个节点指向next
+        last.next = (next = next.next); // next前一个节点指向next的下一个节点
+        (pre=pre.next).next = tmp; // pre的下一个节点指向临时记录的节点
+    }
+    return first.next;
 }
 ```
 # 88. Merge Sorted Array(简单)
