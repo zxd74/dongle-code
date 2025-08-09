@@ -5081,6 +5081,10 @@ public int largestRectangleArea(int[] heights) {
       * 每次内循环，求最大矩形面积
     * 分别向左和向右，位移，重复操作，求最大
     * 限制：O(n^3),超时,存在重复计算情况
+* **改进**: **一维数组计算每列有效行数(索引为列，值为有效行数)**
+  * 方式一：栈处理：遍历数组
+  * 方式二：数组替代栈
+  * 方式三：分别处理左右边界，减少循环次数
 ```java
 // 基本思路: 超时
 public int maximalRectangle(char[][] matrix) {
@@ -5109,6 +5113,113 @@ private int maximalRectangle(char[][] matrix,int n,int m,int i,int j) {
     max = Math.max(max,maximalRectangle(matrix,n,m, i+1, j));
     max = Math.max(max,maximalRectangle(matrix,n,m, i, j+1));
     return max;
+}
+// 改进一：利用列数组存储每列有效行数
+public int maximalRectangle(char[][] matrix) {
+    if (matrix == null || matrix.length == 0 || matrix[0].length == 0) return 0;
+    int maxArea = 0,cols = matrix[0].length;
+    int[] heights = new int[cols];
+    for (char[] row : matrix) {
+        for (int i = 0; i < cols; i++) heights[i] = (row[i] == '1') ? heights[i] + 1 : 0;
+        maxArea = Math.max(maxArea, largestRectangleArea(heights));
+    }
+    return maxArea;
+}
+private int largestRectangleArea(int[] heights) {
+    int n = heights.length;
+    int[] left = new int[n],right = new int[n];
+    Stack<Integer> stack = new Stack<>();
+    for (int i = 0; i < n; i++) { // Nearest Smaller to Left
+        while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) stack.pop();
+        left[i] = (stack.isEmpty()) ? -1 : stack.peek();
+        stack.push(i);
+    }
+    stack.clear(); // Reuse stack
+    for (int i = n - 1; i >= 0; i--) { // Nearest Smaller to Right
+        while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) stack.pop();
+        right[i] = (stack.isEmpty()) ? n : stack.peek();
+        stack.push(i);
+    }
+    int maxArea = 0;// Compute max area
+    for (int i = 0; i < n; i++) {
+        int width = right[i] - left[i] - 1;
+        maxArea = Math.max(maxArea, heights[i] * width);
+    }
+    return maxArea;
+}
+// 改进二：使用栈结构改为一维数组替代
+public int maximalRectangle(char[][] matrix) {
+    int[] heights = new int[matrix[0].length];
+    int maxArea = 0;
+    for (char[] row : matrix) {
+        for (int i = 0; i < row.length; i++) heights[i] = row[i] == '1' ? heights[i] + 1 : 0;
+        maxArea = Math.max(maxArea, largestRectangleArea(heights));
+    }
+    return maxArea;
+}
+private int largestRectangleArea(int[] heights) {
+    int n = heights.length;
+    int[] stack = new int[n];
+    int top = -1,maxArea = 0;
+    for (int i = 0; i < n; i++) {
+        while (top >= 0 && heights[stack[top]] > heights[i]) {
+            int height = heights[stack[top--]];
+            int width = top < 0 ? i : i - stack[top] - 1;
+            maxArea = Math.max(maxArea, height * width);
+        }
+        stack[++top] = i;
+    }
+    while (top >= 0) {
+        int height = heights[stack[top--]];
+        int width = top < 0 ? n : n - stack[top] - 1;
+        maxArea = Math.max(maxArea, height * width);
+    }
+    return maxArea;
+}
+// 改进三：
+public int maximalRectangle(char[][] matrix) {
+    if (matrix == null || matrix.length == 0 || matrix[0].length == 0) return 0;
+    int m = matrix.length,n = matrix[0].length;
+    int[] heights = new int[n],leftEdge = new int[n],rightEdge = new int[n];
+    Arrays.fill(rightEdge, n);
+    int maxArea = 0;
+    for (int i = 0; i < m; i++) {
+        int left = 0,right = n;
+        updateHeightsAndLeftBoundaries(matrix[i], heights, leftEdge, left);
+        updateRightBoundaries(matrix[i], rightEdge, right);
+        maxArea = calculateMaxRectangle(heights, leftEdge, rightEdge, maxArea);
+    }
+    return maxArea;
+}
+private void updateHeightsAndLeftBoundaries(char[] row, int[] heights, int[] leftEdge, int left) {
+    for (int j = 0; j < heights.length; j++) {
+        if (row[j] == '1') {
+            heights[j]++;
+            leftEdge[j] = Math.max(leftEdge[j], left);
+        } else {
+            heights[j] = 0;
+            leftEdge[j] = 0;
+            left = j + 1;
+        }
+    }
+}
+private void updateRightBoundaries(char[] row, int[] rightEdge, int right) {
+    for (int j = rightEdge.length - 1; j >= 0; j--) {
+        if (row[j] == '1') {
+            rightEdge[j] = Math.min(rightEdge[j], right);
+        } else {
+            rightEdge[j] = right;
+            right = j;
+        }
+    }
+}
+private int calculateMaxRectangle(int[] heights, int[] leftEdge, int[] rightEdge, int maxArea) {
+    for (int j = 0; j < heights.length; j++) {
+        int width = rightEdge[j] - leftEdge[j];
+        int area = heights[j] * width;
+        maxArea = Math.max(maxArea, area);
+    }
+    return maxArea;
 }
 ```
 # 88. Merge Sorted Array(简单)
@@ -7190,6 +7301,7 @@ public int maxTotalFruits(int[][] fruits, int startPos, int k) {
     int left = 0, sum = 0, max = 0;
     for (int right = 0; right < fruits.length; right++) {
         sum += fruits[right][1];
+        // 计算与startpos，若最小距离大于k，则窗口左边界右移一位
         while (left <= right && minSteps(fruits[left][0], fruits[right][0], startPos) > k) {
             sum -= fruits[left][1];
             left++;
