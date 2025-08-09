@@ -79,6 +79,7 @@
 - [84. Largest Rectangle in Histogram(困难)](#84-largest-rectangle-in-histogram困难)
 - [85. Maximal Rectangle(困难)](#85-maximal-rectangle困难)
 - [86. Partition List(中等)](#86-partition-list中等)
+- [87. Scramble String(困难)](#87-scramble-string困难)
 - [88. Merge Sorted Array(简单)](#88-merge-sorted-array简单)
 - [94. Binary Tree Inorder Traversal(简单)](#94-binary-tree-inorder-traversal简单)
 - [100. Same Tree(简单)](#100-same-tree简单)
@@ -5259,6 +5260,107 @@ public ListNode partition(ListNode head, int x) {
         (pre=pre.next).next = tmp; // pre的下一个节点指向临时记录的节点
     }
     return first.next;
+}
+```
+# 87. Scramble String(困难)
+
+* **思路**：递归
+  * 判断是否等值，若等值，则返回true
+  * 循环长度，每一种索引都尝试
+    * 根据索引切分两个字符串
+    * 判断两半是否等长，等长交换递归(错位左右)，满足结果(并)，返回true
+    * 不交换递归(同半部分)，满足结果(并)，返回true
+  * 不满足结果，返回false
+* **改进**：使用二维boolean数组记录匹配结果
+```java
+public boolean isScramble(String s1, String s2) { // 栈溢出
+    if(s1.equals(s2)) return true;
+    for (int i = 0; i < s1.length(); i++) {// 改进，筛选出更合适的索引位置
+        // 先根据索引分割
+        String[] s1s = {s1.substring(0, i), s1.substring(i)};
+        String[] s2s = {s2.substring(0, i), s2.substring(i)};
+        // 若两半长度等，可以交换判断
+        if(s1s[0].length()==s1s[1].length()) {
+            if((isScramble(s1s[0], s2s[1]) && isScramble(s1s[1], s2s[0]))) return true;
+        }
+        if((isScramble(s1s[0], s2s[0]) && isScramble(s1s[1], s2s[1]))) return true;
+    }
+    
+    return false;
+}
+// 改进一：多次循环
+public boolean isScramble(String s1, String s2) {
+    int n = s1.length();
+    boolean dp[][][] = new boolean[n + 1][n][n];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) dp[1][i][j] = s1.charAt(i) == s2.charAt(j);
+    }
+    for (int length = 2; length <= n; length++) {
+        for (int i = 0; i < n + 1 - length; i++) {
+            for (int j = 0; j < n + 1 - length; j++) {
+                for (int newLength = 1; newLength < length; newLength++) {
+                    boolean dp1[] = dp[newLength][i];
+                    boolean dp2[] = dp[length - newLength][i + newLength];
+                    dp[length][i][j] |= dp1[j] && dp2[j + newLength];
+                    dp[length][i][j] | dp1[j + length - newLength] && dp2[j];
+                }
+            }
+        }
+    }
+    return dp[n][0][0];
+}
+// 改进二：递归+记忆化
+public boolean isScramble(String s1, String s2) {
+    int n = s1.length();
+    if (s1.equals(s2)) return true;
+    char[] c1 = s1.toCharArray();
+    char[] c2 = s2.toCharArray();
+    int[][][] memo = new int[n][n][n + 1];  // 0: unvisited, 1: false, 2: true
+    return dfs(0, 0, n,c1,c2,memo);
+}
+
+private boolean dfs(int i, int j, int len,char[] c1,char[] c2,int[][][] memo) {
+    if (memo[i][j][len] != 0) return memo[i][j][len] == 2;
+    // Check for direct equality
+    boolean equal = true;
+    for (int k = 0; k < len; k++) {
+        if (c1[i + k] != c2[j + k]) {
+            equal = false;
+            break;
+        }
+    }
+    if (equal) {
+        memo[i][j][len] = 2;
+        return true;
+    }
+
+    // Char frequency pruning
+    int[] chs = new int[26];
+    for (int k = 0; k < len; k++) {
+        chs[c1[i + k] - 'a']++;
+        chs[c2[j + k] - 'a']--;
+    }
+    for (int c : chs) {
+        if (c != 0) {
+            memo[i][j][len] = 1;
+            return false;
+        }
+    }
+    // Try all split points
+    for (int k = 1; k < len; k++) {
+        // No swap
+        if (dfs(i, j, k,c1,c2,memo) && dfs(i + k, j + k, len - k,c1,c2,memo)) {
+            memo[i][j][len] = 2;
+            return true;
+        }
+        // With swap
+        if (dfs(i, j + len - k, k,c1,c2,memo) && dfs(i + k, j, len - k,c1,c2,memo)) {
+            memo[i][j][len] = 2;
+            return true;
+        }
+    }
+    memo[i][j][len] = 1;
+    return false;
 }
 ```
 # 88. Merge Sorted Array(简单)
