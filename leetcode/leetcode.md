@@ -129,6 +129,7 @@
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [808. Soup Servings(中等)](#808-soup-servings中等)
+- [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
@@ -5263,6 +5264,14 @@ public ListNode partition(ListNode head, int x) {
 }
 ```
 # 87. Scramble String(困难)
+We can scramble a string s to get a string t using the following algorithm:
+1. If the length of the string is 1, stop.
+2. If the length of the string is > 1, do the following:
+   - Split the string into two non-empty substrings at a random index, i.e., if the string is `s`, divide it to `x` and y where `s = x + y`.
+   - **Randomly** decide to swap the two substrings or to keep them in the same order. i.e., after this step, `s` may become `s = x + y` or `s = y + x`.
+   - Apply step 1 recursively on each of the two substrings `x` and `y`.
+
+Given two strings `s1` and `s2` of **the same length**, return `true` if `s2` is a scrambled string of `s1`, otherwise, return `false`.
 
 * **思路**：递归
   * 判断是否等值，若等值，则返回true
@@ -7204,7 +7213,53 @@ private double calcProb(int a, int b,Double[][] cache) {
     return cache[a][b];
 }
 ```
+# 869. Reordered Power of 2(中等)
+You are given an integer n. We reorder the digits in any order (including the original order) such that the leading digit is not zero.
 
+Return `true` if and only if we can do this so that the resulting number is a power of two.
+
+* **约束**
+  * `1 <= n <= 10^9`
+* **思路**：**数字排序**
+  * 数字每位做余数数组并排序
+  * 遍历2的次幂，每位做余数数组并排序
+  * 判断两个数组是否相等
+* **优化**：
+  * 数字的每一位x10并相加得到新数字
+  * 遍历有效2的次幂，同样对数字每一位x10
+  * 判断两个数字是否相等
+```java
+public boolean reorderedPowerOf2(int n) {
+    if (n == 1) return true;
+    int[] cnt = new int[10];
+    while (n > 0) {
+        cnt[n % 10]++;
+        n /= 10;
+    }
+    for (int i = 0; i < 31; i++) {
+        int[] cnt2 = new int[10];
+        int x = 1 << i;
+        while (x > 0) {
+            cnt2[x % 10]++;
+            x /= 10;
+        }
+        if (java.util.Arrays.equals(cnt, cnt2)) return true;
+    }
+    return false;
+}
+// 优化 提取公共方法
+public boolean reorderedPowerOf2(int n) {
+    int count = counter(n);
+    for (int i = 0; i < 30; ++i)
+        if (counter(1 << i) == count) return true;
+    return false;
+}
+private int counter(int n) {
+    int count = 0;
+    for (; n > 0; n /= 10) count += Math.pow(10, n % 10);
+    return count;
+}
+```
 # 898. Bitwise ORs of Subarrays(中等)
 Given an integer array `nums`, return *the number of non-empty **subarrays** such that the bitwise OR of the subarray elements is equal to `nums[i]` for all `i` where `0 <= i < nums.length`*.
 
