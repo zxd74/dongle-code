@@ -139,6 +139,7 @@
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
+- [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
@@ -7810,6 +7811,32 @@ private int longestSubarray(int[] nums) {
     return maxCount;
 }
 ```
+# 2787. Ways to Express an Integer as Sum of Powers(中等)
+Given two positive integers `n` and `x`.
+
+Return the number of ways `n` can be expressed as the sum of the xth power of unique positive integers, in other words, the number of sets of unique integers $[n_1, n_2, ..., n_k]$ where $n = n_1^x + n_2^x + ... + n_k^x$.
+
+Since the result can be very large, return it modulo $10^9 + 7$.
+
+For example, if `n = 160` and `x = 3`, one way to express n is $n = 2^3 + 3^3 + 5^3$.
+
+* **约束**
+  * `1 <= n <= 10^9`
+  * `2 <= x <= 9`
+* **思路**：
+  * 定义最大值，最大值取n的x次方
+```java
+public int numberOfWays(int n, int x) {
+    long[] dp = new long[n+1];
+    dp[0] = 1;
+    for (int i = 1,tmp; (tmp = (int)Math.pow(i,x)) <= n; i++) {
+        int num = tmp;
+        for (int s = n; s >= num; s--) dp[s] += dp[s - num];
+    }
+    return (int) (dp[n] % 1_000_000_007);
+}
+```
+
 # 3330. Find the Original Typed String I(简单)
 Alice is attempting to type a specific string on her computer. However, she tends to be clumsy and **may** press a key for too long, resulting in a character being typed **multiple** times.
 
