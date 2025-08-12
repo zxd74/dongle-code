@@ -7829,8 +7829,7 @@ For example, if `n = 160` and `x = 3`, one way to express n is $n = 2^3 + 3^3 + 
 public int numberOfWays(int n, int x) {
     long[] dp = new long[n+1];
     dp[0] = 1;
-    for (int i = 1,tmp; (tmp = (int)Math.pow(i,x)) <= n; i++) {
-        int num = tmp;
+    for (int i = 1,num; (num = (int)Math.pow(i,x)) <= n; i++) {
         for (int s = n; s >= num; s--) dp[s] += dp[s - num];
     }
     return (int) (dp[n] % 1_000_000_007);
