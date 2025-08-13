@@ -128,6 +128,7 @@
 - [232. Implement Queue using Stacks(简单)](#232-implement-queue-using-stacks简单)
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
+- [326. Power of Three(简单)](#326-power-of-three简单)
 - [808. Soup Servings(中等)](#808-soup-servings中等)
 - [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
@@ -7131,6 +7132,23 @@ public boolean isAnagram(String s, String t) {
         if(sa[i]!=0) return false;
     }
     return true;
+}
+```
+# 326. Power of Three(简单)
+Given an integer `n`, return `true` if it is a power of three. Otherwise, return `false`.
+
+An integer `n` is a power of three, if there exists an integer `x` such that `n == 3x`.
+
+* **约束**
+  * `-2^31 <= n <= 2^31 - 1`
+* **思路**：
+  * 首先应该是3的倍数，其次3的倍数，再除以3，结果还是3的倍数，直到结果为非3的余数
+  * 判断是否=1(3的倍数循环除3，一定是1)
+```java
+public boolean isPowerOfThree(int n) {
+    if(n<= 0) return false;
+    while(n % 3 == 0) n /= 3;
+    return n == 1;
 }
 ```
 # 808. Soup Servings(中等)
