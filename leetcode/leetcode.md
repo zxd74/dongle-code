@@ -137,6 +137,7 @@
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
+- [2264. Largest 3-Same-Digit Number in String(简单)](#2264-largest-3-same-digit-number-in-string简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
@@ -7563,7 +7564,25 @@ public int countHillValley(int[] nums) {
     return count;    
 }
 ```
+# 2264. Largest 3-Same-Digit Number in String(简单)
+You are given a string num representing a large integer. An integer is **good** if it meets the following conditions:
+* It is a **substring** of `num` with length `3`.
+* It consists of only one unique digit.
+Return the **maximum good** integer as a **string** or an empty string `""` if no such integer exists.
 
+* **约束**
+  * `3 <= num.length <= 1000`
+  * `num` only consists of digits from `0-9`
+* **思路**：由于数字是有限的，可以直接有限定匹配
+```java
+public String largestGoodInteger(String num) {
+    String[] numbers={"999","888","777","666","555","444","333","222","111","000"};
+    for(String i:numbers){
+        if(num.contains(i)) return i;
+    }
+    return "";
+}
+```
 # 2322. Minimum Score After Removals on a Tree(困难)
 There is an undirected connected tree with `n` nodes labeled from 0 to `n - 1` and `n - 1` edges.
 
