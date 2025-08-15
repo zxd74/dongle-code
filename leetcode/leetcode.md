@@ -129,6 +129,7 @@
 - [234. Palindrome Linked List(简单)](#234-palindrome-linked-list简单)
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [326. Power of Three(简单)](#326-power-of-three简单)
+- [342. Power of Four(简单)](#342-power-of-four简单)
 - [808. Soup Servings(中等)](#808-soup-servings中等)
 - [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
@@ -165,6 +166,7 @@
 * 数字操作
   * 使用位运算
   * 注意数据类型范围限制
+  * 是否是一个数的幂次结果：若余数为0，重置为除该数，直到非余数，判断结果是否为1
 * 语言环境
   * java语言，可以使用`static`调用方法：
     * 热点代码，JIT编译器会将其编译为本地机器码，大幅提升执行速度，
@@ -7149,6 +7151,24 @@ An integer `n` is a power of three, if there exists an integer `x` such that `n 
 public boolean isPowerOfThree(int n) {
     if(n<= 0) return false;
     while(n % 3 == 0) n /= 3;
+    return n == 1;
+}
+```
+# 342. Power of Four(简单)
+Given an integer `n`, return `true` if it is a power of four. Otherwise, return `false`.
+
+An integer `n` is a power of four, if there exists an integer `x` such that `n == 4x`.
+
+* **约束**
+  * `-2^31 <= n <= 2^31 - 1`
+  * `n` is an integer.
+* **思路**：
+  * 首先应该是4的倍数，其次4的倍数，再除以4，结果还是4的倍数，直到结果为非4的余数
+  * 判断是否=1(4的倍数循环除4，一定是1)
+```java
+public boolean isPowerOfFour(int n) {
+    if(n<=0) return false;
+    while(n%4==0) n/=4;
     return n == 1;
 }
 ```
