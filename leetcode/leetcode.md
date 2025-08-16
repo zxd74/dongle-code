@@ -7411,13 +7411,25 @@ Return the maximum number you can get by changing **at most** one digit (6 becom
   * 方式一：将数字转为字符串
   * 方式二：利用余数差值判断，若为6，则增加`3*digit`
 ```java
+// 方式一：转字符串，第一个遇到6的替换为9，并退出
 public int maximum69Number (int num) {
-    int max = num,digit=10;
-    while(true){
-        int gap = num % digit,tmp = gap; // 用于判断是否已经到达最高位
-        while(gap>10) gap /= digit/10;
-        if(gap==6) max = num + digit/10*3;
-        if(tmp == num) break; // 已经到达最高位,退出
+    char[] numStr = String.valueOf(num).toCharArray();
+    for (int i = 0; i < numStr.length; i++) {
+        if(numStr[i] == '6'){
+            numStr[i] = '9';
+            break;
+        }
+    }
+    return Integer.parseInt(String.valueOf(numStr));
+}
+// 方式二：利用余数差值判断，若为6，则增加`3*digit`
+// 追求机制也可将(tmpDigit=1 , tmpDigit = digit/10)定义为变量，避免重复计算，不过会增加变量开销
+public int maximum69Number (int num) {
+    int max = num, digit = 10;
+    while(true) {
+        int gap = (num % digit) / (digit/10); // 直接提取当前位的数字
+        if(gap == 6) max = num + digit/10 * 3; // 替换当前位的6为9
+        if((num % digit) == num) break; // 检查是否到达最高位
         digit *= 10;
     }
     return max;
