@@ -134,6 +134,7 @@
 - [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
+- [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
@@ -7400,7 +7401,28 @@ public int totalFruit(int[] fruits) {
     return max;
 }
 ```
+# 1323. Maximum 69 Number(简单)
+You are given a positive integer `num` consisting only of digits 6 and 9.
+Return the maximum number you can get by changing **at most** one digit (6 becomes 9, and 9 becomes 6).
 
+* **约束**
+  * `1 <= num <= 10^4`
+* **思路**：
+  * 方式一：将数字转为字符串
+  * 方式二：利用余数差值判断，若为6，则增加`3*digit`
+```java
+public int maximum69Number (int num) {
+    int max = num,digit=10;
+    while(true){
+        int gap = num % digit,tmp = gap; // 用于判断是否已经到达最高位
+        while(gap>10) gap /= digit/10;
+        if(gap==6) max = num + digit/10*3;
+        if(tmp == num) break; // 已经到达最高位,退出
+        digit *= 10;
+    }
+    return max;
+}
+```
 # 1717. Maximum Score From Removing Substrings(中等)
 You are given a 0-indexed string `s` that consists of only lowercase English letters, where each letter the string has an associated score. You are also given an integer array `nums` where `nums[i]` is the score of the `i`th character of `s`.
 You are allowed to remove any substring of `s` in one operation. The score of a string is the sum of the scores of its characters.
