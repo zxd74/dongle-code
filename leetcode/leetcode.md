@@ -143,6 +143,7 @@
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2264. Largest 3-Same-Digit Number in String(简单)](#2264-largest-3-same-digit-number-in-string简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
+- [2348. Number of Zero-Filled Subarrays(中等)](#2348-number-of-zero-filled-subarrays中等)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
@@ -7865,6 +7866,23 @@ private void dfs(int cur,int parent,int[] nums,List<List<Integer>> graph,int[] x
         xor[cur] ^= xor[neighbor]; // 当前节点和相邻节点的异或
     }
     out[cur] = cnt[0];
+}
+```
+# 2348. Number of Zero-Filled Subarrays(中等)
+Given an integer array `nums`, return *the number of subarrays filled with **0**.*
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `-10^9 <= nums[i] <= 10^9`
+* **思路**：
+```java
+public long zeroFilledSubarray(int[] nums) {
+    long cnt = 0, streak = 0;
+    for (int num : nums) {
+        streak = (num == 0) ? streak + 1 : 0;
+        cnt += streak;
+    }
+    return cnt;
 }
 ```
 # 2411. Smallest Subarrays With Maximum Bitwise OR(中等)
