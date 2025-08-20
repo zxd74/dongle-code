@@ -136,6 +136,7 @@
 - [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
+- [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
@@ -7507,6 +7508,29 @@ public int totalFruit(int[] fruits) {
     }
     max = Math.max(max, fruits.length-start);
     return max;
+}
+```
+# 1277. Count Square Submatrices with All Ones(中等)
+Given a `m * n` matrix of ones and zeros, return how many **square** submatrices have all ones.
+
+* **约束**
+  * `1 <= arr.length <= 300`
+  * `1 <= arr[0].length <= 300`
+  * `arr[i][j] == 0` or `arr[i][j] == 1`
+* **思路**：
+```java
+public int countSquares(int[][] matrix) {
+    int m = matrix.length, n = matrix[0].length,count =0;
+    for (int i=1;i<m;i++) {
+        for (int j=1;j<n;j++) {
+            if (matrix[i][j] != 1) continue;
+            matrix[i][j] += Math.min(matrix[i-1][j], Math.min(matrix[i][j-1], matrix[i-1][j-1]));
+            count += matrix[i][j];
+        }
+    }
+    for (int i=0;i<m;i++) count+=matrix[i][0];
+    for (int i=1;i<n;i++) count+=matrix[0][i];
+    return count;
 }
 ```
 # 1323. Maximum 69 Number(简单)
