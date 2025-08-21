@@ -138,6 +138,7 @@
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
+- [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
@@ -7565,6 +7566,36 @@ public int maximum69Number (int num) {
         digit *= 10;
     }
     return max;
+}
+```
+# 1504. Count Submatrices With All Ones(中等)
+Given an `m x n` binary matrix `mat`, return the number of **submatrices** that have all ones.
+
+* **约束**
+  * `1 <= m,n <= 10^5`
+  * `arr[i][j] == 0` or `arr[i][j] == 1`
+* **思路**：
+```java
+public int numSubmat(int[][] mat) {
+    int n = mat.length,m = mat[0].length,ans = 0;
+    int[] height = new int[m];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) height[j] = (mat[i][j] == 0) ? 0 : height[j] + 1;// Update histogram heights
+        ans += countRectangles(height);// Count rectangles in current histogram
+    }
+    return ans;
+}
+private int countRectangles(int[] height) {
+    int m = height.length,count = 0,top = -1;
+    int[] stack = new int[m],sum = new int[m];
+    for (int j = 0; j < m; j++) {
+        while (top >= 0 && height[stack[top]] >= height[j]) top--;
+        if (top == -1) sum[j] = height[j] * (j + 1);
+        else sum[j] = sum[stack[top]] + height[j] * (j - stack[top]);
+        count += sum[j];
+        stack[++top] = j;
+    }
+    return count;
 }
 ```
 # 1717. Maximum Score From Removing Substrings(中等)
