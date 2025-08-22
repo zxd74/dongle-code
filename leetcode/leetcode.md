@@ -149,6 +149,7 @@
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
+- [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
@@ -8106,7 +8107,75 @@ public int numberOfWays(int n, int x) {
     return (int) (dp[n] % 1_000_000_007);
 }
 ```
+# 3195. Find the Minimum Area to Cover All Ones I(中等)
+You are given a 2D **binary** array `grid`. Find a rectangle with horizontal and vertical sides with the **smallest** area, such that all the 1's in `grid` lie inside this rectangle.
 
+Return the **minimum** possible area of the rectangle.
+
+* **约束**
+  * `1 <= grid.length, grid[i].length <= 1000`
+  * `grid[i][j]`is either 0 or 1
+  * The input is generated such that there is at least one 1 in grid
+* **思路**：
+  * 寻找最小上边界和左边界
+  * 寻找最大下边界和右边界
+* **优化**
+  * 从不同方向遍历，直接寻找对应边界，避免边界内部遍历
+```java
+public static int minimumArea(int[][] grid) {
+    int n = grid.length, m = grid[0].length;
+    int left =-1,right=-1,top=-1,bottom=-1;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if(grid[i][j] == 1){
+                top = top == -1? i:Math.min(top, i);
+                bottom = Math.max(bottom, i);
+                left = left==-1 ? j: Math.min(left, j);
+                right = Math.max(right, j);
+            }
+        }
+    }
+    return (right-left+1)*(bottom-top+1);
+}
+// 优化：从不同方向确定边界
+public static int minimumArea(int[][] grid) {
+    int n = grid.length, m = grid[0].length;
+    int left =-1,right=-1,top=-1,bottom=-1;
+    A:for (int i = 0; i < n; i++) { // 寻找上边界
+        for (int j = 0; j < m; j++) {
+            if(grid[i][j] == 1){
+                top = i;
+                break A;
+            }
+        }
+    }
+    A:for (int i = 0; i < m; i++) { // 寻找左边界
+        for (int j = 0; j < n; j++) {
+            if(grid[j][i] == 1){
+                left = i;
+                break A;
+            }
+        }
+    }
+    A:for (int i = n-1; i >=0; i--) { // 寻找下边界
+        for (int j = m-1; j >=0; j--) {
+            if(grid[i][j] == 1){
+                bottom = i;
+                break A;
+            }
+        }
+    }
+    A:for (int i = m-1; i >=0; i--) { // 寻找右边界
+        for (int j = n-1; j >=0; j--) {
+            if(grid[j][i] == 1){
+                right = i;
+                break A;
+            }
+        }
+    }
+    return (right-left+1)*(bottom-top+1);
+}
+```
 # 3330. Find the Original Typed String I(简单)
 Alice is attempting to type a specific string on her computer. However, she tends to be clumsy and **may** press a key for too long, resulting in a character being typed **multiple** times.
 
