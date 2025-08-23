@@ -150,6 +150,7 @@
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
+- [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
@@ -8174,6 +8175,119 @@ public static int minimumArea(int[][] grid) {
         }
     }
     return (right-left+1)*(bottom-top+1);
+}
+```
+# 3197. Find the Minimum Area to Cover All Ones II(困难)
+You are given a 2D **binary** array `grid`. Find a rectangle with horizontal and vertical sides with the **smallest** area, such that all the 1's in `grid` lie inside this rectangle.
+
+Return the **minimum** possible area of the rectangle.
+
+* **约束**
+  * `1 <= grid.length, grid[i].length <= 1000`
+  * `grid[i][j]`is either 0 or 1
+  * The input is generated such that there is at least one 1 in grid
+* **思路**：
+```java
+public int minimumSum(int[][] grid) {
+    return Math.min(f(grid), f(rotate(grid)));
+}
+private int f(int[][] a) {
+    int m = a.length,n = a[0].length;
+    int[][] lr = new int[m][2]; // 每一行最左最右 1 的列号
+    for (int i = 0; i < m; i++) {
+        int l = -1,r = 0;
+        for (int j = 0; j < n; j++) {
+            if (a[i][j] > 0) {
+                if (l < 0) l = j;
+                r = j;
+            }
+        }
+        lr[i][0] = l;
+        lr[i][1] = r;
+    }
+
+    // lt[i+1][j+1] = 包含【左上角为 (0,0) 右下角为 (i,j) 的子矩形】中的所有 1 的最小矩形面积
+    int[][] lt = minimumArea(a);
+    a = rotate(a);
+    // lb[i][j+1] = 包含【左下角为 (m-1,0) 右上角为 (i,j) 的子矩形】中的所有 1 的最小矩形面积
+    int[][] lb = rotate(rotate(rotate(minimumArea(a))));
+    a = rotate(a);
+    // rb[i][j] = 包含【右下角为 (m-1,n-1) 左上角为 (i,j) 的子矩形】中的所有 1 的最小矩形面积
+    int[][] rb = rotate(rotate(minimumArea(a)));
+    a = rotate(a);
+    // rt[i+1][j] = 包含【右上角为 (0,n-1) 左下角为 (i,j) 的子矩形】中的所有 1 的最小矩形面积
+    int[][] rt = rotate(minimumArea(a))
+    int ans = Integer.MAX_VALUE;
+    if (m >= 3) {
+        for (int i = 1; i < m; i++) {
+            int left = n,right = 0,top = m,bottom = 0;
+            for (int j = i + 1; j < m; j++) {
+                int l = lr[j - 1][0];
+                if (l >= 0) {
+                    left = Math.min(left, l);
+                    right = Math.max(right, lr[j - 1][1]);
+                    top = Math.min(top, j - 1);
+                    bottom = j - 1;
+                }
+                ans = Math.min(ans, lt[i][n] + (right - left + 1) * (bottom - top + 1) + lb[j][n]);// 图片上左
+            }
+        }
+    }
+    if (m >= 2 && n >= 2) {
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                ans = Math.min(ans, lt[i][n] + lb[i][j] + rb[i][j]);// 图片上中
+                ans = Math.min(ans, lt[i][j] + rt[i][j] + lb[i][n]);// 图片上右
+            }
+        }
+    }
+    return ans;
+}
+private int[][] minimumArea(int[][] a) {
+    int m = a.length,n = a[0].length;
+    // f[i+1][j+1] 表示包含【左上角为 (0,0) 右下角为 (i,j) 的子矩形】中的所有 1 的最小矩形面积
+    int[][] f = new int[m + 1][n + 1];
+    int[][] border = new int[n][3];
+    for (int j = 0; j < n; j++) {
+        border[j][0] = -1;
+    }
+    for (int i = 0; i < m; i++) {
+        int left = -1,right = 0;
+        for (int j = 0; j < n; j++) {
+            if (a[i][j] == 1) {
+                if (left < 0) left = j;
+                right = j;
+            }
+            int[] preB = border[j];
+            if (left < 0) { // 这一排目前全是 0
+                f[i + 1][j + 1] = f[i][j + 1]; // 等于上面的结果
+            } else if (preB[0] < 0) { // 这一排有 1，上面全是 0
+                f[i + 1][j + 1] = right - left + 1;
+                border[j][0] = i;
+                border[j][1] = left;
+                border[j][2] = right;
+            } else { // 这一排有 1，上面也有 1
+                int l = Math.min(preB[1], left);
+                int r = Math.max(preB[2], right);
+                f[i + 1][j + 1] = (r - l + 1) * (i - preB[0] + 1);
+                border[j][1] = l;
+                border[j][2] = r;
+            }
+        }
+    }
+    return f;
+}
+// 顺时针旋转矩阵 90°
+private int[][] rotate(int[][] a) {
+    int m = a.length;
+    int n = a[0].length;
+    int[][] b = new int[n][m];
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            b[j][m - 1 - i] = a[i][j];
+        }
+    }
+    return b;
 }
 ```
 # 3330. Find the Original Typed String I(简单)
