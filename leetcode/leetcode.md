@@ -138,6 +138,7 @@
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
+- [1493. Longest Subarray of 1's After Deleting One Element(中等)](#1493-longest-subarray-of-1s-after-deleting-one-element中等)
 - [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
@@ -7568,6 +7569,46 @@ public int maximum69Number (int num) {
         digit *= 10;
     }
     return max;
+}
+```
+# 1493. Longest Subarray of 1's After Deleting One Element(中等)
+Given a binary array `nums`, you can delete one element from it.
+Return the size of the longest non-empty subarray containing only 1's **in the resulting array**.
+Return `0` if there is no such subarray.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `nums[i]` is either `0` or `1`.
+* **思路**：
+```java
+public int longestSubarray(int[] nums) {
+    int i=0,j=0,n=nums.length,max=0,count=0;
+    while(j<n){
+        if(nums[j]==0) count++;
+        while(count>1){
+            if(nums[i]==0) count--;
+            i++;
+        }
+        max=Math.max(max,j-i);
+        j++;
+    }
+    return max;
+}
+public int longestSubarray(int[] nums) {
+    int l = 0, r = 0, d = -1, max = 0, len = nums.length;
+    while (r < len) {
+        if (nums[r] == 0) {
+            if (d == -1) {
+                d = r;
+                r++;
+            } else {
+                max = Math.max(max, r - l - 1);
+                l = d + 1;
+                d = -1;
+            }
+        } else r++;
+    }
+    return Math.max(max, r - l - 1);
 }
 ```
 # 1504. Count Submatrices With All Ones(中等)
