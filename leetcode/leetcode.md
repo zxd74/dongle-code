@@ -130,6 +130,7 @@
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [326. Power of Three(简单)](#326-power-of-three简单)
 - [342. Power of Four(简单)](#342-power-of-four简单)
+- [498. Diagonal Traverse(中等)](#498-diagonal-traverse中等)
 - [679. 24 Game(困难)](#679-24-game困难)
 - [808. Soup Servings(中等)](#808-soup-servings中等)
 - [837. New 21 Game(中等)](#837-new-21-game中等)
@@ -7179,6 +7180,47 @@ public boolean isPowerOfFour(int n) {
     if(n<=0) return false;
     while(n%4==0) n/=4;
     return n == 1;
+}
+```
+# 498. Diagonal Traverse(中等)
+Given an `m x n` matrix `mat`, return an array of all the elements of the matrix in diagonals in spiral order.
+
+* **约束**
+  * `m == mat.length`
+  * `n == mat[i].length`
+  * `1 <= m, n <= 10^4`
+  * `1 <= m * n <= 10^4`
+* **思路**：确定转向边界
+  * 向上转向边界：首行或尾列
+  * 向下转向边界：尾行或首列
+```java
+public static findDiagonalOrder(int[][] mat) {
+    int m = mat.length,n = mat[0].length;
+    int i = 0,j = 0,index = 0;
+    boolean flag = true;
+    int[] ans = new int[m*n];
+    while(true){
+        ans[index++]= mat[i][j];
+        if(i==m-1 && j==n-1) return ans;
+        if (flag) {
+            if(i==0 || j==n-1){
+                if(j<n-1) j++;
+                else i++;
+                flag = false;
+                continue;
+            }
+            i--;j++;
+            continue;
+        }
+        // flag = false => down
+        if(j==0 || i==m-1){
+            if(i<m-1) i++;
+            else j++;
+            flag = true;
+            continue;
+        }
+        i++;j--;
+    }
 }
 ```
 # 679. 24 Game(困难)
