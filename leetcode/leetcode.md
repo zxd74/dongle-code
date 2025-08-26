@@ -151,6 +151,7 @@
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
+- [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
@@ -8189,6 +8190,36 @@ public int numberOfWays(int n, int x) {
         for (int s = n; s >= num; s--) dp[s] += dp[s - num];
     }
     return (int) (dp[n] % 1_000_000_007);
+}
+```
+# 3000. Maximum Area of Longest Diagonal Rectangle(简单)
+You are given a 2D 0-indexed integer array dimensions.
+
+For all indices i, 0 <= i < dimensions.length, dimensions[i][0] represents the length and dimensions[i][1] represents the width of the rectangle i.
+
+Return the area of the rectangle having the longest diagonal. If there are multiple rectangles with the longest diagonal, return the area of the rectangle having the maximum area.
+
+* **约束**
+  * `1 <= dimensions.length <= 100`
+  * `dimensions.length == 2`
+  * `1 <= dimensions[i][0], dimensions[i][1] <= 100`
+* **思路**：
+  * 计算各自积和，比最大值
+  * 取最大值
+  * 若最大值相等，取乘积最大值
+  * **建议**：不需要对结果sqrt，只要自积和越大，则sqrt结果越大
+```java
+public int areaOfMaxDiagonal(int[][] dimensions) {
+    int max = 0,res=0;
+    for (int[] dimension : dimensions) {
+        int l = dimension[0],w = dimension[1];
+        int tmp = l*l+w*w;
+        if ((tmp > max)||(tmp==max && l*w > res)){ // 注意最大值相等时，取最大乘积
+            max = tmp;
+            res = l*w;
+        }
+    }
+    return res;
 }
 ```
 # 3195. Find the Minimum Area to Cover All Ones I(中等)
