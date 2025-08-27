@@ -156,6 +156,7 @@
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
+- [3459. Length of Longest V-Shaped Diagonal Segment(困难)](#3459-length-of-longest-v-shaped-diagonal-segment困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
@@ -8487,7 +8488,69 @@ public int maxCollectedFruits(int[][] fruits) {
     return fruits[n-1][n-2] + fruits[n-2][n-1] + fruits[n-1][n-1];
 }
 ```
+# 3459. Length of Longest V-Shaped Diagonal Segment(困难)
+You are given a 2D integer matrix grid of size n x m, where each element is either 0, 1, or 2.
 
+A V-shaped diagonal segment is defined as:
+* The segment starts with 1.
+* The subsequent elements follow this infinite sequence: 2, 0, 2, 0, ....
+* The segment:
+  * Starts along a diagonal direction (top-left to bottom-right, bottom-right to top-left, top-right to bottom-left, or bottom-left to top-right).
+  * Continues the sequence in the same diagonal direction.
+  * Makes at most one clockwise 90-degree turn to another diagonal direction while maintaining the sequence.
+
+Return the length of the longest V-shaped diagonal segment. If no valid segment exists, return 0.
+
+* **约束**
+* `n == grid.length`
+* `m == grid[i].length`
+* `1 <= n, m <= 500`
+* `grid[i][j]` is either `0`, `1` or `2`.
+```java
+private static final int[][] DIRS = { { 1, 1 }, { 1, -1 }, { -1, -1 }, { -1, 1 } };
+public int lenOfVDiagonal(int[][] grid) {
+    int m = grid.length;
+    int n = grid[0].length;
+    // 开太多维度影响效率，这里把 k 和 canTurn 压缩成一个 int
+    int[][][] memo = new int[m][n][1 << 3];
+    int ans = 0;
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (grid[i][j] != 1) {
+                continue;
+            }
+            int[] maxs = { m - i, j + 1, i + 1, n - j }; // 理论最大值（走到底）
+            for (int k = 0; k < 4; k++) { // 枚举起始方向
+                if (maxs[k] > ans) { // 优化一：如果理论最大值没有超过 ans，那么不递归
+                    ans = Math.max(ans, dfs(i, j, k, 1, 2, grid, memo) + 1);
+                }
+            }
+        }
+    }
+    return ans;
+}
+private int dfs(int i, int j, int k, int canTurn, int target, int[][] grid, int[][][] memo) {
+    i += DIRS[k][0];
+    j += DIRS[k][1];
+    if (i < 0 || i >= grid.length || j < 0 || j >= grid[i].length || grid[i][j] != target) {
+        return 0;
+    }
+    int mask = k << 1 | canTurn;
+    if (memo[i][j][mask] > 0) {
+        return memo[i][j][mask];
+    }
+    int res = dfs(i, j, k, canTurn, 2 - target, grid, memo);
+    if (canTurn == 1) {
+        int[] maxs = { grid.length - i - 1, j, i, grid[i].length - j - 1 }; // 理论最大值（走到底）
+        k = (k + 1) % 4;
+        // 优化二：如果理论最大值没有超过 res，那么不递归
+        if (maxs[k] > res) {
+            res = Math.max(res, dfs(i, j, k, 0, 2 - target, grid, memo));
+        }
+    }
+    return memo[i][j][mask] = res + 1;
+}
+```
 # 3477. Fruits into Baskets II(简单)
 You are given an integer array `fruits` where `fruits[i]` represents the type of fruit the `i`-th basket of fruits has.
 You can choose any two types of fruits and swap them with each other. Afterward, the cost of swapping is equal to the product of the number of baskets of the first type and the number of baskets of the second type.
