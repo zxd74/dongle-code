@@ -156,6 +156,7 @@
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
+- [3446. Sort Matrix by Diagonals(中等)](#3446-sort-matrix-by-diagonals中等)
 - [3459. Length of Longest V-Shaped Diagonal Segment(困难)](#3459-length-of-longest-v-shaped-diagonal-segment困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
@@ -8486,6 +8487,57 @@ public int maxCollectedFruits(int[][] fruits) {
         }
     }
     return fruits[n-1][n-2] + fruits[n-2][n-1] + fruits[n-1][n-1];
+}
+```
+# 3446. Sort Matrix by Diagonals(中等)
+You are given an `n x n` square matrix of integers `grid`. Return the matrix such that:
+* The diagonals in the **bottom-left triangle** (including the middle diagonal) are sorted in **non-increasing order**.
+* The diagonals in the **top-right triangle** are sorted in **non-decreasing order**.
+
+* **约束**
+  * `grid.length == grid[i].length == n`
+  * `1 <= n <= 10`
+  * `-10^5 <= grid[i][j] <= 10^5`
+```java
+public int[][] sortMatrix(int[][] grid) {
+    int n = grid.length;
+    for (int i = 0; i < n; i++) {
+        List<Integer> tmp = new ArrayList<>();
+        for (int j = 0; i + j < n; j++) tmp.add(grid[i + j][j]);
+        tmp.sort(Collections.reverseOrder());
+        for (int j = 0; i + j < n; j++) grid[i + j][j] = tmp.get(j);
+    }
+    for (int j = 1; j < n; j++) {
+        List<Integer> tmp = new ArrayList<>();
+        for (int i = 0; j + i < n; i++) tmp.add(grid[i][j + i]);
+        Collections.sort(tmp);
+        for (int i = 0; j + i < n; i++) grid[i][j + i] = tmp.get(i);
+    }
+    return grid;
+}
+
+public int[][] sortMatrix(int[][] mat) {
+    int rows = mat.length,cols = mat[0].length;
+    for (int row = 0; row < rows; row++) sortDiagonal(mat, row, 0, false); // false for non-increasing
+    for (int col = 1; col < cols; col++) sortDiagonal(mat, 0, col, true); // true for non-decreasing
+    return mat;
+}
+private void sortDiagonal(int[][] mat, int row, int col, boolean increasing) {
+    int rows = mat.length,cols = mat[0].length;
+    int len = Math.min(rows - row, cols - col);
+    int[] diagonal = new int[len];
+    for (int i = 0; i < len; i++) diagonal[i] = mat[row + i][col + i];
+    Arrays.sort(diagonal);
+    if (!increasing) reverse(diagonal);
+    for (int i = 0; i < len; i++) mat[row + i][col + i] = diagonal[i];
+}
+private void reverse(int[] arr) {
+    int i = 0, j = arr.length - 1;
+    while (i < j) {
+        int temp = arr[i];
+        arr[i] = arr[j];arr[j] = temp;
+        i++;j--;
+    }
 }
 ```
 # 3459. Length of Longest V-Shaped Diagonal Segment(困难)
