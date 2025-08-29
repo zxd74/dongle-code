@@ -152,6 +152,7 @@
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
+- [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
@@ -8222,6 +8223,29 @@ public int areaOfMaxDiagonal(int[][] dimensions) {
         }
     }
     return res;
+}
+```
+# 3021. Alice and Bob Playing Flower Games(中等)
+Alice and Bob are playing a turn-based game on a field, with two lanes of flowers between them. There are x flowers in the first lane between Alice and Bob, and y flowers in the second lane between them.
+
+The game proceeds as follows:
+* Alice takes the first turn.
+* In each turn, a player must choose either one of the lane and pick one flower from that side.
+* At the end of the turn, if there are no flowers left at all, the current player captures their opponent and wins the game.
+
+Given two integers, n and m, the task is to compute the number of possible pairs (x, y) that satisfy the conditions:
+* Alice must win the game according to the described rules.
+* The number of flowers x in the first lane must be in the range [1,n].
+* The number of flowers y in the second lane must be in the range [1,m].
+
+Return the number of possible pairs (x, y) that satisfy the conditions mentioned in the statement.
+
+* **约束**
+  * `1 <= n, m <= 10^5`
+* **思路**：
+```java
+public long flowerGame(int n, int m) {
+    return ((long) m * n) / 2;
 }
 ```
 # 3195. Find the Minimum Area to Cover All Ones I(中等)
