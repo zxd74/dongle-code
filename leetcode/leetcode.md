@@ -2010,7 +2010,6 @@ public boolean isValidSudoku(char[][] board) {
     return true;
 }
 ```
-
 # 37 解数独(难)
     Write a program to solve a Sudoku puzzle by filling the empty cells.
     A sudoku solution must satisfy all of the following rules:
@@ -2119,7 +2118,75 @@ public boolean solveSudoku(char[][] board,char[] nums,int i,int j){
 * 官方(升级版)：
   * 按位判断是否互斥
 ```java
-// TODO 待理解后补充
+private final int[] rowMask = new int[9],colMask = new int[9],boxMask = new int[9],empties = new int[81];
+private int emptyCount = 0;
+public void solveSudoku(char[][] board) {
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            char ch = board[r][c];
+            if (ch == '.') empties[emptyCount++] = r * 9 + c;
+            else {
+                int d = ch - '1',bit = 1 << d;
+                rowMask[r] |= bit;
+                colMask[c] |= bit;
+                boxMask[boxIndex(r, c)] |= bit;
+            }
+        }
+    }
+    dfs(board, 0);
+}
+private boolean dfs(char[][] board, int k) {
+    if (k == emptyCount) return true; // solved
+    int bestIdx = k,bestChoicesMask = 0,bestChoicesCount = 10;
+    for (int i = k; i < emptyCount; i++) {
+        int pos = empties[i];
+        int r = pos / 9, c = pos % 9, b = boxIndex(r, c);
+        int used = rowMask[r] | colMask[c] | boxMask[b];
+        int choices = (~used) & 0x1FF;              // 9 bits
+        int cnt = Integer.bitCount(choices);
+        if (cnt < bestChoicesCount) {
+            bestChoicesCount = cnt;
+            bestChoicesMask = choices;
+            bestIdx = i;
+            if (cnt == 1) break;
+        }
+        if (cnt == 0) return false;
+    }
+    swap(empties, k, bestIdx);
+    int pos = empties[k];
+    int r = pos / 9, c = pos % 9, b = boxIndex(r, c);
+    int choices = bestChoicesMask == 0
+            ? ((~(rowMask[r] | colMask[c] | boxMask[b])) & 0x1FF)
+            : bestChoicesMask;
+    while (choices != 0) {
+        int bit = choices & -choices;                  // isolate lowest 1 bit
+        int d = Integer.numberOfTrailingZeros(bit);    // 0..8 for digit 1..9
+        place(board, r, c, b, d, bit);
+        if (dfs(board, k + 1)) return true;
+        unplace(board, r, c, b, d, bit);
+        choices -= bit;                                // next candidate
+    }
+    swap(empties, k, k); 
+    return false;
+}
+private void place(char[][] board, int r, int c, int b, int d, int bit) {
+    board[r][c] = (char) ('1' + d);
+    rowMask[r] |= bit;
+    colMask[c] |= bit;
+    boxMask[b] |= bit;
+}
+private void unplace(char[][] board, int r, int c, int b, int d, int bit) {
+    board[r][c] = '.';
+    rowMask[r] ^= bit;
+    colMask[c] ^= bit;
+    boxMask[b] ^= bit;
+}
+private static int boxIndex(int r, int c) {
+    return (r / 3) * 3 + (c / 3);
+}
+private void swap(int[] a, int i, int j) {
+    int t = a[i]; a[i] = a[j]; a[j] = t;
+}
 ```
 
 # 38 报数序列(中)
