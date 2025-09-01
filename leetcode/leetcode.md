@@ -142,6 +142,7 @@
 - [1493. Longest Subarray of 1's After Deleting One Element(中等)](#1493-longest-subarray-of-1s-after-deleting-one-element中等)
 - [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
+- [1792. Maximum Average Pass Ratio(中等)](#1792-maximum-average-pass-ratio中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
@@ -7851,6 +7852,113 @@ public int maximumGain(String s, int x, int y) {
     }
     if (cnt1 != 0) score += Math.min(cnt1, cnt2) * y; // 最后剩余的
     return score;
+}
+```
+# 1792. Maximum Average Pass Ratio(中等)
+There is a school that has classes of students and each class will be having a final exam. You are given a 2D integer array classes, where classes[i] = [passi, totali]. You know beforehand that in the ith class, there are totali total students, but only passi number of students will pass the exam.
+
+You are also given an integer extraStudents. There are another extraStudents brilliant students that are guaranteed to pass the exam of any class they are assigned to. You want to assign each of the extraStudents students to a class in a way that maximizes the average pass ratio across all the classes.
+
+The pass ratio of a class is equal to the number of students of the class that will pass the exam divided by the total number of students of the class. The average pass ratio is the sum of pass ratios of all the classes divided by the number of the classes.
+
+Return the maximum possible average pass ratio after assigning the extraStudents students. Answers within 10-5 of the actual answer will be accepted.
+
+* **约束**
+  * `1 <= classes.length <= 10^5`
+  * `classes[i].length == 2`
+  * `1 <= pass_i <= total_i <= 10^5`
+  * `1 <= extraStudents <= 10^5`
+* **思路**：
+```java
+// 基础版
+public double maxAverageRatio(int[][] classes, int extraStudents) {
+    List<Double> passRatios = new ArrayList<>();
+
+    // Calculate initial pass ratios
+    for (int classIndex = 0; classIndex < classes.length; classIndex++) {
+        double initialRatio =
+            (double) classes[classIndex][0] / classes[classIndex][1];
+        passRatios.add(initialRatio);
+    }
+
+    while (extraStudents > 0) {
+        List<Double> updatedRatios = new ArrayList<>();
+
+        // Calculate updated pass ratios if an extra student is added
+        for (
+            int classIndex = 0;
+            classIndex < classes.length;
+            classIndex++
+        ) {
+            double newRatio =
+                (double) (classes[classIndex][0] + 1) /
+                (classes[classIndex][1] + 1);
+            updatedRatios.add(newRatio);
+        }
+
+        int bestClassIndex = 0;
+        double maximumGain = 0;
+
+        // Find the class that gains the most from an extra student
+        for (
+            int classIndex = 0;
+            classIndex < updatedRatios.size();
+            classIndex++
+        ) {
+            double gain =
+                updatedRatios.get(classIndex) - passRatios.get(classIndex);
+            if (gain > maximumGain) {
+                bestClassIndex = classIndex;
+                maximumGain = gain;
+            }
+        }
+
+        // Update the selected class
+        passRatios.set(bestClassIndex, updatedRatios.get(bestClassIndex));
+        classes[bestClassIndex][0]++;
+        classes[bestClassIndex][1]++;
+
+        extraStudents--;
+    }
+
+    // Calculate the total average pass ratio
+    double totalPassRatio = 0;
+    for (double passRatio : passRatios) {
+        totalPassRatio += passRatio;
+    }
+
+    return totalPassRatio / classes.length;
+}
+// 改进版
+public double maxAverageRatio(int[][] classes, int extraStudents) {
+    PriorityQueue<double[]> pq = new PriorityQueue<>(new Comparator<double[]>() {
+        public int compare(double[] a, double[] b) {
+            if (a[0] < b[0]) return 1;
+            if (a[0] > b[0]) return -1;
+            return 0;
+        }
+    });
+    for (int i = 0; i < classes.length; i++) {
+        double pass = classes[i][0];
+        double total = classes[i][1];
+        double inc = (pass + 1.0) / (total + 1.0) - pass / total;
+        pq.offer(new double[]{inc, pass, total});
+    }
+    while (extraStudents > 0) {
+        double[] top = pq.poll();
+        double pass = top[1] + 1;
+        double total = top[2] + 1;
+        double inc = (pass + 1.0) / (total + 1.0) - pass / total;
+        pq.offer(new double[]{inc, pass, total});
+        extraStudents--;
+    }
+    double sum = 0.0;
+    Object[] arr = pq.toArray();
+    for (int i = 0; i < arr.length; i++) {
+        double[] c = (double[]) arr[i];
+        sum += c[1] / c[2];
+    }
+    return sum / classes.length;
 }
 ```
 # 2044. Count Number of Maximum Bitwise OR Subsets(中等)
