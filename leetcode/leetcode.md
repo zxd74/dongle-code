@@ -154,6 +154,7 @@
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
 - [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
+- [3025. Find the Number of Ways to Place People I(中等)](#3025-find-the-number-of-ways-to-place-people-i中等)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
@@ -8438,6 +8439,38 @@ Return the number of possible pairs (x, y) that satisfy the conditions mentioned
 ```java
 public long flowerGame(int n, int m) {
     return ((long) m * n) / 2;
+}
+```
+# 3025. Find the Number of Ways to Place People I(中等)
+You are given a 2D array points of size `n x 2` representing integer coordinates of some points on a 2D plane, where `points[i] = [xi, yi]`.
+
+Count the number of pairs of points `(A, B)`, where
+* `A` is on the upper left side of `B`, and
+* there are no other points in the rectangle (or line) they make (including the border).
+
+Return the count.
+
+* **约束**
+  * `2 <= n <= 50`
+  * `points[i].length == 2`
+  * `0
+```java
+public int numberOfPairs(int[][] points) {
+    Arrays.sort(points, (a, b) -> a[0] == b[0] ? b[1] - a[1] : a[0] - b[0]);
+    int cnt = 0;
+    for (int i = 0; i < points.length; i++) {
+        int x0 = points[i][0], y0 = points[i][1];
+        int bot = Integer.MIN_VALUE, top = y0;
+        for (int j = i + 1; j < points.length; j++) {
+            int x1 = points[j][0], y1 = points[j][1];
+            if (y1 <= top && y1 > bot) {
+                cnt++; // found a valid rectangular.
+                bot = y1;
+                if (y1 == top) top--;// to avoid points on the same y value;
+            }
+        }
+    }
+    return cnt;
 }
 ```
 # 3195. Find the Minimum Area to Cover All Ones I(中等)
