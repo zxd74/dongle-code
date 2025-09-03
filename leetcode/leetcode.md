@@ -155,6 +155,7 @@
 - [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
 - [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
 - [3025. Find the Number of Ways to Place People I(中等)](#3025-find-the-number-of-ways-to-place-people-i中等)
+- [3027. Find the Number of Ways to Place People II(困难)](#3027-find-the-number-of-ways-to-place-people-ii困难)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
@@ -8453,7 +8454,8 @@ Return the count.
 * **约束**
   * `2 <= n <= 50`
   * `points[i].length == 2`
-  * `0
+  * `0 <= points[i][0], points[i][1] <= 50`
+  * All `points[i]` are distinct.
 ```java
 public int numberOfPairs(int[][] points) {
     Arrays.sort(points, (a, b) -> a[0] == b[0] ? b[1] - a[1] : a[0] - b[0]);
@@ -8471,6 +8473,49 @@ public int numberOfPairs(int[][] points) {
         }
     }
     return cnt;
+}
+```
+# 3027. Find the Number of Ways to Place People II(困难)
+You are given a 2D array `points` of size `n x 2` representing integer coordinates of some points on a 2D-plane, where `points[i] = [xi, yi]`.
+
+We define the **right** direction as positive x-axis (**increasing x-coordinate**) and the **left** direction as negative x-axis (**decreasing x-coordinate**). Similarly, we define the **up** direction as positive y-axis (**increasing y-coordinate**) and the down direction as negative y-axis (**decreasing y-coordinate**)
+
+You have to place n people, including Alice and Bob, at these points such that there is **exactly one** person at every point. Alice wants to be alone with Bob, so Alice will build a rectangular fence with Alice's position as the **upper left corner** and Bob's position as the **lower right corner** of the fence (**Note** that the fence **might not** enclose any area, i.e. it can be a line). If any person other than Alice and Bob is either **inside** the fence or **on** the fence, Alice will be sad.
+
+Note that Alice can only build a fence with Alice's position as the upper left corner, and Bob's position as the lower right corner. For example, Alice cannot build either of the fences in the picture below with four corners `(1, 1)`, `(1, 3)`, `(3, 1)`, and `(3, 3)`, because:
+* With Alice at `(3, 3)` and Bob at `(1, 1)`, Alice's position is not the upper left corner and Bob's position is not the lower right corner of the fence.
+* With Alice at `(1, 3)` and Bob at `(1, 1)`, Bob's position is not the lower right corner of the fence.
+
+Return the number of **pairs of points** where you can place Alice and Bob, such that Alice **does not** become sad on building the fence.
+
+* **约束**：
+  * `2 <= n <= 1000`
+  * `points[i].length == 2`
+  * `-10^9 <= points[i][0], points[i][1] <= 10^9`
+  * All `points[i]` are distinct.
+```java
+public int numberOfPairs(int[][] points) {
+    // Sort by x ascending, then y descending
+    Arrays.sort(points, new Comparator<int[]>() {
+        public int compare(int[] a, int[] b) {
+            if (a[0] != b[0]) return a[0] - b[0]; // sort by x
+            return b[1] - a[1]; // if x same, y descending
+        }
+    });
+
+    int n = points.length, ans = 0;
+    for (int i = 0; i < n; i++) {
+        int top = points[i][1], bottom = Integer.MIN_VALUE;
+        for (int j = i + 1; j < n; j++) {
+            if (points[j][1] <= top && points[j][1] > bottom) {
+                bottom = points[j][1];
+                ans++;
+            }
+            if (bottom == top)
+                break;
+        }
+    }
+    return ans;
 }
 ```
 # 3195. Find the Minimum Area to Cover All Ones I(中等)
