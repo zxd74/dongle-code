@@ -165,6 +165,7 @@
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
+- [3516. Find Closest Person(简单)](#3516-find-closest-person简单)
 
 
 # 总结
@@ -9061,5 +9062,29 @@ public int maxSum(int[] nums) {
         pre = tmp;
     }
     return sum;
+}
+```
+# 3516. Find Closest Person(简单)
+You are given three integers `x`, `y`, and `z`, representing the positions of three people on a number line:
+* `x` is the position of Person 1.
+* `y` is the position of Person 2.
+* `z` is the position of Person 3, who does **not** move.
+* Both Person 1 and Person 2 move toward Person 3 at the **same** speed.
+
+Determine which person reaches Person 3 **first**:
+* Return 1 if Person 1 arrives first.
+* Return 2 if Person 2 arrives first.
+* Return 0 if both arrive at the **same** time.
+
+Return the result accordingly.
+* **约束**
+  * `1 <= x, y, z <= 100`
+* **思路**： 绝对值比较
+```java
+public int findClosest(int x, int y, int z) {
+    int tx = Math.abs(z-x),ty = Math.abs(z-y);
+    if(tx<ty) return 1;
+    if(tx>ty) return 2;
+    return 0;
 }
 ```
