@@ -151,6 +151,7 @@
 - [2348. Number of Zero-Filled Subarrays(中等)](#2348-number-of-zero-filled-subarrays中等)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
+- [2749. Minimum operations to Make the Integer Zero(中等)](#2749-minimum-operations-to-make-the-integer-zero中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
 - [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
@@ -8364,6 +8365,29 @@ private int longestSubarray(int[] nums) {
         i--;
     }
     return maxCount;
+}
+```
+# 2749. Minimum operations to Make the Integer Zero(中等)
+You are given two integers num1 and num2.
+
+In one operation, you can choose integer i in the range [0, 60] and subtract 2i + num2 from num1.
+
+Return the integer denoting the minimum number of operations needed to make num1 equal to 0.
+
+If it is impossible to make num1 equal to 0, return -1.
+
+* **约束**
+  * `1 <= num1 <= 10^9`
+  * `-10^9 <= num2 <= 10^9`
+```java
+public int makeTheIntegerZero(int num1, int num2) {
+    int k = 1;
+    while (true) {
+        long x = num1 - (long) num2 * k;
+        if (x < k) return -1;
+        if (k >= Long.bitCount(x)) return k;
+        k++;
+    }
 }
 ```
 # 2787. Ways to Express an Integer as Sum of Powers(中等)
