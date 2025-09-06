@@ -166,6 +166,7 @@
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
+- [3495. Minimum Operations to Make Array Elements zero(困难)](#3495-minimum-operations-to-make-array-elements-zero困难)
 - [3516. Find Closest Person(简单)](#3516-find-closest-person简单)
 
 
@@ -9086,6 +9087,63 @@ public int maxSum(int[] nums) {
         pre = tmp;
     }
     return sum;
+}
+```
+# 3495. Minimum Operations to Make Array Elements zero(困难)
+You are given a 2D array `queries`, where `queries[i]` is of the form `[l, r]`. Each `queries[i]` defines an array of integers `nums` consisting of elements ranging from `l` to `r`, both **inclusive**.
+
+In one operation, you can:
+* Select two integers a and b from the array.
+* Replace them with `floor(a / 4)` and `floor(b / 4)`.
+
+Your task is to determine the **minimum** number of operations required to reduce all elements of the array to zero for each query. Return the sum of the results for all queries.
+
+* **约束**
+  * `1 <= queries.length <= 10^5`
+  * `queries[i].length == 2`
+  * `queries[i] == [l, r]`
+  * `1 <= l <= r <= 10^9`
+* **思路**：
+```java
+public long minOperations(int[][] queries) {
+    long res = 0;
+    for (int[] q : queries) {
+        long count1 = get(q[1]),count2 = get(q[0] - 1);
+        res += (count1 - count2 + 1) / 2;
+    }
+    return res;
+}
+private long get(int num) {
+    long cnt = 0;
+    int i = 1,base = 1;
+    while (base <= num) {
+        int end = Math.min(base * 2 - 1, num);
+        cnt += (long) ((i + 1) / 2) * (end - base + 1);
+        i++;
+        base *= 2;
+    }
+    return cnt;
+}
+// 改进
+public long minOperations(int[][] queries) {
+    long res = 0;
+    for (int[] query: queries) res += minOperations(query);
+    return res;
+}
+private long minOperations(int[] query) {
+    long res0 = 0，x = 1;
+    while (x < query[0]) {
+        res0 ++;
+        x *= 4;
+    }
+    long res1 = res0，res = 0，prev = query[0];
+    while (x <= query[1] * 4L) {
+        res += res1 * (Math.min(x, query[1] + 1) - prev);
+        prev = x;
+        res1 ++;
+        x *= 4;
+    }
+    return (res + 1) / 2;
 }
 ```
 # 3516. Find Closest Person(简单)
