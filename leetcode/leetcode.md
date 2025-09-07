@@ -138,6 +138,7 @@
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
+- [1304. Find N Unique Integers Sum up to Zero(简单)](#1304-find-n-unique-integers-sum-up-to-zero简单)
 - [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
 - [1493. Longest Subarray of 1's After Deleting One Element(中等)](#1493-longest-subarray-of-1s-after-deleting-one-element中等)
 - [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
@@ -7671,6 +7672,49 @@ public int countSquares(int[][] matrix) {
     for (int i=0;i<m;i++) count+=matrix[i][0];
     for (int i=1;i<n;i++) count+=matrix[0][i];
     return count;
+}
+```
+# 1304. Find N Unique Integers Sum up to Zero(简单)
+Given an integer n, return any array containing n unique integers such that they add up to 0.
+
+* **约束**
+  * `1 <= n <= 1000`
+* **思路**：
+  * 方式一：生成对半正负数组
+  * 方式二：数组保留一位负，其余皆为正
+```java
+public int[] sumZero(int n) {
+    int left = 0,right=0,count = n/2;
+    int[] arr = new int[n];
+    int idx = 0;
+    if(n%2 == 0){
+        while(idx<n){
+            arr[idx++] = -count;
+            arr[idx++] = count--;
+        }
+    }else{
+        while(idx<n){
+            if(count==0){
+                arr[idx] = count;
+                break;
+            }
+            arr[idx++] = -count;
+            arr[idx++] = count--;
+        }
+    }
+    return arr;
+}
+
+public int[] sumZero(int n) {
+    int[] arr=new int[n];
+    if(n==1) return arr;
+    int sum=0;
+    for(int i=0;i<n-1;i++){
+        arr[i]=i+1;
+        sum+=arr[i];
+    }
+    arr[n-1]=-sum;
+    return arr;
 }
 ```
 # 1323. Maximum 69 Number(简单)
