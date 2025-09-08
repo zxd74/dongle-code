@@ -139,6 +139,7 @@
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1304. Find N Unique Integers Sum up to Zero(简单)](#1304-find-n-unique-integers-sum-up-to-zero简单)
+- [1317. Convert Integer to the Sum of Two No-Zero Integers(简单)](#1317-convert-integer-to-the-sum-of-two-no-zero-integers简单)
 - [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
 - [1493. Longest Subarray of 1's After Deleting One Element(中等)](#1493-longest-subarray-of-1s-after-deleting-one-element中等)
 - [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
@@ -7715,6 +7716,40 @@ public int[] sumZero(int n) {
     }
     arr[n-1]=-sum;
     return arr;
+}
+```
+# 1317. Convert Integer to the Sum of Two No-Zero Integers(简单)
+**No-Zero integer** is a positive integer that **does not contain any** `0` in its decimal representation.
+
+Given an integer `n`, return a list of two integers `[a, b]` where:
+* `a and `b` are **No-Zero integers**.
+* `a + b = n`
+
+The test cases are generated so that there is at least one valid solution. If there are many valid solutions, you can return any of them.
+
+* **约束**
+  * `1 <= n <= 10^4`
+* **思路**：
+  * 不能被`10`整除
+  * 内部不能包含`0`
+```java
+public int[] getNoZeroIntegers(int n) {
+    for(int i=1;i<=n;i++){
+        int a = i;
+        int b = n-i;
+        if(a>0 && b>0 && iscontainsZero(a) == false && iscontainsZero(b) == false){
+            return new int[]{a,b};
+        }
+    }
+    return new int[] {-1,-1};
+}
+private boolean iscontainsZero(int n){
+    while(n > 0){
+        int digits = n % 10;
+        if(digits == 0) return true;
+        n /= 10;
+    }
+    return false;
 }
 ```
 # 1323. Maximum 69 Number(简单)
