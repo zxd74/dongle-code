@@ -150,6 +150,7 @@
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2264. Largest 3-Same-Digit Number in String(简单)](#2264-largest-3-same-digit-number-in-string简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
+- [2327. Number of People Aware of a Secret(中等)](#2327-number-of-people-aware-of-a-secret中等)
 - [2348. Number of Zero-Filled Subarrays(中等)](#2348-number-of-zero-filled-subarrays中等)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
@@ -8286,6 +8287,32 @@ private void dfs(int cur,int parent,int[] nums,List<List<Integer>> graph,int[] x
         xor[cur] ^= xor[neighbor]; // 当前节点和相邻节点的异或
     }
     out[cur] = cnt[0];
+}
+```
+# 2327. Number of People Aware of a Secret(中等)
+On day `1`, one person discovers a secret.
+
+You are given an integer `delay`, which means that each person will **share** the secret with a new person **every day**, starting from `delay` days after discovering the secret. You are also given an integer `forget`, which means that each person will **forget** the secret `forget` days after discovering it. A person **cannot** share the secret on the same day they forgot it, or on any day afterwards.
+
+Given an integer `n`, return the number of people who know the secret at the end of day `n`. Since the answer may be very large, return it **modulo** `10^9 + 7`.
+
+* **约束**
+  * `2 <= n <= 1000`
+  * `1 <= delay < forget <= n`
+* **思路**：
+```java
+public int peopleAwareOfSecret(int n, int delay, int forget) {
+    long[] dp = new long[n + 1];
+    dp[1] = 1;
+    long share = 0, MOD = (long)1e9 + 7;
+    for (int t = 2; t <= n; t++) {
+        if (t - delay > 0) share = (share + dp[t - delay] + MOD) % MOD;
+        if (t - forget > 0) share = (share - dp[t - forget] + MOD) % MOD;
+        dp[t] = share;
+    }
+    long res = 0;
+    for (int i = n - forget + 1; i <= n; i++) res = (res + dp[i]) % MOD;
+    return (int)res;
 }
 ```
 # 2348. Number of Zero-Filled Subarrays(中等)
