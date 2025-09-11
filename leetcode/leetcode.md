@@ -156,6 +156,7 @@
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2749. Minimum operations to Make the Integer Zero(中等)](#2749-minimum-operations-to-make-the-integer-zero中等)
+- [2785. Sort Vowels in a String(中等)](#2785-sort-vowels-in-a-string中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
 - [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
@@ -8542,6 +8543,42 @@ public int makeTheIntegerZero(int num1, int num2) {
         if (k >= Long.bitCount(x)) return k;
         k++;
     }
+}
+```
+# 2785. Sort Vowels in a String(中等)
+Given a **0-indexed** string `s`, **permute** `s` to get a new string `t` such that:
+
+* All consonants remain in their original places. More formally, if there is an index `i` with `0 <= i < s.length` such that `s[i]` is a consonant, then `t[i] = s[i]`.
+* The vowels must be sorted in the nondecreasing order of their ASCII values. More formally, for pairs of indices `i, j` with `0 <= i < j < s.length` such that `s[i]` and `s[j]` are vowels, then `t[i]` must not have a higher ASCII value than `t[j]`.
+Return the resulting string.
+
+The vowels are `'a'`, `'e'`, `'i'`, `'o'`, and `'u'`, and they can appear in lowercase or uppercase. Consonants comprise all letters that are not vowels.
+
+* **约束**
+  * `1 <= s.length <= 10^5`
+  * `s` consists only of letters of the English alphabet in **uppercase and lowercase**.
+```java
+public String sortVowels(String s) {
+    char[] vowels = {'A','E','I','O','U','a','e','i','o','u'};
+    int[] stringCharCount = new int[128];
+    char[] sChars = s.toCharArray();
+    for(char ch : sChars) stringCharCount[ch]++;
+    boolean found = false;
+    for(char ch : vowels) found |= stringCharCount[ch]>0;
+    if(!found) return s;
+    
+    boolean[] isVowels = new boolean[128];
+    for(char ch : vowels) if(stringCharCount[ch]>0) isVowels[ch] = true;
+    int left = 0;
+    for(char v : vowels){
+        while(stringCharCount[v]>0){
+            char ch = sChars[left];
+            stringCharCount[v] -= isVowels[ch]?1:0; 
+            sChars[left] = isVowels[ch]?v:ch; 
+            left++;
+        }
+    }
+    return new String(sChars);
 }
 ```
 
