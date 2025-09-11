@@ -144,6 +144,7 @@
 - [1493. Longest Subarray of 1's After Deleting One Element(中等)](#1493-longest-subarray-of-1s-after-deleting-one-element中等)
 - [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
+- [1733. Minimum Number of People to Teach(中等)](#1733-minimum-number-of-people-to-teach中等)
 - [1792. Maximum Average Pass Ratio(中等)](#1792-maximum-average-pass-ratio中等)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
@@ -7939,6 +7940,52 @@ public int maximumGain(String s, int x, int y) {
     return score;
 }
 ```
+# 1733. Minimum Number of People to Teach(中等)
+On a social network consisting of `m` users and some friendships between users, two users can communicate with each other if they know a common language.
+
+You are given an integer `n`, an array `languages`, and an array `friendships` where:
+* There are `n` languages numbered `1` through `n`,
+* `languages[i]` is the set of languages the `i^​​​​​​th​​​​` user knows, and
+* `friendships[i] = [u_​​​​​​i​​​, v​​​​​​_i]` denotes a friendship between the users `u_​​​​​​​​​​​i​​​​​` and `v_i`.
+
+You can choose **one** language and teach it to some users so that all friends can communicate with each other. Return the **minimum** number of users you need to teach.
+
+Note that friendships are not transitive, meaning if `x` is a friend of `y` and `y` is a friend of `z`, this doesn't guarantee that `x` is a friend of `z`.
+
+* **约束**:
+* `2 <= n <= 500`
+* `languages.length == m`
+* `1 <= m <= 500`
+* `1 <= languages[i].length <= n`
+* `1 <= languages[i][j] <= n`
+* `1 <= u​​​​​​i < v​​​​​​i <= languages.length`
+* `1 <= friendships.length <= 500`
+* All tuples `(u​​​​​i, v​​​​​​i)` are unique
+* `languages[i]` contains only unique values
+* **思路**：
+```java
+public int minimumTeachings(int n, int[][] languages, int[][] friendships) {
+    BitSet[] bit = new BitSet[languages.length];
+    Arrays.setAll(bit, o -> new BitSet(n + 1));
+    for (int i = 0; i < languages.length; i++){
+        for (int l : languages[i]) bit[i].set(l);
+    }
+    Set<Integer> teach = new HashSet<>();
+    for (int[] f : friendships){
+        BitSet t = (BitSet)bit[f[0] - 1].clone();
+        t.and(bit[f[1] - 1]);
+        if (t.isEmpty()){
+            teach.add(f[0] - 1);
+            teach.add(f[1] - 1);
+        }
+    }
+    int[] count = new int[n + 1];
+    for (int person : teach){
+        for (int l : languages[person]) count[l]++;
+    }
+    return teach.size() - Arrays.stream(count).max().getAsInt();
+}
+```
 # 1792. Maximum Average Pass Ratio(中等)
 There is a school that has classes of students and each class will be having a final exam. You are given a 2D integer array classes, where classes[i] = [passi, totali]. You know beforehand that in the ith class, there are totali total students, but only passi number of students will pass the exam.
 
@@ -8497,6 +8544,7 @@ public int makeTheIntegerZero(int num1, int num2) {
     }
 }
 ```
+
 # 2787. Ways to Express an Integer as Sum of Powers(中等)
 Given two positive integers `n` and `x`.
 
