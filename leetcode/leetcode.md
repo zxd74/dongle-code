@@ -164,6 +164,7 @@
 - [3027. Find the Number of Ways to Place People II(困难)](#3027-find-the-number-of-ways-to-place-people-ii困难)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
+- [3227. Vowels Game in a String(中等)](#3227-vowels-game-in-a-string中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
 - [3446. Sort Matrix by Diagonals(中等)](#3446-sort-matrix-by-diagonals中等)
@@ -8915,6 +8916,32 @@ private int[][] rotate(int[][] a) {
         }
     }
     return b;
+}
+```
+# 3227. Vowels Game in a String(中等)
+Alice and Bob are playing a game on a string.
+
+You are given a string s, Alice and Bob will take turns playing the following game where Alice starts **first**:
+* On Alice's turn, she has to remove any **non-empty** substring from s that contains an **odd** number of vowels.
+* On Bob's turn, he has to remove any **non-empty** substring from s that contains an **even** number of vowels.
+
+The first player who cannot make a move on their turn loses the game. We assume that both Alice and Bob play **optimally**.
+
+Return `true` if Alice wins the game, and `false` otherwise.
+
+The English vowels are: `a`, `e`, `i`, `o`, and `u`.
+
+* **约束**
+  * `1 <= s.length <= 10^5`
+  * `s` consists only of lowercase English letters.
+```java
+public boolean doesAliceWin(String s) {
+    for (int i = 0; i < s.length(); i++) {
+        switch (s.charAt(i)) {
+            case 'a','e','i','o','u':return true;
+        }
+    }
+    return false;
 }
 ```
 # 3330. Find the Original Typed String I(简单)
