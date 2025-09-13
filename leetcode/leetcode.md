@@ -174,6 +174,7 @@
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 - [3495. Minimum Operations to Make Array Elements zero(困难)](#3495-minimum-operations-to-make-array-elements-zero困难)
 - [3516. Find Closest Person(简单)](#3516-find-closest-person简单)
+- [3541. Find Most Frequency Vowel and Consonant(简单)](#3541-find-most-frequency-vowel-and-consonant简单)
 
 
 # 总结
@@ -9386,5 +9387,37 @@ public int findClosest(int x, int y, int z) {
     if(tx<ty) return 1;
     if(tx>ty) return 2;
     return 0;
+}
+```
+# 3541. Find Most Frequency Vowel and Consonant(简单)
+You are given a string s consisting of lowercase English letters (`'a'` to `'z'`).
+
+Your task is to:
+* Find the vowel (one of `'a'`, `'e'`, `'i'`, `'o'`, or `'u'`) with the **maximum** frequency.
+* Find the consonant (all other letters excluding vowels) with the **maximum** frequency.
+
+Return the sum of the two frequencies.
+
+**Note**: If multiple vowels or consonants have the same maximum frequency, you may choose any one of them. If there are no vowels or no consonants in the string, consider their frequency as 0.
+
+The **frequency** of a letter x is the number of times it occurs in the string.
+
+* **约束**
+  * `1 <= s.length <= 100`
+  * `s` consists of lowercase English letters only.
+```java
+public int maxFreqSum(String s) {
+    s=s.toLowerCase();
+    int arr[]=new int[26];
+    for(int i=0;i<s.length();i++){
+        char c = s.charAt(i);
+        arr[c-'a']++;
+    }
+    int vmax=0,cmax=0;
+    for(int i=0;i<arr.length;i++){
+        if((i==0||i==4||i==8||i==14||i==20)&&arr[i]>vmax) vmax=arr[i];
+        else if((i!=0&&i!=4&&i!=8&&i!=14&&i!=20)&&arr[i]>cmax) cmax=arr[i];
+    }
+    return vmax+cmax;
 }
 ```
