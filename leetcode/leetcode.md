@@ -137,6 +137,7 @@
 - [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
+- [966. Vowel Spellchecker(中等)](#966-vowel-spellchecker中等)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1304. Find N Unique Integers Sum up to Zero(简单)](#1304-find-n-unique-integers-sum-up-to-zero简单)
 - [1317. Convert Integer to the Sum of Two No-Zero Integers(简单)](#1317-convert-integer-to-the-sum-of-two-no-zero-integers简单)
@@ -7655,6 +7656,74 @@ public int totalFruit(int[] fruits) {
     }
     max = Math.max(max, fruits.length-start);
     return max;
+}
+```
+# 966. Vowel Spellchecker(中等)
+Given a `wordlist`, we want to implement a spellchecker that converts a query word into a correct word.
+
+For a given `query` word, the spell checker handles two categories of spelling mistakes:
+
+Capitalization: If the query matches a word in the wordlist (**case-insensitive**), then the query word is returned with the same case as the case in the wordlist.
+* Example: `wordlist = ["yellow"], query = "YellOw": correct = "yellow"`
+* Example: `wordlist = ["Yellow"], query = "yellow": correct = "Yellow"`
+* Example: `wordlist = ["yellow"], query = "yellow": correct = "yellow"`
+
+Vowel Errors: If after replacing the vowels ('a', 'e', 'i', 'o', 'u') of the query word with any vowel individually, it matches a word in the wordlist (case-insensitive), then the query word is returned with the same case as the match in the wordlist.
+* Example: `wordlist = ["YellOw"], query = "yollow": correct = "YellOw"`
+* Example: `wordlist = ["YellOw"], query = "yeellow": correct = "" (no match)`
+* Example: `wordlist = ["YellOw"], query = "yllw": correct = "" (no match)`
+
+In addition, the spell checker operates under the following precedence rules:
+* When the query exactly matches a word in the wordlist (**case-sensitive**), you should return the same word back.
+* When the query matches a word up to capitlization, you should return the first such match in the wordlist.
+* When the query matches a word up to vowel errors, you should return the first such match in the wordlist.
+* If the query has no matches in the wordlist, you should return the empty string.
+
+Given some `queries`, return a list of words `answer`, where `answer[i]` is the correct word for `query = queries[i]`.
+
+* **约束**
+  * `1 <= wordlist.length, queries.length <= 5000`
+  * `1 <= wordlist[i].length, queries[i].length <= 7`
+  * `wordlist[i]` and `queries[i]` consist only of only English letters.
+```java
+public String[] spellchecker(String[] wordlist, String[] queries) {
+    int m = wordlist.length, n = queries.length;
+    String[] res = new String[n];
+    Map<String, Integer> caseSense = new HashMap<>(),caseInsense = new HashMap<>(),vowelErrors = new HashMap<>();
+    for (int i = m - 1; i >= 0; i--) {
+        String word = wordlist[i];
+        caseSense.put(word, i);
+        String lowerCase = word.toLowerCase();
+        char[] vowelRepArr = lowerCase.toCharArray();
+        for (int j = 0; j < vowelRepArr.length; j++) {
+            if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') vowelRepArr[j] = 'a';
+        }
+        caseInsense.put(lowerCase, i);
+        vowelErrors.put(new String(vowelRepArr), i);
+    }
+    for (int i = 0; i < n; i++) {
+        String word = queries[i];
+        if (caseSense.containsKey(word)) {
+            res[i] = word;
+            continue;
+        }
+        String lowerCase = word.toLowerCase();
+        if (caseInsense.containsKey(lowerCase)) {
+            res[i] = wordlist[caseInsense.get(lowerCase)];
+            continue;
+        }
+        char[] vowelRepArr = lowerCase.toCharArray();
+        for (int j = 0; j < vowelRepArr.length; j++) {
+            if (vowelRepArr[j] == 'e' || vowelRepArr[j] == 'i' || vowelRepArr[j] == 'o' || vowelRepArr[j] == 'u') vowelRepArr[j] = 'a';
+        }
+        String vowelRepStr = new String(vowelRepArr);
+        if (vowelErrors.containsKey(vowelRepStr)) {
+            res[i] = wordlist[vowelErrors.get(vowelRepStr)];
+            continue;
+        }
+        res[i] = "";
+    }
+    return res;
 }
 ```
 # 1277. Count Square Submatrices with All Ones(中等)
