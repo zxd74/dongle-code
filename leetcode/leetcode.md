@@ -147,6 +147,7 @@
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [1733. Minimum Number of People to Teach(中等)](#1733-minimum-number-of-people-to-teach中等)
 - [1792. Maximum Average Pass Ratio(中等)](#1792-maximum-average-pass-ratio中等)
+- [1935. Maximum Number of Words You Can Type(简单)](#1935-maximum-number-of-words-you-can-type简单)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
@@ -8163,6 +8164,50 @@ public double maxAverageRatio(int[][] classes, int extraStudents) {
         sum += c[1] / c[2];
     }
     return sum / classes.length;
+}
+```
+# 1935. Maximum Number of Words You Can Type(简单)
+There is a malfunctioning keyboard where some letter keys do not work. All other keys on the keyboard work properly.
+
+Given a string `text` of words separated by a single space (no leading or trailing spaces) and a string `brokenLetters` of all **distinct** letter keys that are broken, return the **number of words** in `text` you can fully type using this keyboard.
+
+* **约束**
+  * `1 <= text.length <= 10^4`
+  * `0 <= brokenLetters.length <= 26`
+  * `text` consists of words separated by a single space without any leading or trailing spaces.
+  * Each word only consists of lowercase English letters.
+  * `brokenLetters` consists of **distinct** lowercase English letters.
+```java
+public int canBeTypedWords(String text, String brokenLetters) {
+    String[] arr = text.split(" ");
+    char[] brokenWords = brokenLetters.toCharArray();
+    boolean[] charExists = new boolean[26];
+    for (char c : brokenWords) charExists[c - 'a'] = true;
+    int count = 0;
+    for (String word : arr) if (!hasBrokenLetters(word, charExists)) count++;
+    return count;
+}
+private boolean hasBrokenLetters(String s, boolean[] charExists) {
+    for (int i = 0; i < s.length(); i++) if (charExists[s.charAt(i) - 'a']) return true;
+    return false;
+}
+
+public int canBeTypedWords(String text, String brokenLetters) {
+    int count = 1;
+    boolean flag = true;
+    boolean[] c = new boolean[26];
+    for(int i = 0; i < brokenLetters.length(); i++) c[brokenLetters.charAt(i) - 97] = true;
+    for(char ch : text.toCharArray()) {
+        if(ch == ' ') {
+            flag = true;
+            count++;
+        }
+        else if(c[ch - 97] && flag) {
+            count--;
+            flag = false;
+        }
+    }
+    return count < 1 ? 0 : count;
 }
 ```
 # 2044. Count Number of Maximum Bitwise OR Subsets(中等)
