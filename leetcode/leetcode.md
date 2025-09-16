@@ -150,6 +150,7 @@
 - [1935. Maximum Number of Words You Can Type(简单)](#1935-maximum-number-of-words-you-can-type简单)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
+- [2197. Replace Non-Coprime Numbers in Array(困难)](#2197-replace-non-coprime-numbers-in-array困难)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
 - [2264. Largest 3-Same-Digit Number in String(简单)](#2264-largest-3-same-digit-number-in-string简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
@@ -8279,6 +8280,46 @@ private int minSteps(int left, int right, int start) {
     int goLeft = Math.abs(start - left) + (right - left);
     int goRight = Math.abs(start - right) + (right - left);
     return Math.min(goLeft, goRight);
+}
+```
+# 2197. Replace Non-Coprime Numbers in Array(困难)
+You are given an array of integers nums. Perform the following steps:
+
+1. Find **any** two **adjacent** numbers in nums that are **non-coprime**.
+2. If no such numbers are found, **stop** the process.
+3. Otherwise, delete the two numbers and **replace** them with their **LCM (Least Common Multiple)**.
+4. **Repeat** this process as long as you keep finding two adjacent non-coprime numbers.
+
+Return the **final** modified array. It can be shown that replacing adjacent non-coprime numbers in **any** arbitrary order will lead to the same result.
+
+The test cases are generated such that the values in the final array are **less than or equal** to `10^8`.
+
+Two values `x` and `y` are **non-coprime** if `GCD(x, y) > 1` where `GCD(x, y)` is the **Greatest Common Divisor** of `x` and `y`.
+
+* **约束**
+  * `1 <= nums.length <= 10^5`
+  * `1 <= nums[i] <= 10^5`
+  * The test cases are generated such that the values in the final array are **less than or equal** to `10^8`.
+```java
+public List<Integer> replaceNonCoprimes(int[] nums) {
+    int n = nums.length;
+    int[] stack = new int[n];
+    int top = -1;
+    for(int num:nums){
+        while(top != -1){
+            int x = gcd(stack[top], num);
+            if(x == 1) break;
+            num *= stack[top--]/x;
+        }
+        stack[++top] = num;
+    }
+    List<Integer> result = new ArrayList<Integer>(top + 1);
+    for(int i = 0; i <= top; ++i) result.add(stack[i]);
+    return result;
+}
+
+private int gcd(int a, int b){
+    return b == 0 ? a: gcd(b, a % b);
 }
 ```
 # 2210. Count Hills and Valleys in an Array(简单)
