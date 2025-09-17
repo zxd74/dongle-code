@@ -156,6 +156,7 @@
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [2327. Number of People Aware of a Secret(中等)](#2327-number-of-people-aware-of-a-secret中等)
 - [2348. Number of Zero-Filled Subarrays(中等)](#2348-number-of-zero-filled-subarrays中等)
+- [2353. Design a Food Rating System(中等)](#2353-design-a-food-rating-system中等)
 - [2411. Smallest Subarrays With Maximum Bitwise OR(中等)](#2411-smallest-subarrays-with-maximum-bitwise-or中等)
 - [2419. Longest Subarray With Maximum Bitwise AND(中等)](#2419-longest-subarray-with-maximum-bitwise-and中等)
 - [2749. Minimum operations to Make the Integer Zero(中等)](#2749-minimum-operations-to-make-the-integer-zero中等)
@@ -8535,6 +8536,82 @@ public long zeroFilledSubarray(int[] nums) {
         cnt += streak;
     }
     return cnt;
+}
+```
+# 2353. Design a Food Rating System(中等)
+Design a food rating system that can do the following:
+* **Modify** the rating of a food item listed in the system.
+* Return the highest-rated food item for a type of cuisine in the system.
+
+Implement the `FoodRatings` class:
+* `FoodRatings(String[] foods, String[] cuisines, int[] ratings)` Initializes the system. The food items are described by foods, cuisines and ratings, all of which have a length of n.
+  * `foods[i]` is the name of the `i^th` food,
+  * `cuisines[i]` is the type of cuisine of the `i^th` food, and
+  * `ratings[i]` is the initial rating of the `i^th` food.
+* `void changeRating(String food, int newRating)` Changes the rating of the food item with the name `food`.
+* `String highestRated(String cuisine)` Returns the name of the food item that has the highest rating for the given type of `cuisine`. If there is a tie, return the item with the **lexicographically smaller** name.
+
+Note that a string `x` is lexicographically smaller than string `y` if `x` comes before `y` in dictionary order, that is, either `x` is a prefix of `y`, or if `i` is the first position such that `x[i] != y[i]`, then `x[i]` comes before `y[i]` in alphabetic order.
+
+* **约束**
+  * `1 <= n <= 2 * 10^4`
+  * `n == foods.length == cuisines.length == ratings.length`
+  * `1 <= foods[i].length, cuisines[i].length <= 10`
+  * `foods[i]`, `cuisines[i]` consist of lowercase English letters.
+  * `1 <= ratings[i] <= 10^8`
+  * All the strings in `foods` are **distinct**.
+  * `food` will be the name of a food item in the system across all calls to `changeRating`.
+  * `cuisine` will be a type of cuisine of **at least one** food item in the system across all calls to `highestRated`.
+  * At most `2 * 10^4` calls **in total** will be made to `changeRating` and `highestRated`.
+```java
+class FoodRatings {
+    static class Food {
+        String name;
+        String cuisine;
+        int rating;
+
+        Food(String name, String cuisine, int rating) {
+            this.name = name;
+            this.cuisine = cuisine;
+            this.rating = rating;
+        }
+    }
+    private Map<String, Food> foodMap;// Map from food name → latest Food object (with current rating)
+    private Map<String, PriorityQueue<Food>> cuisineToMaxHeap;// Map from cuisine → max heap of foods
+
+    public FoodRatings(String[] foods, String[] cuisines, int[] ratings) {
+        foodMap = new HashMap<>();
+        cuisineToMaxHeap = new HashMap<>();
+        for (int i = 0; i < foods.length; i++) {
+            Food food = new Food(foods[i], cuisines[i], ratings[i]);
+            foodMap.put(foods[i], food);
+            cuisineToMaxHeap
+                .computeIfAbsent(cuisines[i], k -> new PriorityQueue<>((a, b) -> {
+                        if (b.rating != a.rating) return b.rating - a.rating; // max heap by rating
+                        return a.name.compareTo(b.name); // lex order tie breaker
+                    }
+                ))
+                .add(food);
+        }
+    }
+
+    public void changeRating(String foodName, int newRating) {
+        Food oldFood = foodMap.get(foodName);
+        Food updatedFood = new Food(foodName, oldFood.cuisine, newRating);
+        foodMap.put(foodName, updatedFood);// Update the map
+        cuisineToMaxHeap.get(oldFood.cuisine).add(updatedFood);// Add new version to the heap (lazy deletion: old one will be ignored)
+    }
+
+    public String highestRated(String cuisine) {
+        PriorityQueue<Food> pq = cuisineToMaxHeap.get(cuisine);
+        while (!pq.isEmpty()) {
+            Food top = pq.peek();
+            Food latest = foodMap.get(top.name);
+            if (top.rating == latest.rating) return top.name;
+            else pq.poll(); // stale entry, discard
+        }
+        return "";
+    }
 }
 ```
 # 2411. Smallest Subarrays With Maximum Bitwise OR(中等)
