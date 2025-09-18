@@ -171,6 +171,7 @@
 - [3227. Vowels Game in a String(中等)](#3227-vowels-game-in-a-string中等)
 - [3330. Find the Original Typed String I(简单)](#3330-find-the-original-typed-string-i简单)
 - [3363. Find the Maximum Number of Fruits Collected(困难)](#3363-find-the-maximum-number-of-fruits-collected困难)
+- [3408. Design Task Manager(中等)](#3408-design-task-manager中等)
 - [3446. Sort Matrix by Diagonals(中等)](#3446-sort-matrix-by-diagonals中等)
 - [3459. Length of Longest V-Shaped Diagonal Segment(困难)](#3459-length-of-longest-v-shaped-diagonal-segment困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
@@ -9260,6 +9261,122 @@ public int maxCollectedFruits(int[][] fruits) {
     return fruits[n-1][n-2] + fruits[n-2][n-1] + fruits[n-1][n-1];
 }
 ```
+# 3408. Design Task Manager(中等)
+There is a task management system that allows users to manage their tasks, each associated with a priority. The system should efficiently handle adding, modifying, executing, and removing tasks.
+
+Implement the `TaskManager` class:
+* `TaskManager(vector<vector<int>>& tasks)` initializes the task manager with a list of user-task-priority triples. Each element in the input list is of the form `[userId, taskId, priority]`, which adds a task to the specified user with the given priority.
+* `void add(int userId, int taskId, int priority)` adds a task with the specified `taskId` and `priority` to the user with userId. It is **guaranteed** that `taskId` does not exist in the system.
+* `void edit(int taskId, int newPriority)` updates the priority of the existing `taskId` to `newPriority`. It is **guaranteed** that `taskId` exists in the system.
+* `void rmv(int taskId)` removes the task identified by `taskId` from the system. It is **guaranteed** that `taskId` exists in the system.
+* `int execTop()` executes the task with the **highest** priority across all users. If there are multiple tasks with the same **highest** priority, execute the one with the **highest** `taskId`. After executing, the `taskId` is **removed** from the system. Return the `userId` associated with the executed task. If no tasks are available, return -1.
+
+Note that a user may be assigned multiple tasks.
+
+* **约束**
+  * `1 <= tasks.length <= 10^5`
+  * `tasks[i].length == 3`
+  * `0 <= userId, taskId, priority <= 10^9`
+  * `tasks[i][0] != tasks[j][0]` for all `i != j`
+* **思路**：使用流式处理，没变更数据一次，则重新排序
+* **改进**：使用优先级队列
+```java
+class Task{
+    int userId;
+    int taskId;
+    int priority;
+    public Task(int userId, int taskId, int priority) {
+        this.userId = userId;
+        this.taskId = taskId;
+        this.priority = priority;
+    }
+}
+class TaskManager {
+    List<Task> tasks;
+    Map<Integer,List<Task>> userTasks = new HashMap<>();
+    public TaskManager(List<List<Integer>> tasks) {
+        this.tasks = tasks.stream().map(e->new Task(e.get(0), e.get(1), e.get(2))).collect(Collectors.toList());
+        sort(); // 初始化排序
+    }
+    
+    public void add(int userId, int taskId, int priority) {
+        Optional<Task> userTask = tasks.stream().filter(e->e.userId == userId && e.taskId == taskId).findFirst();
+        if (userTask.isPresent()) {
+            userTask.get().priority = priority;
+        }else tasks.add(new Task(userId, taskId, priority));
+        sort(); // 变更优先级后，重新排序
+    }
+    
+    public void edit(int taskId, int newPriority) {
+        tasks.stream().filter(e->e.taskId == taskId).forEach(e->e.priority = newPriority);
+        sort(); // 变更优先级后，重新排序
+    }
+    
+    public void rmv(int taskId) {
+        tasks.removeIf(e->e.taskId == taskId); // 未变更优先级，无需重新排序
+    }
+    private void sort(){
+        tasks = tasks.stream()
+            .sorted(Comparator.comparingInt((Task e)->e.priority).reversed() // 优先级最高降序
+                .thenComparing(Comparator.comparingInt((Task e)->e.taskId).reversed())) // taskid最高降序
+            .collect(Collectors.toList());
+    }
+    
+    public int execTop() {
+        if(tasks.isEmpty()) return -1;
+        // 先最高priority，后最高taskid
+        return tasks.remove(0).userId;
+    }
+}
+// 改进版：使用优先级队列
+class TaskManager {
+    int[] priorities = new int[100001];
+    int[] userIds = new int[100001];
+    PriorityQueue<Long> PQ = new PriorityQueue<>((a, b) -> Long.compare(b, a));
+
+    public TaskManager(List<List<Integer>> tasks) {
+        for (List<Integer> task : tasks) {
+            int userId = task.get(0);
+            int taskId = task.get(1);
+            int priority = task.get(2);
+            priorities[taskId] = priority;
+            userIds[taskId] = userId;
+            PQ.offer((long) priority * 100001 + taskId);
+        }
+    }
+
+    public void add(int userId, int taskId, int priority) {
+        if (priorities[taskId] > 0)
+            return;
+        priorities[taskId] = priority;
+        userIds[taskId] = userId;
+        PQ.offer((long) priority * 100001 + taskId);
+    }
+
+    public void edit(int taskId, int newPriority) {
+        priorities[taskId] = newPriority;
+        PQ.offer((long) newPriority * 100001 + taskId);
+    }
+
+    public void rmv(int taskId) {
+        priorities[taskId] = -1;
+    }
+
+    public int execTop() {
+        while (!PQ.isEmpty()) {
+            long current = PQ.poll();
+            int taskId = (int) (current % 100001);
+            int priority = (int) (current / 100001);
+            if (priorities[taskId] != priority)
+                continue;
+            priorities[taskId] = -1;
+            return userIds[taskId];
+        }
+        return -1;
+    }
+}
+```
+
 # 3446. Sort Matrix by Diagonals(中等)
 You are given an `n x n` square matrix of integers `grid`. Return the matrix such that:
 * The diagonals in the **bottom-left triangle** (including the middle diagonal) are sorted in **non-increasing order**.
