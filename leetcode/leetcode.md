@@ -176,6 +176,7 @@
 - [3459. Length of Longest V-Shaped Diagonal Segment(困难)](#3459-length-of-longest-v-shaped-diagonal-segment困难)
 - [3477. Fruits into Baskets II(简单)](#3477-fruits-into-baskets-ii简单)
 - [3479. Fruits into Baskets III(简单)](#3479-fruits-into-baskets-iii简单)
+- [3484. Desgin Spreadsheet(中等)](#3484-desgin-spreadsheet中等)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 - [3495. Minimum Operations to Make Array Elements zero(困难)](#3495-minimum-operations-to-make-array-elements-zero困难)
 - [3516. Find Closest Person(简单)](#3516-find-closest-person简单)
@@ -9602,6 +9603,42 @@ public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
         }
     }
     return count;     
+}
+```
+# 3484. Desgin Spreadsheet(中等)
+A spreadsheet is a grid with 26 columns (labeled from `'A'` to `'Z'`) and a given number of `rows`. Each cell in the spreadsheet can hold an integer value between `0` and `10^5`.
+
+Implement the `Spreadsheet` class:
+* `Spreadsheet(int rows)` Initializes a spreadsheet with 26 columns (labeled `'A'` to `'Z'`) and the specified number of rows. All cells are initially set to 0.
+* `void setCell(String cell, int value)` Sets the value of the specified `cell`. The cell reference is provided in the format `"AX"` (e.g., `"A1"`, `"B10"`), where the letter represents the column (from `'A'` to `'Z'`) and the number represents a **1-indexed** row.
+* `void resetCell(String cell) `Resets the specified cell to 0.
+* `int getValue(String formula)` Evaluates a formula of the form `"=X+Y"`, where `X` and `Y` are **either** cell references or non-negative integers, and returns the computed sum.
+
+Note: If `getValue` references a cell that has not been explicitly set using `setCell`, its value is considered 0.
+
+* **约束**
+  * `1 <= rows <= 10^3`
+  * `0 <= value  <= 10^5`
+  * The formula is always in the format `"=X+Y"`, where `X` and `Y` are either valid cell references or **non-negative** integers with values less than or equal to `10^5`.
+  * Each cell reference consists of a capital letter from `'A'` to `'Z'` followed by a row number between `1` and `rows`.
+  * At most `10^4` calls will be made in **total** to `setCell`, `resetCell`, and `getValue`.
+```java
+class Spreadsheet {
+    public Spreadsheet(int rows) {}
+    Map<String, Integer> map = new HashMap<>(); 
+    public void setCell(String cell, int value) {
+        map.put(cell, value);
+    }
+    public void resetCell(String cell) {
+        map.remove(cell);
+    }
+    public int getValue(String formula) {
+        int io = formula.indexOf('+');
+        String cell1 = formula.substring(1, io),cell2 = formula.substring(io + 1); 
+        int val1 = cell1.charAt(0) > '9'?map.getOrDefault(cell1, 0):Integer.parseInt(cell1);
+        int val2 = cell2.charAt(0) > '9'?map.getOrDefault(cell2, 0):Integer.parseInt(cell2);
+        return val1 + val2;
+    }
 }
 ```
 # 3487. Maximum Unique Subarray Sum After Deletion(简单)
