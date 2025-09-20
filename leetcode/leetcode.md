@@ -179,6 +179,7 @@
 - [3484. Desgin Spreadsheet(中等)](#3484-desgin-spreadsheet中等)
 - [3487. Maximum Unique Subarray Sum After Deletion(简单)](#3487-maximum-unique-subarray-sum-after-deletion简单)
 - [3495. Minimum Operations to Make Array Elements zero(困难)](#3495-minimum-operations-to-make-array-elements-zero困难)
+- [3508. Implement Router(中等)](#3508-implement-router中等)
 - [3516. Find Closest Person(简单)](#3516-find-closest-person简单)
 - [3541. Find Most Frequency Vowel and Consonant(简单)](#3541-find-most-frequency-vowel-and-consonant简单)
 
@@ -9749,6 +9750,119 @@ private long minOperations(int[] query) {
         x *= 4;
     }
     return (res + 1) / 2;
+}
+```
+# 3508. Implement Router(中等)
+Design a data structure that can efficiently manage data packets in a network router. Each data packet consists of the following attributes:
+* `source`: A unique identifier for the machine that generated the packet.
+* `destination`: A unique identifier for the target machine.
+* `timestamp`: The time at which the packet arrived at the router.
+
+Implement the `Router` class:
+* `Router(int memoryLimit)`: Initializes the Router object with a fixed memory limit.
+  * `memoryLimit` is the **maximum** number of packets the router can store at any given time.
+  * If adding a new packet would exceed this limit, the **oldest** packet must be removed to free up space.
+* `bool addPacket(int source, int destination, int timestamp)`: Adds a packet with the given attributes to the router.
+  * A packet is considered a duplicate if another packet with the same `source`, `destination`, and `timestamp` already exists in the router.
+  * Return `true` if the packet is successfully added (i.e., it is not a duplicate); otherwise return `false`.
+* `int[] forwardPacket()`: Forwards the next packet in FIFO (First In First Out) order.
+  * Remove the packet from storage.
+  * Return the packet as an array `[source, destination, timestamp]`.
+  * If there are no packets to forward, return an empty array.
+* `int getCount(int destination, int startTime, int endTime)`:Returns the number of packets currently stored in the router (i.e., not yet forwarded) that have the specified destination and have timestamps in the inclusive range `[startTime, endTime]`.
+
+**Note** that queries for `addPacket` will be made in increasing order of `timestamp`.
+
+* **约束**
+  * `2 <= memoryLimit <= 10^5`
+  * `1 <= source, destination <= 2*10^5`
+  * `1 <= timestamp <= 10^9`
+  * `0 <= startTime <= endTime <= 10^9`
+  * At most `10^5` calls will be made to `addPacket`, `forwardPacket`, and `getCount` methods altogether.
+  * queries for `addPacket` will be made in increasing order of `timestamp`.
+```java
+class Router {
+    Deque<int[]>que;
+    HashMap<Integer,List<int[]>>map;
+    int size;
+    public Router(int memoryLimit) {
+        que=new LinkedList<>();
+        map=new HashMap<>();
+        this.size=memoryLimit;
+    }
+    
+    public boolean addPacket(int source, int destination, int timestamp) {
+        
+        if(!map.containsKey(destination)){
+            map.put(destination,new ArrayList<>());
+        }
+        List<int[]>list=map.get(destination);
+        int left=small(list,timestamp);
+        
+        if(list.size()!=0){
+            // System.out.println(left);
+            // for(int []a:list)System.out.println(Arrays.toString(a));
+            for(int i=left;i<list.size() && list.get(i)[1]==timestamp;i++){
+                // System.out.println(left);
+                if(list.get(i)[0]==source)return false;
+            }
+        }
+        map.get(destination).add(new int[]{source,timestamp});
+        que.addLast(new int[]{source,destination,timestamp});
+        if(que.size()>size){
+            forwardPacket();
+        }
+        
+        return true;
+        
+    }
+    
+    public int[] forwardPacket() {
+        if(que.size()==0)return new int[0];
+        int[]arr=que.pollFirst();
+        // System.out.println(Arrays.toString(arr));
+        map.get(arr[1]).remove(0);
+        return arr;
+    }
+    
+    public int getCount(int destination, int startTime, int endTime) {
+        if(!map.containsKey(destination)){
+            return 0;
+        }
+        List<int[]>list=map.get(destination);
+        int left=small(list,startTime);
+        int right=big(list,endTime);
+        if(left>right)return 0;
+        return right-left+1;
+    }
+    public int small(List<int[]>list,int start){
+        int left=0;
+        int right=list.size()-1;
+        while(left<=right){
+            int mid=left+(right-left)/2;
+            if(list.get(mid)[1]>=start){
+                right=mid-1;
+            }
+            else{
+                left=mid+1;
+            }
+        }
+        return left;
+    }
+    public int big(List<int[]>list,int end){
+        int left=0;
+        int right=list.size()-1;
+        while(left<=right){
+            int mid=left+(right-left)/2;
+            if(list.get(mid)[1]>end){
+                right=mid-1;
+            }
+            else{
+                left=mid+1;
+            }
+        }
+        return right;
+    }
 }
 ```
 # 3516. Find Closest Person(简单)
