@@ -147,6 +147,7 @@
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [1733. Minimum Number of People to Teach(中等)](#1733-minimum-number-of-people-to-teach中等)
 - [1792. Maximum Average Pass Ratio(中等)](#1792-maximum-average-pass-ratio中等)
+- [1912. Design Movie Rental System(困难)](#1912-design-movie-rental-system困难)
 - [1935. Maximum Number of Words You Can Type(简单)](#1935-maximum-number-of-words-you-can-type简单)
 - [2044. Count Number of Maximum Bitwise OR Subsets(中等)](#2044-count-number-of-maximum-bitwise-or-subsets中等)
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
@@ -8169,6 +8170,123 @@ public double maxAverageRatio(int[][] classes, int extraStudents) {
         sum += c[1] / c[2];
     }
     return sum / classes.length;
+}
+```
+# 1912. Design Movie Rental System(困难)
+You have a movie renting company consisting of `n` shops. You want to implement a renting system that supports searching for, booking, and returning movies. The system should also support generating a report of the currently rented movies.
+
+Each movie is given as a 2D integer array `entries` where `entries[i] = [shop_i, movie_i, price_i]` indicates that there is a copy of movie `movie_i` at shop `shop_i` with a rental price of `price_i`. Each shop carries **at most one** copy of a movie `movie_i`.
+
+The system should support the following functions:
+* **Search**: Finds the **cheapest 5 shops** that have an **unrented copy** of a given movie. The shops should be sorted by **price** in ascending order, and in case of a tie, the one with the **smaller** `shop_i` should appear first. If there are less than 5 matching shops, then all of them should be returned. If no shop has an **unrented copy**, then an empty list should be returned.
+* **Rent**: Rents an **unrented copy** of a given movie from a given shop.
+* **Drop**: Drops off a **previously rented copy** of a given movie at a given shop.
+* **Report**: Returns the **cheapest 5 rented movies** (possibly of the same movie ID) as a 2D list res where `res[j] = [shop_j, movie_j]` describes that the `j^th` cheapest rented movie `movie_j` was rented from the shop `shop_j`. The movies in `res` should be sorted by **price** in ascending order, and in case of a tie, the one with the **smaller** `shop_j` should appear first, and if there is still tie, the one with the **smaller** `movie_j` should appear first. If there are fewer than 5 rented movies, then all of them should be returned. If no movies are currently being rented, then an empty list should be returned.
+
+Implement the `MovieRentingSystem` class:
+* `MovieRentingSystem(int n, int[][] entries)` Initializes the `MovieRentingSystem` object with n shops and the movies in `entries`.
+* `List<Integer> search(int movie)` Returns a list of shops that have an **unrented copy** of the given `movie` as described above.
+* `void rent(int shop, int movie)` Rents the given movie from the given `shop`.
+* `void drop(int shop, int movie)` Drops off a previously rented `movie` at the given `shop`.
+* `List<List<Integer>> report()` Returns a list of cheapest **rented** movies as described above.
+
+**Note**: The test cases will be generated such that rent will only be called if the shop has an **unrented** copy of the movie, and drop will only be called if the shop had **previously rented** out the movie.
+
+* **约束**
+  * `1 <= n <= 3 * 10^5`
+  * `1 <= entries.length <= 10^5`
+  * `0 <= shop_i <= n`
+  * `1 <= movie_i,price_i <= 10^4`
+  * Each shop carries **at most one** copy of a movie `movie_i`.
+  * At most `10^5` calls **in total** will be made to  `search`, `rent`, `drop`, and `report`.
+```java
+class MovieRentingSystem {
+    private static class Node {
+        final int shop;
+        final int movie;
+        final int price;
+        Node(int shop, int movie, int price) {
+            this.shop = shop;
+            this.movie = movie;
+            this.price = price;
+        }
+    }
+
+    // Order: price ↑, shop ↑, movie ↑  (strict: never returns 0 for distinct nodes)
+    private static final Comparator<Node> CMP =
+        (a, b) -> {
+            int c = Integer.compare(a.price, b.price);
+            if (c != 0) return c;
+            c = Integer.compare(a.shop, b.shop);
+            if (c != 0) return c;
+            return Integer.compare(a.movie, b.movie);
+        };
+
+    // Available copies grouped by movie
+    private final Map<Integer, TreeSet<Node>> availableByMovie = new HashMap<>();
+    // All currently rented copies
+    private final TreeSet<Node> rentedSet = new TreeSet<>(CMP);
+    // Quick lookup from (shop, movie) -> Node
+    private final Map<Long, Node> byPair = new HashMap<>();
+
+    private static long key(int shop, int movie) {
+        return (((long) shop) << 32) ^ (movie & 0xffffffffL);
+    }
+
+    public MovieRentingSystem(int n, int[][] entries) {
+        for (int[] e : entries) {
+            int shop = e[0], movie = e[1], price = e[2];
+            Node node = new Node(shop, movie, price);
+            byPair.put(key(shop, movie), node);
+            availableByMovie
+                .computeIfAbsent(movie, k -> new TreeSet<>(CMP))
+                .add(node);
+        }
+    }
+
+    // Return up to 5 shops with this movie, cheapest then shop asc.
+    public List<Integer> search(int movie) {
+        List<Integer> ans = new ArrayList<>(5);
+        TreeSet<Node> set = availableByMovie.get(movie);
+        if (set == null || set.isEmpty()) return ans;
+        Iterator<Node> it = set.iterator();
+        for (int i = 0; i < 5 && it.hasNext(); i++) {
+            ans.add(it.next().shop);
+        }
+        return ans;
+    }
+
+    // Move (shop,movie) from available -> rented
+    public void rent(int shop, int movie) {
+        long k = key(shop, movie);
+        Node node = byPair.get(k);
+        if (node == null) return; // defensive
+        TreeSet<Node> set = availableByMovie.get(movie);
+        if (set != null) set.remove(node);
+        rentedSet.add(node);
+    }
+
+    // Move (shop,movie) from rented -> available
+    public void drop(int shop, int movie) {
+        long k = key(shop, movie);
+        Node node = byPair.get(k);
+        if (node == null) return; // defensive
+        rentedSet.remove(node);
+        availableByMovie
+            .computeIfAbsent(movie, x -> new TreeSet<>(CMP))
+            .add(node);
+    }
+
+    // Return up to 5 rented copies [shop, movie], cheapest then shop asc, then movie asc.
+    public List<List<Integer>> report() {
+        List<List<Integer>> ans = new ArrayList<>(5);
+        Iterator<Node> it = rentedSet.iterator();
+        for (int i = 0; i < 5 && it.hasNext(); i++) {
+            Node n = it.next();
+            ans.add(Arrays.asList(n.shop, n.movie));
+        }
+        return ans;
+    }
 }
 ```
 # 1935. Maximum Number of Words You Can Type(简单)
