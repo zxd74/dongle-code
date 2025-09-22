@@ -164,6 +164,7 @@
 - [2785. Sort Vowels in a String(中等)](#2785-sort-vowels-in-a-string中等)
 - [2787. Ways to Express an Integer as Sum of Powers(中等)](#2787-ways-to-express-an-integer-as-sum-of-powers中等)
 - [3000. Maximum Area of Longest Diagonal Rectangle(简单)](#3000-maximum-area-of-longest-diagonal-rectangle简单)
+- [3005. Count Elements With Maximum Frequency(简单)](#3005-count-elements-with-maximum-frequency简单)
 - [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
 - [3025. Find the Number of Ways to Place People I(中等)](#3025-find-the-number-of-ways-to-place-people-i中等)
 - [3027. Find the Number of Ways to Place People II(困难)](#3027-find-the-number-of-ways-to-place-people-ii困难)
@@ -8989,6 +8990,38 @@ public int areaOfMaxDiagonal(int[][] dimensions) {
         }
     }
     return res;
+}
+```
+# 3005. Count Elements With Maximum Frequency(简单)
+You are given an array `nums` consisting of **positive** integers.
+
+Return the **total frequencies** of elements in `nums` such that those elements all have the maximum frequency.
+
+The **frequency** of an element is the number of occurrences of that element in the array.
+
+* **约束**
+  * `1 <= nums.length <= 100`
+  * `1 <= nums[i] <= 100`
+* **思路**：
+  * 统计每个元素出现的次数
+  * 找出最大值
+  * 统计最大值出现的次数
+```java
+class Solution {
+    public int maxFrequencyElements(int[] nums) {
+        int n = nums.length,max = Integer.MIN_VALUE;
+        for(int i=0;i<n;i++) if(nums[i]>max) max = nums[i];
+        int[] arr = new int[max+1];
+        for(int i=0;i<n;i++) arr[nums[i]]++;
+        int maxFreq = 0,count = 0;
+        for(int i=0;i<arr.length;i++) {
+            if(maxFreq<arr[i]) {
+                maxFreq = arr[i];
+                count = 1;
+            } else if (maxFreq == arr[i]) Math.max(maxFreq,++count);
+        }
+        return count*maxFreq;
+    }
 }
 ```
 # 3021. Alice and Bob Playing Flower Games(中等)
