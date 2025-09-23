@@ -100,6 +100,7 @@
 - [157. Read N Characters Given Read4(中等)](#157-read-n-characters-given-read4中等)
 - [160. Intersection of Two Linked Lists(简单)](#160-intersection-of-two-linked-lists简单)
 - [163. Missing Ranges(中等)](#163-missing-ranges中等)
+- [165. Compare Version Numbers(中等)](#165-compare-version-numbers中等)
 - [168. Excel Sheet Column Title(简单)](#168-excel-sheet-column-title简单)
 - [169. Majority Element(简单)](#169-majority-element简单)
 - [170. Two Sum III - Data Structure Design(简单)](#170-two-sum-iii---data-structure-design简单)
@@ -6252,7 +6253,60 @@ public void format(List<String> res,int start,int end){
     else res.add(start+"->"+end); // 区间
 }
 ```
+# 165. Compare Version Numbers(中等)
+Given two **version strings**, `version1` and `version2`, compare them. A version string consists of **revisions** separated by dots `'.'`. The **value of the revision** is its **integer conversion** ignoring leading zeros.
 
+To compare version strings, compare their revision values in **left-to-right order**. If one of the version strings has fewer revisions, treat the missing revision values as `0`.
+
+Return the following:
+* If `version1 < version2`, return -1.
+* If `version1 > version2`, return 1.
+* Otherwise, return 0.
+
+* **约束**
+  * `1 <= version1.length, version2.length <= 200`
+  * `version1` and `version2` only contain digits and `'.'`.
+  * `version1` and `version2` are valid version strings.
+  * All the given revisions in `version1` and `version2` can be compared.
+* **思路**:分割字符串，再对比
+* **改进**：直接以字符对比，并跳过`.`
+```java
+// 分割，分别对比
+public int compareVersion(String version1, String version2) {
+    String[] v1 = version1.split("\\.");
+    String[] v2 = version2.split("\\.");
+
+    int len = Math.max(v1.length, v2.length);
+    for (int i = 0; i < len; i++) {
+        int num1 = i < v1.length ? Integer.parseInt(v1[i]) : 0;
+        int num2 = i < v2.length ? Integer.parseInt(v2[i]) : 0;
+        if (num1 < num2) return -1;
+        if (num1 > num2) return 1;
+    }
+    return 0;
+}
+// 改进版： 以字符对比
+public int compareVersion(String version1, String version2) {
+    int i = 0, j = 0,n = version1.length(), m = version2.length();
+    while (i < n || j < m) {
+        long num1 = 0, num2 = 0; // long to avoid overflow
+        while (i < n && version1.charAt(i) != '.') {
+            num1 = num1 * 10 + (version1.charAt(i) - '0');
+            i++;
+        }
+        while (j < m && version2.charAt(j) != '.') {
+            num2 = num2 * 10 + (version2.charAt(j) - '0');
+            j++;
+        }
+        if (num1 > num2) return 1;
+        if (num1 < num2) return -1;
+        // skip dots
+        if (i < n && version1.charAt(i) == '.') i++;
+        if (j < m && version2.charAt(j) == '.') j++;
+    }
+    return 0;
+}
+```
 # 168. Excel Sheet Column Title(简单)
 Given an integer `columnNumber`, return its corresponding column title as it appears in an Excel sheet.
 
