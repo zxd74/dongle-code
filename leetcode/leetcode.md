@@ -91,6 +91,7 @@
 - [112. Path Sum(简单)](#112-path-sum简单)
 - [118. Pascal's Triangle(简单,帕斯卡三角形)](#118-pascals-triangle简单帕斯卡三角形)
 - [119. Pascal's Triangle II(简单,帕斯卡三角形)](#119-pascals-triangle-ii简单帕斯卡三角形)
+- [120. `Triangle`(中等,三角形)](#120-triangle中等三角形)
 - [121. Best Time to Buy and Sell Stock(简单)](#121-best-time-to-buy-and-sell-stock简单)
 - [125. Valid Palindrome(简单)](#125-valid-palindrome简单)
 - [136. Single Number(简单)](#136-single-number简单)
@@ -5926,7 +5927,37 @@ public List<Integer> getRow(int rowIndex) {
     return res;
 }
 ```
+# 120. `Triangle`(中等,三角形)
+Given a triangle array, return the minimum path sum from top to bottom.
 
+For each step, you may move to an adjacent number of the row below. More formally, if you are on index `i` on the current row, you may move to either index `i` or index `i + 1` on the next row.
+
+* **约束**
+  * `1 <=  triangle.length <= 200`
+  * `triangle[0].length == 1`
+  * `triangle[i].length == triangle[i - 1].length + 1`
+  * `-10^4 <= triangle[i][j] <= 10^4`
+```java
+public int minimumTotal(List<List<Integer>> triangle) {
+    int n = triangle.size();
+    int dp[][] = new int[n][n];
+    for (int[] row : dp) {
+        Arrays.fill(row, Integer.MIN_VALUE);
+    }
+    return dfs(triangle, 0, 0, dp);
+}
+private int dfs(List<List<Integer>> triangle, int row, int col, int[][] dp) {
+    if (row == triangle.size() - 1) {
+        return triangle.get(row).get(col);
+    }
+    if (dp[row][col] != Integer.MIN_VALUE) {
+        return dp[row][col];
+    }
+    int down = dfs(triangle, row + 1, col, dp);
+    int diag = dfs(triangle, row + 1, col + 1, dp);
+    return dp[row][col] = triangle.get(row).get(col) + Math.min(down, diag);
+}
+```
 # 121. Best Time to Buy and Sell Stock(简单)
     You are given an array prices where prices[i] is the price of a given stock on the ith day.
 
