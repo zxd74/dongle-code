@@ -134,6 +134,7 @@
 - [326. Power of Three(简单)](#326-power-of-three简单)
 - [342. Power of Four(简单)](#342-power-of-four简单)
 - [498. Diagonal Traverse(中等)](#498-diagonal-traverse中等)
+- [611. Valid Triangle Number(中等)](#611-valid-triangle-number中等)
 - [679. 24 Game(困难)](#679-24-game困难)
 - [808. Soup Servings(中等)](#808-soup-servings中等)
 - [837. New 21 Game(中等)](#837-new-21-game中等)
@@ -7458,6 +7459,28 @@ public static findDiagonalOrder(int[][] mat) {
         }
         i++;j--;
     }
+}
+```
+# 611. Valid Triangle Number(中等)
+Given an integer array nums, return the number of triplets chosen from the array that can make triangles if we take them as side lengths of a triangle.
+
+* **约束**
+  * `1 <= nums.length <= 1000`
+  * `0 <= nums[i] <= 1000`
+* **思路**：先排序，记录满足(**三角形性质**)两边之和大于第三边
+```java
+public int triangleNumber(int[] nums) {
+    int count = 0;
+    Arrays.sort(nums);
+    for (int i = 0; i < nums.length - 2; i++) {
+        if(nums[i]==0) continue;
+        int k = i + 2;
+        for (int j = i + 1; j < nums.length - 1; j++) {
+            while (k < nums.length && nums[i] + nums[j] > nums[k]) k++;
+            count += k - j - 1;
+        }
+    }
+    return count;
 }
 ```
 # 679. 24 Game(困难)
