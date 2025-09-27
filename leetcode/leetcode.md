@@ -137,6 +137,7 @@
 - [611. Valid Triangle Number(中等)](#611-valid-triangle-number中等)
 - [679. 24 Game(困难)](#679-24-game困难)
 - [808. Soup Servings(中等)](#808-soup-servings中等)
+- [812. Largest Triangle Area(简单)](#812-largest-triangle-area简单)
 - [837. New 21 Game(中等)](#837-new-21-game中等)
 - [869. Reordered Power of 2(中等)](#869-reordered-power-of-2中等)
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
@@ -7615,6 +7616,36 @@ private double calcProb(int a, int b,Double[][] cache) {
     cache[a][b] = 0.25 * ( calcProb(a - 4, b,cache) + calcProb(a - 3, b - 1,cache) +
         calcProb(a - 2, b - 2,cache) + calcProb(a-1, b - 3,cache));
     return cache[a][b];
+}
+```
+# 812. Largest Triangle Area(简单)
+Given an array of points on the **X-Y** plane points where `points[i] = [x_i, y_i]`, return the area of the largest triangle that can be formed by any three different points. Answers within `10^-5` of the actual answer will be accepted.
+
+* **约束**
+  * `3 <= points.length <= 50`
+  * `-50 <= x_i, y_i <= 50`
+  * All the points are **unique**.
+```java
+public double largestTriangleArea(int[][] points) {
+    int n = points.length;
+    double maxArea = 0.0;
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            for (int k = j + 1; k < n; k++) {
+                double area = calculateArea(points[i], points[j], points[k]);
+                if (area > maxArea) {
+                    maxArea = area;
+                }
+            }
+        }
+    }
+    return maxArea;
+}
+
+private double calculateArea(int[] p1, int[] p2, int[] p3) {
+    // Shoelace formula for triangle area
+    return 0.5 * Math.abs(p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1]));
 }
 ```
 # 837. New 21 Game(中等)
