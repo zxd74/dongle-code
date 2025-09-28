@@ -143,6 +143,7 @@
 - [898. Bitwise ORs of Subarrays(中等)](#898-bitwise-ors-of-subarrays中等)
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [966. Vowel Spellchecker(中等)](#966-vowel-spellchecker中等)
+- [976.  Largest Perimeter Triangle(简单)](#976--largest-perimeter-triangle简单)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1304. Find N Unique Integers Sum up to Zero(简单)](#1304-find-n-unique-integers-sum-up-to-zero简单)
 - [1317. Convert Integer to the Sum of Two No-Zero Integers(简单)](#1317-convert-integer-to-the-sum-of-two-no-zero-integers简单)
@@ -7913,6 +7914,49 @@ public String[] spellchecker(String[] wordlist, String[] queries) {
         res[i] = "";
     }
     return res;
+}
+```
+# 976.  Largest Perimeter Triangle(简单)
+Given an integer array nums, return the largest perimeter of a triangle with a non-zero area, formed from three of these lengths. If it is impossible to form any triangle of a non-zero area, return 0.
+
+* **约束**
+  * `3 <= nums.length <= 10^4`
+  * `0 <= nums[i] <= 10^6`
+* **思路**：三角形性质，两边之和大于第三边
+* 
+```java
+public int largestPerimeter(int[] nums) {
+    Arrays.sort(nums);
+    for (int i = nums.length - 3; i >= 0; --i)
+        if (nums[i] + nums[i+1] > nums[i+2])
+            return nums[i] + nums[i+1] + nums[i+2];
+    return 0;
+}
+// 优化版
+public int largestPerimeter(int[] nums) {
+    int n = nums.length;
+    selectAndSwapMax(nums, n - 1);
+    selectAndSwapMax(nums, n - 2);
+    for (int i = n - 1; i >= 2; i--) {
+        selectAndSwapMax(nums, i - 2);
+        if (nums[i] < nums[i - 1] + nums[i - 2]) {
+            return nums[i] + nums[i - 1] + nums[i - 2];
+        }
+    }
+    return 0;
+}
+private void selectAndSwapMax(int[] nums, int idx) {
+    int maxValue = nums[0];
+    int maxIndex = 0;
+    for (int i = 1; i <= idx; i++) {
+        if (nums[i] > maxValue) {
+            maxValue = nums[i];
+            maxIndex = i;
+        }
+    }
+    int temp = nums[idx];
+    nums[idx] = maxValue;
+    nums[maxIndex] = temp;
 }
 ```
 # 1277. Count Square Submatrices with All Ones(中等)
