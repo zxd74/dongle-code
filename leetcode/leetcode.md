@@ -144,6 +144,7 @@
 - [904. Fruit Into Baskets(中等)](#904-fruit-into-baskets中等)
 - [966. Vowel Spellchecker(中等)](#966-vowel-spellchecker中等)
 - [976.  Largest Perimeter Triangle(简单)](#976--largest-perimeter-triangle简单)
+- [1039. Minimum Score Triangulation of Polygon(中等)](#1039-minimum-score-triangulation-of-polygon中等)
 - [1277. Count Square Submatrices with All Ones(中等)](#1277-count-square-submatrices-with-all-ones中等)
 - [1304. Find N Unique Integers Sum up to Zero(简单)](#1304-find-n-unique-integers-sum-up-to-zero简单)
 - [1317. Convert Integer to the Sum of Two No-Zero Integers(简单)](#1317-convert-integer-to-the-sum-of-two-no-zero-integers简单)
@@ -7957,6 +7958,39 @@ private void selectAndSwapMax(int[] nums, int idx) {
     int temp = nums[idx];
     nums[idx] = maxValue;
     nums[maxIndex] = temp;
+}
+```
+# 1039. Minimum Score Triangulation of Polygon(中等)
+You have a convex n-sided polygon where each vertex has an integer value. You are given an integer array `values` where `values[i]` is the value of the `i^th` vertex in **clockwise order**.
+
+**Polygon triangulation** is a process where you divide a polygon into a set of triangles and the vertices of each triangle must also be vertices of the original polygon. Note that no other shapes other than triangles are allowed in the division. This process will result in `n - 2` triangles.
+
+You will **triangulate** the polygon. For each triangle, the weight of that triangle is the product of the values at its vertices. The total score of the triangulation is the sum of these weights over all `n - 2` triangles.
+
+Return the minimum possible score that you can achieve with some **triangulation** of the polygon.
+
+* **约束**
+  * `n == values.length`
+  * `3 <= n <= 50`
+  * `1 <= values[i] <= 100`
+```java
+int [][]dp;
+public int minScoreTriangulation(int[] values) {
+    dp = new int[values.length][values.length];
+    return helper(values, 0, values.length-1);
+}
+int helper(int []a, int i, int j){
+    if(j - i < 2){
+        return 0;
+    }
+    if(dp[i][j] != 0)
+    return dp[i][j];
+    int min = Integer.MAX_VALUE;
+    for(int k = i+1 ; k < j ; k++){
+        int cost = a[i]*a[k]*a[j] + helper(a,i,k)+helper(a,k,j);
+        min = Math.min(min, cost);
+    }
+    return dp[i][j] = min;
 }
 ```
 # 1277. Count Square Submatrices with All Ones(中等)
