@@ -160,6 +160,7 @@
 - [2106. Maximum Fruits Harvested After at Most K Steps(困难)](#2106-maximum-fruits-harvested-after-at-most-k-steps困难)
 - [2197. Replace Non-Coprime Numbers in Array(困难)](#2197-replace-non-coprime-numbers-in-array困难)
 - [2210. Count Hills and Valleys in an Array(简单)](#2210-count-hills-and-valleys-in-an-array简单)
+- [2221. Find Triangular Sum of an Array(中等)](#2221-find-triangular-sum-of-an-array中等)
 - [2264. Largest 3-Same-Digit Number in String(简单)](#2264-largest-3-same-digit-number-in-string简单)
 - [2322. Minimum Score After Removals on a Tree(困难)](#2322-minimum-score-after-removals-on-a-tree困难)
 - [2327. Number of People Aware of a Secret(中等)](#2327-number-of-people-aware-of-a-secret中等)
@@ -8732,6 +8733,82 @@ public int countHillValley(int[] nums) {
         }
     }
     return count;    
+}
+```
+# 2221. Find Triangular Sum of an Array(中等)
+You are given a **0-indexed** integer array nums, where `nums[i]` is a digit between `0` and `9` (**inclusive**).
+
+The **triangular sum** of `nums` is the value of the only element present in nums after the following process terminates:
+* Let `nums` comprise of `n` elements. If `n == 1`, **end** the process. Otherwise, **create** a new **0-indexed** integer array `newNums` of length `n - 1`.
+* For each index `i`, where` 0 <= i < n - 1`, **assign** the value of `newNums[i]` as `(nums[i] + nums[i+1]) % 10`, where `%` denotes modulo operator.
+* **Replace** the array nums with `newNums`.
+* **Repeat** the entire process starting from step 1.
+
+Return the triangular sum of `nums`.
+
+* **约束**：
+  * `1 <= nums.length <= 1000`
+  * `0 <= nums[i] <= 9`
+```java
+public int triangularSum(int[] nums) {
+    int n = nums.length;
+    while (n > 1) { // keep shrinking until only one number left
+        for (int i = 0; i < n - 1; i++) {
+            nums[i] = (nums[i] + nums[i + 1]) % 10;
+        }
+        n--; // effectively the array shrinks by one
+    }
+    return nums[0];
+}
+
+// 改进版
+private static final int[][] C5 = buildC5();
+public int triangularSum(int[] nums) {
+    int n = nums.length;
+    int N = n - 1;
+    int ans = 0;
+    for (int i = 0; i < n; i++) {
+        int c2 = combMod2(N, i);         // 0 or 1
+        int c5 = combMod5(N, i);         // 0..4
+        int c10 = crt10(c2, c5);         // 0..9
+        ans = (ans + c10 * nums[i]) % 10;
+    }
+    return ans;
+}
+private static int combMod2(int N, int i) {
+    return ((i & (N - i)) == 0) ? 1 : 0;
+}
+private static int combMod5(int N, int i) {
+    int res = 1;
+    int n = N, k = i;
+    while (n > 0 || k > 0) {
+        int nd = n % 5, kd = k % 5;
+        if (kd > nd) return 0;
+        res = (res * C5[nd][kd]) % 5;
+        n /= 5; k /= 5;
+    }
+    return res;
+}
+private static int crt10(int r2, int r5) {
+    int r = r5;                 // r in {0,1,2,3,4}
+    if ((r & 1) != r2) r += 5;  // pick r or r+5 to match parity
+    return r;                   // 0..9
+}
+
+private static int[][] buildC5() {
+    int[][] c = new int[5][5];
+    for (int a = 0; a < 5; a++) {
+        c[a][0] = c[a][a] = 1;
+        for (int b = 1; b < a; b++) c[a][b] = (c[a-1][b-1] + c[a-1][b]) % 5;
+    }
+    return c;
+}
+static int triangularSumSlow(int[] nums) {
+    int[] a = Arrays.copyOf(nums, nums.length);
+    for (int len = a.length; len > 1; len--) {
+        for (int j = 0; j < len - 1; j++) a[j] = (a[j] + a[j+1]) % 10;
+    }
+    return a[0];
 }
 ```
 # 2264. Largest 3-Same-Digit Number in String(简单)
