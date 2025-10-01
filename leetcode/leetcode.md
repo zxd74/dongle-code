@@ -151,6 +151,7 @@
 - [1323. Maximum 69 Number(简单)](#1323-maximum-69-number简单)
 - [1493. Longest Subarray of 1's After Deleting One Element(中等)](#1493-longest-subarray-of-1s-after-deleting-one-element中等)
 - [1504. Count Submatrices With All Ones(中等)](#1504-count-submatrices-with-all-ones中等)
+- [1518. Water Bottles(简单)](#1518-water-bottles简单)
 - [1717. Maximum Score From Removing Substrings(中等)](#1717-maximum-score-from-removing-substrings中等)
 - [1733. Minimum Number of People to Teach(中等)](#1733-minimum-number-of-people-to-teach中等)
 - [1792. Maximum Average Pass Ratio(中等)](#1792-maximum-average-pass-ratio中等)
@@ -8196,6 +8197,27 @@ private int countRectangles(int[] height) {
         stack[++top] = j;
     }
     return count;
+}
+```
+# 1518. Water Bottles(简单)
+There are `numBottles` water bottles that are initially full of water. You can exchange `numExchange` empty water bottles from the market with one full water bottle.
+
+The operation of drinking a full water bottle turns it into an empty bottle.
+
+Given the two integers `numBottles` and `numExchange`, return the **maximum** number of water bottles you can drink.
+
+* **约束**
+  * `1 <= numBottles <= 100`
+  * `2 <= numExchange <= 100`
+```java
+public int numWaterBottles(int numBottles, int numExchange) {
+    int consumedBottles = 0;
+    while (numBottles >= numExchange) {
+        consumedBottles += numExchange;
+        numBottles -= numExchange;
+        numBottles++;
+    }
+    return consumedBottles + numBottles;
 }
 ```
 # 1717. Maximum Score From Removing Substrings(中等)
