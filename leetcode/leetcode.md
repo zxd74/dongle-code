@@ -177,6 +177,7 @@
 - [3021. Alice and Bob Playing Flower Games(中等)](#3021-alice-and-bob-playing-flower-games中等)
 - [3025. Find the Number of Ways to Place People I(中等)](#3025-find-the-number-of-ways-to-place-people-i中等)
 - [3027. Find the Number of Ways to Place People II(困难)](#3027-find-the-number-of-ways-to-place-people-ii困难)
+- [3100. Water Bottles II(中)](#3100-water-bottles-ii中)
 - [3195. Find the Minimum Area to Cover All Ones I(中等)](#3195-find-the-minimum-area-to-cover-all-ones-i中等)
 - [3197. Find the Minimum Area to Cover All Ones II(困难)](#3197-find-the-minimum-area-to-cover-all-ones-ii困难)
 - [3227. Vowels Game in a String(中等)](#3227-vowels-game-in-a-string中等)
@@ -9479,6 +9480,32 @@ public int numberOfPairs(int[][] points) {
         }
     }
     return ans;
+}
+```
+# 3100. Water Bottles II(中)
+You are given two integers `numBottles` and `numExchange`.
+
+`numBottles` represents the number of full water bottles that you initially have. In one operation, you can perform one of the following operations:
+* Drink any number of full water bottles turning them into empty bottles.
+* Exchange `numExchange` empty bottles with one full water bottle. Then, increase `numExchange` by one.
+
+Note that you cannot exchange multiple batches of empty bottles for the same value of `numExchange`. For example, if `numBottles == 3` and `numExchange == 1`, you cannot exchange `3` empty water bottles for `3` full bottles.
+
+Return the **maximum** number of water bottles you can drink.
+
+* **约束**
+  * `1 <= numBottles,numExchange  <= 100`
+```java
+public int maxBottlesDrunk(int numBottles, int numExchange) {
+    int sum=numBottles,bottle=numBottles;
+    while(bottle >= numExchange)
+    {
+        bottle-=numExchange;
+        numExchange++;
+        sum++;
+        bottle++;
+    }
+    return sum;
 }
 ```
 # 3195. Find the Minimum Area to Cover All Ones I(中等)
