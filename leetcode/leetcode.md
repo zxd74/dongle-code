@@ -133,6 +133,7 @@
 - [242. Valid Anagram(简单)](#242-valid-anagram简单)
 - [326. Power of Three(简单)](#326-power-of-three简单)
 - [342. Power of Four(简单)](#342-power-of-four简单)
+- [407. Trapping Rain Water II(困难)](#407-trapping-rain-water-ii困难)
 - [498. Diagonal Traverse(中等)](#498-diagonal-traverse中等)
 - [611. Valid Triangle Number(中等)](#611-valid-triangle-number中等)
 - [679. 24 Game(困难)](#679-24-game困难)
@@ -7424,6 +7425,56 @@ public boolean isPowerOfFour(int n) {
     if(n<=0) return false;
     while(n%4==0) n/=4;
     return n == 1;
+}
+```
+# 407. Trapping Rain Water II(困难)
+Given an `m x n` integer matrix `heightMap` representing the height of each unit cell in a 2D elevation map, return the volume of water it can trap after raining.
+
+* **约束**
+  * `m == heightMap.length`
+  * `n == heightMap[i].length`
+  * `1 <= m, n <= 200`
+  * `0 <= heightMap[i][j] <= 2 * 10^4`
+```java
+public int trapRainWater(int[][] heightMap) {
+    int m = heightMap.length;
+    int n = heightMap[0].length;
+    int[][] vols = new int[m][n];
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++)
+            vols[i][j] = heightMap[i][j];
+    boolean upt = true;
+    boolean init = true;
+    while (upt) {
+        upt = false;
+        for (int i = 1; i < m - 1; i++) { 
+            for (int j = 1; j < n - 1; j++) {
+                int val = Math.max(heightMap[i][j],
+                Math.min(vols[i - 1][j], vols[i][j - 1]));
+                if (init || vols[i][j] > val) {
+                    vols[i][j] = val;
+                    upt = true;
+                }         
+            }
+        }
+        init = false;
+        for (int i = m - 2; i >= 1; i--) { 
+            for (int j = n - 2; j >= 1; j--) { 
+                int val = Math.max(heightMap[i][j],
+                Math.min(vols[i + 1][j], vols[i][j + 1]));
+                if (vols[i][j] > val) {
+                    vols[i][j] = val;
+                    upt = true;
+                }
+            }
+        }
+    } 
+    int res = 0;
+    for (int i = 1; i < m - 1; i++)
+        for (int j = 1; j < n - 1; j++) 
+            if (vols[i][j] > heightMap[i][j])
+            res += vols[i][j] - heightMap[i][j];
+    return res;
 }
 ```
 # 498. Diagonal Traverse(中等)
