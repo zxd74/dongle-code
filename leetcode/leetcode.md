@@ -791,28 +791,28 @@ public static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
 ```
 
 # 11 最大水量(中)
-    You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
+You are given an integer array `height` of length `n`. There are `n` vertical lines drawn such that the two endpoints of the `i^th` line are `(i, 0)` and `(i, height[i])`.
 
-    Find two lines that together with the x-axis form a container, such that the container contains the most water.
+Find two lines that together with the x-axis form a container, such that the container contains the most water.
 
-* 约束：
+Return the maximum amount of water a container can store.
+
+**Notice** that you may not slant the container.
+
+* **约束**
   * `n == height.length`
   * `2 <= n <= 10^5`
   * `0 <= height[i] <= 10^4`
-* 个人解法:逻辑通，但超时
-* **改进**
 ```java
-public static int maxArea(int[] height) {
-    int min=0,max=Math.min(height[0], height[1]);
-    for(int i=2;i<height.length;i++){
-        for(int j = 0;j<i;j++){
-            min = Math.min(height[j], height[i]) * (i-j);
-            if (min>max) {
-                max = min;
-            }
-        }
+public int maxArea(int[] height) {
+    int i = 0,j = height.length - 1;
+    int res = 0;
+    while (i < j) {
+        res = Math.max(res, (j - i) * Math.min(height[i], height[j]));
+        if (height[i] < height[j]) i++;
+        else j--;
     }
-    return max;
+    return res;
 }
 ```
 * 最优解
