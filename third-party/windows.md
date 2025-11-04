@@ -32,6 +32,7 @@ Windows Registry Editor Version 5.00
 * 双击运行，导入注册表
 * 重启电脑
 
+## 任务栏
 ### 任务栏图标无法运行
 * `该文件没有与之关联的应用来执行该操作。请安装应用，若已经安装应用，请在“默认应用设置”页面中创建关联`
 ```batch
@@ -49,3 +50,35 @@ reg add "HEKY_CLASSES_ROOT\piffile" /v IsShortcut /t reg_sz /f
 
 start explorer
 ```
+### 任务栏图标边空白
+**Tip**: 任务栏设置位于`%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar`
+
+**方式一**：替换新快捷方式(**临时**)
+* 在任务栏目录中找到异常图标进行替换
+
+**方式二**：更换图标
+* 点击任务栏图标编辑属性进行更换图标(重新匹配目录)
+
+**方式三**：ie4unit工具
+```bash
+# win7
+ieuinit.exe -ClearIconCache
+
+# win10
+ie4unit.exe -show
+```
+
+**方式四：**：清楚图标缓存(全局)
+```bash
+taskkill /im explorer.exe /f
+
+cd /d %userprofile%\appdata\local
+
+del iconcache.db /a
+
+start explorer.exe
+
+exit
+```
+
+**其它**：重启计算机/Explorer
