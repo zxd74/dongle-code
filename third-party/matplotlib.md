@@ -5,6 +5,29 @@
 plt.bar(range(len(x_data)),y_data)
 plt.xticks(range(len(x_data)),x_data) # 设置x轴刻度
 ```
+# 一个坐标系多图形
+* 共用一个坐标系，但不同图形
+  * 多次调用绘制方法`plt.plot`、`plt.bar`等
+```py
+plt.figure(figsize=(10, 5),dpi=100) # 通过一个坐标系
+# 绘制多个图形
+plt.plot(x, y_d1,color='r',label='label1') # color = 'r'
+plt.plot(x, y_d2,color='b',label='label2')
+# ...
+plt.show()
+```
+* 亦可使用多坐标系创建一个坐标系
+```py
+fig,axes = plt.subplots(figsize=(20, 8),dpi=50) # nrows,ncols默认1
+```
+
+# 多坐标系
+* 将一个画布分割多个区域，每个区域代表一个坐标系
+  * 使用`plt.subplots`创建画布，并返回`fig`、`ax`对象，可指定坐标系个数`nrows`、`ncols`
+```py
+fig,axes = plt.subplots(nrows=2,ncols=2,figsize=(20, 8),dpi=50) 
+
+```
 
 # 水平柱状图`barh`
 * 使用`axes.barh`绘制水平柱状图
