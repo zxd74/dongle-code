@@ -1,3 +1,11 @@
+# 通用扩展
+## 坐标轴不自动缩放
+**基本原理**：以数据长度作为有序值代替数据本身，然后将数据长度对应数据值，从而实现坐标轴自动缩放
+```py
+plt.bar(range(len(x_data)),y_data)
+plt.xticks(range(len(x_data)),x_data) # 设置x轴刻度
+```
+
 # 水平柱状图`barh`
 * 使用`axes.barh`绘制水平柱状图
   * `axes.bar_label` 为条状区段添加label
