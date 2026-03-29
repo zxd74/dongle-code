@@ -1,5 +1,5 @@
 # 初始配置
-* 修改ssh配置`/etc/ssh/sshd_config`
+* **修改ssh配置**`/etc/ssh/sshd_config`
 ```txt
 UseDNS no
 GSSAPIAuthentication no
@@ -10,28 +10,49 @@ ClientAliveConutMax 5
 ```shell
 service sshd restart
 ```
-* 修改安装源，已centos为例
+* **基础工具**
 ```shell
-mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
-wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
-# 或
-curl http://mirrors.aliyun.com/repo/Centos-7.repo -o /etc/yum.repos.d/CentOS-Base.repo
-
-yum clean all
-yum makecache fast
-```
-# 软件源
-```shell
-mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
-curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
-
-yum clean all
-yum makecache
-
 yum update -y
 yum install gcc-c++ wget openssl -y # 基础工具
 yum lsof net-tools -y # 网络工具
 ```
+* 软件源(CentOS)
+  ```shell
+  mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+  curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+
+  yum clean all
+  yum makecache
+  ```
+  * **Centos-Stream**
+  ```bash
+  mv /etc/yum.repos.d/centos.repo  /etc/yum.repos.d/centos.repo.backup
+  mv /etc/yum.repos.d/centos-addons.repo  /etc/yum.repos.d/centos-addons.repo.backup
+  ```
+  ```ini
+  # /etc/yum.repos.d/centos.repo
+  [baseos]
+  name=CentOS Stream $releasever - BaseOS
+  baseurl=https://mirrors.aliyun.com/centos-stream/$stream/BaseOS/$basearch/os/
+  gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial-SHA256
+  gpgcheck=1
+  enabled=1
+  [appstream]
+  name=CentOS Stream $releasever - AppStream
+  baseurl=https://mirrors.aliyun.com/centos-stream/$stream/AppStream/$basearch/os/
+  gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial-SHA256
+  gpgcheck=1
+  enabled=1
+
+  # /etc/yum.repos.d/centos-addons.repo
+  [extras-common]
+  name=CentOS Stream $releasever - Extras packages
+  baseurl=http://mirrors.aliyun.com/centos-stream/SIGs/$stream/extras/$basearch/extras-common/
+  gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Extras-SHA512
+  gpgcheck=1
+  enabled=1
+  ```
+
 # 服务
 ## 自定义服务
 * 创建服务文件`/etc/systemd/system/xxx.service`
