@@ -1,5 +1,5 @@
 # 环境准备
-1. 镜像源:`pip config set global.index-url https://mirrors.aliyun.com/pypi/simple`
+1. 镜像源:`pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple`
 2. 安装路径`python -m site`查看`USER_SITE`和`USER_BASE`，
 3. 
 
