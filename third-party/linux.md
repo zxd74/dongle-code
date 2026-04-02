@@ -174,14 +174,6 @@ gpgcheck=1
 repo_gpgcheck=0
 metadata_expire=6h
 enabled=0
-
-
-[extras-common]
-name=CentOS Stream $releasever - Extras packages
-baseurl=http://mirrors.aliyun.com/centos-stream/SIGs/$stream/extras/$basearch/extras-common/
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Extras-SHA512
-gpgcheck=1
-enabled=1
 ```
 `/etc/yum.repos.d/centos-addons.repo`
 ```ini
