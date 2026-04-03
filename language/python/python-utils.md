@@ -8,9 +8,16 @@ def read_file(path):
 # 按行读取文件
 def read_file_line(path):
     with open(path, 'r') as f:
-        for line in f:
+        for line in f:  # 流式读取
             yield line
 
+# 读取指定行
+def read_specific_line(file_path, target_line_num):
+    with open(file_path, "r", encoding="utf-8") as f:
+        for current_line_num, line in enumerate(f, start=1):
+            if current_line_num == target_line_num:
+                return line.strip()
+    return None  # 行号超出范围
 
 # 写入文件
 def write_file(path, content):
