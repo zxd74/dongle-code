@@ -101,3 +101,15 @@ python -m build # 在dist/下生成模块包
 # --user 用户模块模块包地址
 python -m pip install --user django-polls/dist/django_polls-0.1.tar.gz
 ```
+
+# 源码查找
+- 内置源码：CPython
+- 源码是python语言的
+```py
+# 读取__module__属性
+print(requests.get.__module__)
+
+# inspect 可查看源码
+import inspect
+print(inspect.getfile(xxx))
+```
