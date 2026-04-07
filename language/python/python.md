@@ -1,7 +1,10 @@
 # 环境准备
 1. 镜像源:`pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple`
 2. 安装路径`python -m site`查看`USER_SITE`和`USER_BASE`，
-3. 
+3. 环境变量
+   - `PYTHON_HOME` python安装目录
+   - `PYTHONPATH` python包安装路径如`{PYTHON_HOME}/Lib/site-packages`
+     - **提示**：如果不配置，需要包路径配置到`PATH`中！
 
 # 构建模块
 **模块目录结构**
