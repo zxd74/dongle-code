@@ -1,0 +1,9 @@
+# 环境
+- 镜像源`HF_ENDPOINT`=`https://hf-mirror.com`
+- 默认下载路径：
+  - 全局`HF_HOME`(默认`~/.cache/huggingface/`)
+  - 分模块:详细见各模块`config.py`头部定义
+    - `HF_DATASETS_CACHE`
+    - `HF_HUB_CACHE`
+    - `TRANSFORMERS_CACHE`
+  - 临时指定：可通过下载参数`cache_dir`指定
