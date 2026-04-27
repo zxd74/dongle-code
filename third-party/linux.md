@@ -358,3 +358,28 @@ WantedBy=multi-user.target # 启动级别,多租户
 
 # 第三方
 * [docker](./docker.md#安装)
+
+# 问题排查
+## 资源占满
+1. 查看全进程内存占用情况：并定位PID
+```bash
+top  # 实时查看资源占用情况
+# PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+
+top -o %MEM # 实时查看指定资源占用情况，%MEM 内存
+```
+2. 定位PID对应项目`ps -ef|grep <pid>`
+3. 通过指定项目环境排查，例如java OOM等问题
+
+
+内存满区分
+- 系统内存：整体RAM耗尽，swap占用飙升(内存泄漏 + 堆过大 + 缓存 / 文件句柄 / 共享内存)
+```bash
+free -h # 查看系统内存情况
+# total        used        free      shared  buff/cache   available
+
+pidstat -r <pid> # 进程物理内存、虚拟内存
+
+lsof -p <pid>|wc -l # 排查文件句柄、缓存溢出(大量文件/流不关闭)
+```
+- 应用自身OOM：如`jstack <pid>`
