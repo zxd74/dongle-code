@@ -56,3 +56,49 @@
         }
     }
     ```
+
+# 日志
+```h
+#ifndef LOG_H
+#define LOG_H
+
+// 日志等级
+#define LOG_DEBUG 0
+#define LOG_INFO  1
+#define LOG_WARN  2
+#define LOG_ERROR 3
+
+// 设置当前要输出的最低等级（默认 INFO）
+#define LOG_LEVEL LOG_INFO
+
+// 日志宏（自动带文件名、行号、函数名）
+#if LOG_LEVEL <= LOG_DEBUG
+#define LOG_DEBUG(fmt, ...) \
+    printf("[DEBUG] %s:%d %s: " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+#else
+#define LOG_DEBUG(fmt, ...)
+#endif
+
+#if LOG_LEVEL <= LOG_INFO
+#define LOG_INFO(fmt, ...) \
+    printf("[INFO] %s:%d %s: " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+#else
+#define LOG_INFO(fmt, ...)
+#endif
+
+#if LOG_LEVEL <= LOG_WARN
+#define LOG_WARN(fmt, ...) \
+    printf("[WARN] %s:%d %s: " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+#else
+#define LOG_WARN(fmt, ...)
+#endif
+
+#if LOG_LEVEL <= LOG_ERROR
+#define LOG_ERROR(fmt, ...) \
+    printf("[ERROR] %s:%d %s: " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+#else
+#define LOG_ERROR(fmt, ...)
+#endif
+
+#endif
+```
