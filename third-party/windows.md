@@ -120,3 +120,69 @@ exit
   - **推荐**: 将多个应用启动方式改为使用脚本启动方式
 - **方法三**：第三方工具（可视化，批量管理更省心）:`UACWhitelistTool`
 
+
+# 命令行实践
+## 网络控制
+### 接口管理
+- 查看接口信息
+- 启用接口硬件(网卡)
+```cmd
+:: 以管理员身份运行
+netsh interface show interface
+netsh interface set interface name="WLAN" admin=enable # 硬件开启
+netsh interface set interface "WLAN" enabled # 简化
+netsh interface set interface name="WLAN" admin=disable # 关闭
+```
+
+### wifi连接
+1. wifi接口硬件启用
+2. wifi接口软件开启(**验证暂未通过**)
+  ```cmd
+  :: 以管理员身份运行
+  netsh wlan set autoconfig enabled=yes interface="Wi-Fi" # 开启
+  netsh wlan set autoconfig enabled=no interface="Wi-Fi" # 关闭
+  ```
+3. 查看wifi网卡状态`netsh wlan show interface`
+4. 查看可用wifi列表 `netsh wlan show networks`
+5. 新建wifi配置(**若无连接记录**)
+   - 导入并连接
+   ```cmd
+   netsh wlan add profile filename="wifi.xml"
+   ```
+   ```xml
+   <!-- wifi.xml -->
+   <?xml version="1.0"?>
+   <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
+    <name>WiFi名称</name>
+    <SSIDConfig>
+      <SSID>
+        <name>WiFi名称</name>
+      </SSID>
+    </SSIDConfig>
+    <connectionType>ESS</connectionType>
+    <connectionMode>auto</connectionMode>
+    <MSM>
+      <security>
+        <authEncryption>
+          <authentication>WPA2PSK</authentication>
+          <encryption>AES</encryption>
+          <useOneX>false</useOneX>
+        </authEncryption>
+        <sharedKey>
+          <keyType>passPhrase</keyType>
+          <protected>false</protected>
+          <keyMaterial>WiFi密码</keyMaterial>
+        </sharedKey>
+      </security>
+    </MSM>
+   </WLANProfile>
+   ```
+6. wifi配置管理
+  ```cmd
+  :: 以管理员身份运行
+  netsh wlan show profiles # 查看所有已保存的wifi列表
+  netsh wlan delete profile name="WiFi名称"
+
+  netsh wlan connect name="WiFi名称" # 直连已保存的wifi
+  netsh wlan disconnect
+  ```
