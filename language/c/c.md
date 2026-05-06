@@ -1,3 +1,33 @@
+# 结构体函数实现
+```c
+typedef struct List{
+    int* tab;
+    int size;
+    void (*put)(List* list,int val); // 首参绑定自身
+    int (*get)(List* list,int idx);
+    void (*del)(List* list,int idx);
+}List;
+
+static void put(List* list,int val){
+    //...
+}
+static int get(List* list,int idx){
+    //...
+}
+static void del(List* list,int idx){
+    //...
+}
+
+void init(List* list){ // 定义初始化方法
+    if(!list) exit(-1);
+    list->size = 0;
+    list->tab = NULL;
+    list->put = put; // 绑定struct指针函数成员
+    list->get = get;
+    list->del = del;
+}
+```
+
 # 自定义命名空间
 * 方式一：通过固定前缀方式`math_xxx`
 * 方式二：`static` 做私有成员（**static成员不对外开放**）
