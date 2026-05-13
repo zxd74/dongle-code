@@ -192,12 +192,12 @@ public class RealProxy implements Subject {
         this.subject = subject;
     }
 }
-    public static void main(String[] args) {
-        RealSubject realSubject = new RealSubject();
-        RealProxy proxy = new RealProxy(realSubject);
-        proxy.request();
-        // 输出：RealSubject
-    }
+public static void main(String[] args) {
+    RealSubject realSubject = new RealSubject();
+    RealProxy proxy = new RealProxy(realSubject);
+    proxy.request();
+    // 输出：RealSubject
+}
 ```
 ## 动态代理
 ### JDK动态代理
@@ -231,15 +231,15 @@ class ServiceInvocationHandler implements InvocationHandler {
     }
 }
 
-    public static void main(String[] args) {
-        Service service = new ServiceImpl();
-        Service proxy = (Service) Proxy.newProxyInstance(
-                service.getClass().getClassLoader(),
-                service.getClass().getInterfaces(),
-                new ServiceInvocationHandler(service)
-        );
-        proxy.perform();
-    }
+public static void main(String[] args) {
+    Service service = new ServiceImpl();
+    Service proxy = (Service) Proxy.newProxyInstance(
+            service.getClass().getClassLoader(),
+            service.getClass().getInterfaces(),
+            new ServiceInvocationHandler(service)
+    );
+    proxy.perform();
+}
 ```
 ### CGLIB动态代理
 1. 定义普通类()
@@ -258,11 +258,11 @@ class ServiceInterceptor implements MethodInterceptor {
         return result;
     }
 }
-    public static void main(String[] args) {
-        Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(Service.class);
-        enhancer.setCallback(new ServiceInterceptor());
-        Service proxy = (Service) enhancer.create();
-        proxy.perform();
-    }
+public static void main(String[] args) {
+    Enhancer enhancer = new Enhancer();
+    enhancer.setSuperclass(Service.class);
+    enhancer.setCallback(new ServiceInterceptor());
+    Service proxy = (Service) enhancer.create();
+    proxy.perform();
+}
 ```
