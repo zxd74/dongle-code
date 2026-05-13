@@ -102,3 +102,51 @@
 
 #endif
 ```
+
+# 内存池
+```c
+#include <stdlib.h>
+
+// 内存池块头
+typedef struct Block {
+    struct Block *next;
+} Block;
+
+// 内存池
+typedef struct {
+    Block *free_list;
+    char *start;
+    size_t size;
+} MemPool;
+
+// 创建内存池
+MemPool *pool_create(size_t pool_size, size_t block_size) {
+    MemPool *p = malloc(sizeof(MemPool));
+    p->start = malloc(pool_size);
+    p->size = pool_size;
+    p->free_list = NULL;
+
+    // 切分块
+    for (char *ptr = p->start; ptr + block_size <= p->start + pool_size; ptr += block_size) {
+        Block *b = (Block*)ptr;
+        b->next = p->free_list;
+        p->free_list = b;
+    }
+    return p;
+}
+
+// 从池分配
+void *pool_alloc(MemPool *p) {
+    if (!p->free_list) return NULL;
+    Block *b = p->free_list;
+    p->free_list = b->next;
+    return b;
+}
+
+// 归还到池
+void pool_free(MemPool *p, void *ptr) {
+    Block *b = (Block*)ptr;
+    b->next = p->free_list;
+    p->free_list = b;
+}
+```
