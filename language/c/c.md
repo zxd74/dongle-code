@@ -81,6 +81,7 @@ void init(List* list){ // 定义初始化方法
     ```
 
 # 简易TCP
+## Win
 * Server
 ```c
 #include <stdio.h>
@@ -214,6 +215,132 @@ int main() {
     // 6. 关闭
     closesocket(sock);
     WSACleanup();
+
+    return 0;
+}
+```
+## Unix
+```c
+//server.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#define PORT 8080        // 监听端口
+#define BUF_SIZE 1024    // 缓冲区大小
+
+int main() {
+    int server_fd, new_socket;
+    ssize_t valread;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
+    char buffer[BUF_SIZE] = {0};
+    const char *hello = "Hello from server";
+
+    // 1. 创建 socket 文件描述符
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // 2. 设置端口复用，防止端口被占用
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
+    address.sin_family = AF_INET;         // IPv4
+    address.sin_addr.s_addr = INADDR_ANY; // 监听所有网卡
+    address.sin_port = htons(PORT);      // 端口，主机转网络字节序
+
+    // 3. 绑定端口
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // 4. 开始监听，最大等待队列 3
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    printf("Server listening on port %d...\n", PORT);
+
+    // 5. 接受客户端连接
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    // 6. 读取客户端发送的数据
+    valread = read(new_socket, buffer, BUF_SIZE);
+    printf("Received from client: %s\n", buffer);
+
+    // 7. 发送数据给客户端
+    send(new_socket, hello, strlen(hello), 0);
+    printf("Hello message sent to client\n");
+
+    // 8. 关闭 socket
+    close(new_socket);
+    close(server_fd);
+
+    return 0;
+}
+```
+```c
+//client.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#define PORT 8080
+#define BUF_SIZE 1024
+
+int main() {
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+    char buffer[BUF_SIZE] = {0};
+    const char *message = "Hello from client";
+
+    // 1. 创建 socket
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("\nSocket creation error\n");
+        return -1;
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    // 2. 将 IPv4 地址从字符串转为网络格式
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        printf("\nInvalid address/Address not supported\n");
+        return -1;
+    }
+
+    // 3. 连接服务端
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("connection failed");
+        return -1;
+    }
+
+    // 4. 发送数据给服务端
+    send(sock, message, strlen(message), 0);
+    printf("Message sent to server: %s\n", message);
+
+    // 5. 读取服务端返回数据
+    ssize_t valread = read(sock, buffer, BUF_SIZE);
+    printf("Received from server: %s\n", buffer);
+
+    // 6. 关闭 socket
+    close(sock);
 
     return 0;
 }
