@@ -1,6 +1,38 @@
 # Slf4j
+`slf4j`是日志接口，`log4j/logback`属于日志实现
 
-## slf4j + log4j支持
+# logback 推荐
+```xml
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
+    <version>2.0.9</version>
+</dependency>
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.4.8</version>
+</dependency>
+```
+logback配置：`ch.qos.logback.classic.joran.JoranConfigurator`
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 根日志级别 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
+```
+
+# log4j支持
 ```xml
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -15,7 +47,7 @@
         </dependency>
 ```
 
-## Slf4j + log4j2支持
+## log4j2支持
 ```xml
         <dependency>
             <groupId>org.slf4j</groupId>
