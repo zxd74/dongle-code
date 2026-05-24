@@ -23,18 +23,8 @@
 
 # MapReduce
 ## Mapper
+* 新版
 ```java
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-
-import java.io.IOException;
-
-/**
- * @author Dongle
- * @desc
- * @since 2024/7/1 10:46
- */
 public class MyMapper extends Mapper<Text, LongWritable,Text,LongWritable> {
     private LongWritable one = new LongWritable(1);
     @Override
@@ -47,19 +37,25 @@ public class MyMapper extends Mapper<Text, LongWritable,Text,LongWritable> {
     }
 }
 ```
-## Reducer
+* 旧版
 ```java
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
+public class WordCountMapper extends MapReduceBase 
+    implements Mapper<Object, Text, Text, IntWritable> {
 
-import java.io.IOException;
+    private final static IntWritable one = new IntWritable(1);
+    private Text word = new Text();
 
-/**
- * @author Dongle
- * @desc
- * @since 2024/7/1 10:46
- */
+    @Override
+    public void map(Object key, Text value, 
+                    OutputCollector<Text, IntWritable> output, 
+                    Reporter reporter) throws IOException {
+        // 你的逻辑
+    }
+}
+```
+## Reducer
+* 新版
+```java
 public class MyReduce extends Reducer<Text, LongWritable,Text,LongWritable> {
     private LongWritable res = new LongWritable(); // 记录结果
 
@@ -74,23 +70,73 @@ public class MyReduce extends Reducer<Text, LongWritable,Text,LongWritable> {
     }
 }
 ```
+* 旧版
+```java
+public class WordCountReducer extends MapReduceBase 
+    implements Reducer<Text, IntWritable, Text, IntWritable> {
+
+    @Override
+    public void reduce(Text key, Iterator<IntWritable> values,
+                       OutputCollector<Text, IntWritable> output,
+                       Reporter reporter) throws IOException {
+        // 你的逻辑
+    }
+}
+```
 
 ## Job
+* **新版API** `Job.getInstance`
 ```java
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public static void main(String[] args) throws Exception {
     Configuration config = new Configuration();
     Job job = Job.getInstance(config,"job-demo");
+
     job.setMapperClass(MyMapper.class);
     job.setReducerClass(MyReduce.class);
+
+    // 设置输出 KV 类型
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Long.class);
-    FileInputFormat.addInputPath(job,new Path(args[0]));  // 注意不要和org.apache.hadoop.mapred.FileInputFormat搞混，如果使用，可以通过Job.getConfiguration()作为参数
-    FileOutputFormat.setOutputPath(job,new Path(args[1])); // org.apache.hadoop.mapred.FileInputFormat(job.getConfiguration,new Path("ddd"))，同理
-    job.waitForCompletion(true);
+
+    // 自动识别IO Format
+
+    // 设置输入输出路径
+    FileInputFormat.addInputPath(job,new Path(args[0]));  
+    FileOutputFormat.setOutputPath(job,new Path(args[1])); 
+
+    job.waitForCompletion(true); // 提交运行
+    // JobClient.runJob(conf); // 旧版方式提交Job
 }
 ```
+* **旧版API(兼容)**：`new JobClient() + JobConf`(**废弃**)
+```java
+public static void main(String[] args) throws Exception {
+    // 创建 JobConf（旧版配置 + 任务对象二合一）
+    JobConf conf = new JobConf(OldJobCreator.class);
+    conf.setJobName("job-demo");
+
+    // 设置 Mapper / Reducer
+    conf.setMapperClass(MyMapper.class);
+    conf.setReducerClass(MyReduce.class);
+
+    // 设置输出 KV 类型
+    conf.setOutputKeyClass(Text.class);
+    conf.setOutputValueClass(Long.class);
+
+    // 需要手动绑定IO Format
+    conf.setInputFormat(TextInputFormat.class);
+    conf.setOutputFormat(TextOutputFormat.class);
+
+    // 设置输入输出路径
+    FileInputFormat.addInputPath(job,new Path(args[0])); 
+    FileOutputFormat.setOutputPath(job,new Path(args[1])); 
+
+    JobClient.runJob(conf); // 提交运行（旧版写法）
+}
+```
+* 执行
 ```shell
 bin/hadoop jar wc.jar WordCount /user/joe/wordcount/input /user/joe/wordcount/output
 ```
