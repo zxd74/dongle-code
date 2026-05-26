@@ -80,6 +80,28 @@ void init(List* list){ // 定义初始化方法
     }
     ```
 
+# 函数定义
+* 直接定义
+```c
+void hello(char* name){
+    printf("%s",name)
+}
+```
+* 先声明，后实现: 等同头文件声明
+```c
+void hello(char* name); // 声明和实现分开,适用于函数较多，在头部先定义，等同头文件中声明
+void hello(char* name){
+    printf("%s",name)
+}
+```
+* 宏定义
+```c
+#define hello(char* name)   \
+    printf("%s",name)       \
+
+// ..
+```
+
 # 简易TCP
 ## Win
 * Server
