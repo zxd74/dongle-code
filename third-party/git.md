@@ -1,3 +1,6 @@
+参数：
+* `-verbose` 输出详细信息
+
 # 克隆或拉取
 ## 浅克隆 --depth
 ```bash
@@ -15,3 +18,11 @@ git checkout <commit_id>
 ## 超大文件LSF
 * 普通用户每月有一定额度(若超出可以等待下月初恢复)
 * 可跳过LSF拉取`GIT_LFS_SKIP_SMUDGE=1 git clone <repo address>`
+
+
+# 推送
+## 显式进度
+增加`--progress`参数
+```bash
+git push -progress
+```
